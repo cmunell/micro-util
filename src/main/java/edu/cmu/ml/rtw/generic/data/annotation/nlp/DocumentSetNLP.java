@@ -10,6 +10,7 @@ import java.util.List;
 import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.Annotation;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
+import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
 
 public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	public DocumentSetNLP(String name) {
@@ -49,8 +50,16 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		
 		return true;
 	}
+
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument) {
+		return loadFromMicroPathThroughPipeline(name, path, genericDocument, null, null);
+	}
 	
-	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPath(String name, String path, D genericDocument) {
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument, PipelineNLP pipeline) {
+		return loadFromMicroPathThroughPipeline(name, path, genericDocument, pipeline, null);
+	}
+	
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators) {
 		File filePath = new File(path);
 		File[] files = null;
 		if (filePath.isDirectory()) {
@@ -63,18 +72,18 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		// Might want to remove this assumption...
 		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>(name);
 		for (File file : files) {
-			documentSet.addAll(loadFromMicroFile(file, genericDocument));
+			documentSet.addAll(loadFromMicroFileThroughPipeline(file, genericDocument, pipeline, skipAnnotators));
 		}
 	
 		return documentSet;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroFile(File file, D genericDocument) {
+	private static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroFileThroughPipeline(File file, D genericDocument, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators) {
 		List<DocumentAnnotation> documentAnnotations = DocumentAnnotation.fromFile(file.getAbsolutePath());
 		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>("");
 		for (DocumentAnnotation documentAnnotation : documentAnnotations) {
-			documentSet.add((D)genericDocument.makeInstanceFromMicroAnnotation(documentAnnotation));
+			documentSet.add((D)genericDocument.makeInstanceFromMicroAnnotation(documentAnnotation, pipeline, skipAnnotators));
 		}
 	
 		return documentSet;

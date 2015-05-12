@@ -5,7 +5,7 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
-public abstract class ARKParsable extends Serializable {
+public abstract class CtxParsable extends Serializable {
 	protected String referenceName;
 	protected List<String> modifiers;
 	

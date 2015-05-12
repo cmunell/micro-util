@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 
-public abstract class ARKParsableFunction extends ARKParsable implements Parameterizable {	
+public abstract class CtxParsableFunction extends CtxParsable implements Parameterizable {	
 	@Override
 	public Obj toParse() {
 		return toParse(true);

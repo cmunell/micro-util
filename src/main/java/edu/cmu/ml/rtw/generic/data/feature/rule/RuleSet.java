@@ -8,14 +8,14 @@ import java.util.TreeMap;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.parse.ARKParsable;
-import edu.cmu.ml.rtw.generic.parse.ARKParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.CtxParsable;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
-public class RuleSet<D extends Datum<L>, L> extends ARKParsableFunction {
+public class RuleSet<D extends Datum<L>, L> extends CtxParsableFunction {
 	public static final String RULE_STR = "rule";
 	
 	private Context<D, L> context;
@@ -88,11 +88,11 @@ public class RuleSet<D extends Datum<L>, L> extends ARKParsableFunction {
 		return binaryRuleSet;
 	}
 	
-	public Map<String, Obj> applyRules(ARKParsable sourceObj) {
+	public Map<String, Obj> applyRules(CtxParsable sourceObj) {
 		return applyRules(sourceObj.toParse(), null);
 	}
 	
-	public Map<String, Obj> applyRules(ARKParsable sourceObj, Map<String, Obj> extraAssignments) {
+	public Map<String, Obj> applyRules(CtxParsable sourceObj, Map<String, Obj> extraAssignments) {
 		return applyRules(sourceObj.toParse(), extraAssignments);
 	}
 	

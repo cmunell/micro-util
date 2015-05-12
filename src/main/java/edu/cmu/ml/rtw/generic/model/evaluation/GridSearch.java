@@ -1,21 +1,3 @@
-/**
- * Copyright 2014 Bill McDowell 
- *
- * This file is part of theMess (https://github.com/forkunited/theMess)
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy 
- * of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
- * under the License.
- */
-
 package edu.cmu.ml.rtw.generic.model.evaluation;
 
 import java.text.DecimalFormat;
@@ -36,10 +18,10 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
-import edu.cmu.ml.rtw.generic.parse.ARKParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 /**
@@ -52,10 +34,10 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
  * @param <D> datum type
  * @param <L> datum label type
  */
-public class GridSearch<D extends Datum<L>, L> extends ARKParsableFunction {
+public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 	private static final String DIMENSION_STR = "dimension";
 	
-	public static class GridDimension extends ARKParsableFunction {
+	public static class GridDimension extends CtxParsableFunction {
 		private String name = "";
 		private Obj.Array values = new Obj.Array();
 		private boolean trainingDimension = true;

@@ -18,16 +18,16 @@ import edu.cmu.ml.rtw.generic.data.feature.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.GridSearch;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
-import edu.cmu.ml.rtw.generic.parse.ARKScanner;
-import edu.cmu.ml.rtw.generic.parse.ARKParser;
-import edu.cmu.ml.rtw.generic.parse.ARKParsable;
-import edu.cmu.ml.rtw.generic.parse.ARKParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.CtxScanner;
+import edu.cmu.ml.rtw.generic.parse.CtxParser;
+import edu.cmu.ml.rtw.generic.parse.CtxParsable;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
-public class Context<D extends Datum<L>, L> extends ARKParsable {
+public class Context<D extends Datum<L>, L> extends CtxParsable {
 	private enum ObjectType {
 		MODEL,
 		FEATURE,
@@ -185,11 +185,11 @@ public class Context<D extends Datum<L>, L> extends ARKParsable {
 	
 	/* Generic object matching and construction */
 	
-	private abstract static interface GenericFunctionRetriever<T extends ARKParsableFunction> {
+	private abstract static interface GenericFunctionRetriever<T extends CtxParsableFunction> {
 		List<T> retrieve(String name);
 	}
 	
-	private <T extends ARKParsableFunction> T constructFromParse(ObjectType objectType, List<String> modifiers, String referenceName, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
+	private <T extends CtxParsableFunction> T constructFromParse(ObjectType objectType, List<String> modifiers, String referenceName, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
 		if (obj.getObjType() != Obj.Type.FUNCTION)
 			return null;
 		
@@ -214,7 +214,7 @@ public class Context<D extends Datum<L>, L> extends ARKParsable {
 		return null;
 	}
 	
-	private <T extends ARKParsableFunction> List<T> getMatches(Obj obj, Map<String, T> storageMap) {
+	private <T extends CtxParsableFunction> List<T> getMatches(Obj obj, Map<String, T> storageMap) {
 		List<T> matches = new ArrayList<T>();
 		
 		if (obj.getObjType() == Obj.Type.VALUE) {
@@ -241,7 +241,7 @@ public class Context<D extends Datum<L>, L> extends ARKParsable {
 		return matches;
 	}
 	
-	private <T extends ARKParsableFunction> T getMatch(Obj obj, Map<String, T> storageMap) {
+	private <T extends CtxParsableFunction> T getMatch(Obj obj, Map<String, T> storageMap) {
 		List<T> matches = getMatches(obj, storageMap);
 		
 		if (matches.size() >= 1) {
@@ -250,11 +250,11 @@ public class Context<D extends Datum<L>, L> extends ARKParsable {
 			return null;
 	}
 	
-	public <T extends ARKParsableFunction> T getMatchOrConstruct(ObjectType objectType, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
+	public <T extends CtxParsableFunction> T getMatchOrConstruct(ObjectType objectType, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
 		return getMatchOrConstruct(objectType, null, null, obj, storageMap, retriever);
 	}
 	
-	private <T extends ARKParsableFunction> T getMatchOrConstruct(ObjectType objectType, List<String> modifiers, String referenceName, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
+	private <T extends CtxParsableFunction> T getMatchOrConstruct(ObjectType objectType, List<String> modifiers, String referenceName, Obj obj, Map<String, T> storageMap, GenericFunctionRetriever<T> retriever) {
 		List<T> matches = getMatches(obj, storageMap);
 		if (matches != null && matches.size() >= 1) {
 			return matches.get(0);
@@ -850,8 +850,8 @@ public class Context<D extends Datum<L>, L> extends ARKParsable {
 	}
 	
 	public static <D extends Datum<L>, L> Context<D, L> deserialize(Datum.Tools<D, L> datumTools, Reader reader) {
-		ARKScanner scanner = new ARKScanner(reader);
-		ARKParser parser = new ARKParser(scanner);
+		CtxScanner scanner = new CtxScanner(reader);
+		CtxParser parser = new CtxParser(scanner);
 		AssignmentList parse = null;
 		try {
 			parse = (AssignmentList)parser.parse().value;

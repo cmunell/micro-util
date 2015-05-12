@@ -38,7 +38,7 @@ public abstract class Pipeline {
 		return document.meetsAnnotatorRequirements(this.annotators.get(annotationType).requires());
 	}
 	
-	public int annotatorCount() {
+	public int getAnnotatorCount() {
 		return this.annotationOrder.size();
 	}
 	

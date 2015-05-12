@@ -34,18 +34,18 @@ public class ScannerTest {
 	}
 	
 	private void testScannerByTokens(String[] tokens) {
-		ARKScanner scanner = new ARKScanner(StringUtil.join(tokens, " "));
+		CtxScanner scanner = new CtxScanner(StringUtil.join(tokens, " "));
 		int i = 0;
 		try {
 			Symbol symbol = scanner.next_token();
-			while (symbol.sym != ARKSymbol.EOF) {
-				int tokenSymbol = ARKScanner.getStringSymbol(tokens[i]);
+			while (symbol.sym != CtxSymbol.EOF) {
+				int tokenSymbol = CtxScanner.getStringSymbol(tokens[i]);
 				if (tokenSymbol >= 0) {
 					//System.out.println("Successfully scanned symbol: " + tokenSymbol);
 					Assert.assertEquals(tokenSymbol, symbol.sym);
-				} else if (ARKScanner.isQuotedString(tokens[i])) {
+				} else if (CtxScanner.isQuotedString(tokens[i])) {
 					//System.out.println("Successfully scanned quoted string: " + ARKScanner.unescapeQuotedString(tokens[i]));
-					Assert.assertEquals(ARKScanner.unescapeQuotedString(tokens[i]), symbol.value.toString());
+					Assert.assertEquals(CtxScanner.unescapeQuotedString(tokens[i]), symbol.value.toString());
 				} else {
 					//System.out.println("Successfully scanned string: " + tokens[i]);
 					Assert.assertEquals(tokens[i], symbol.value);

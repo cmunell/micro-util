@@ -13,7 +13,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLPStanford;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
-public class DocumentNLPTest {
+public class DocumentNLPTest {	
 	@Test
 	public void testNLPAnnotationAndMicroSerialization() {
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.POS);

@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
+import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
@@ -214,6 +215,6 @@ public abstract class DocumentNLP extends Document {
 	public abstract List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence(TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations);
 	
 	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation);
-	public abstract Document makeInstanceFromMicroAnnotation(DocumentAnnotation documentAnnotation);
+	public abstract Document makeInstanceFromMicroAnnotation(DocumentAnnotation documentAnnotation, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
 	public abstract DocumentAnnotation toMicroAnnotation(Collection<AnnotationTypeNLP<?>> annotationTypes);
 }

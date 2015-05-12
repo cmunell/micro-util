@@ -45,7 +45,7 @@ public class PipelineNLP extends Pipeline {
 		AnnotatorToken<T> annotator = (AnnotatorToken<T>)this.annotators.get(annotationType);
 		return annotator.annotate(this.document);
 	}
-	
+
 	public PipelineNLP weld(PipelineNLP pipeline) {
 		PipelineNLP welded = new PipelineNLP();
 		welded.annotators.putAll(this.annotators);

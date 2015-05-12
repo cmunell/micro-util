@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.ml.rtw.generic.parse.ARKParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.data.Context;
 
-public abstract class Fn<S, T> extends ARKParsableFunction {
+public abstract class Fn<S, T> extends CtxParsableFunction {
 	private int CACHE_SIZE = 20000; // FIXME Set this elsewhere
 	
 	public enum CacheMode {
