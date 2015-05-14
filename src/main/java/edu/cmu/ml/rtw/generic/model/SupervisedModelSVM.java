@@ -608,7 +608,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			String label = this.labelIndices.reverseGet(labelIndex).toString();
 			String featureName = this.featureNames.get(featureIndex);
 			String w = String.valueOf(weightEntry.getValue());
-			String G = String.valueOf((this.feature_G.containsKey(weightEntry.getKey())) ? this.feature_G.get(weightEntry.getKey()) : 0);
+			String G = String.valueOf((this.feature_G.containsKey(weightEntry.getKey())) ? this.feature_G.get(weightEntry.getKey()).doubleValue() : 0.0);
 			
 			Obj.Array weightArray = Obj.array(new String[] { label, featureName, w, G, labelIndexStr, featureIndexStr });
 			internalAssignments.add(

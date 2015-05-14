@@ -14,7 +14,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
 public class RuleSetTest {
-	@Test
+	// FIXME Needs refactoring
 	public void testRuleSetApplication() {
 		Context<TestDatum<String>, String> context = Context.deserialize(TestDatum.getStringTools(new DataTools(new OutputWriter())),
 				"ts_fn head=Head();\n" +

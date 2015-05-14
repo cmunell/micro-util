@@ -74,11 +74,67 @@ public abstract class DocumentNLP extends Document {
 	}
 	
 	public List<Pair<TokenSpan, String>> getNer(TokenSpan tokenSpan) {
-		return getNer(tokenSpan, TokenSpan.ANY_RELATION);
+		return getNer(tokenSpan, TokenSpan.ANY_SHARING_RELATION);
+	}
+	
+	public List<Pair<TokenSpan, String>> getNer() {
+		List<Pair<TokenSpan, String>> ner = new ArrayList<Pair<TokenSpan, String>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			ner.addAll(getNer(i));
+		}
+		return ner;
+	}
+	
+	public List<Pair<TokenSpan, String>> getNer(int sentenceIndex) {
+		return getNer(new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
+	}
+	
+	public List<Triple<TokenSpan, String, Double>> getNerWithConfidence() {
+		List<Triple<TokenSpan, String, Double>> ner = new ArrayList<Triple<TokenSpan, String, Double>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			ner.addAll(getNerWithConfidence(i));
+		}
+		return ner;
+	}
+	
+	public List<Triple<TokenSpan, String, Double>> getNerWithConfidence(int sentenceIndex) {
+		return getNerWithConfidence(new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
 	}
 	
 	public List<Pair<TokenSpan, TokenSpanCluster>> getCoref(TokenSpan tokenSpan) {
-		return getCoref(tokenSpan, TokenSpan.ANY_RELATION);
+		return getCoref(tokenSpan, TokenSpan.ANY_SHARING_RELATION);
+	}
+	
+	public List<Pair<TokenSpan, TokenSpanCluster>> getCoref() {
+		List<Pair<TokenSpan, TokenSpanCluster>> coref = new ArrayList<Pair<TokenSpan, TokenSpanCluster>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			coref.addAll(getCoref(i));
+		}
+		return coref;
+	}
+	
+	public List<Pair<TokenSpan, TokenSpanCluster>> getCoref(int sentenceIndex) {
+		return getCoref(new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
+	}
+	
+	public List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence() {
+		List<Triple<TokenSpan, TokenSpanCluster, Double>> coref = new ArrayList<Triple<TokenSpan, TokenSpanCluster, Double>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			coref.addAll(getCorefWithConfidence(i));
+		}
+		return coref;
+	}
+	
+	public List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence(int sentenceIndex) {
+		return getCorefWithConfidence(new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
 	}
 
 	public Double getDocumentAnnotationConfidence(AnnotationTypeNLP<?> annotationType) {
@@ -123,8 +179,36 @@ public abstract class DocumentNLP extends Document {
 		}
 	}
 
+	public <T> List<Pair<TokenSpan, T>> getTokenSpanAnnotations(AnnotationTypeNLP<T> annotationType) {
+		List<Pair<TokenSpan, T>> annotations = new ArrayList<Pair<TokenSpan, T>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			annotations.addAll(getTokenSpanAnnotations(annotationType, i));
+		}
+		return annotations;
+	}
+	
+	public <T> List<Pair<TokenSpan, T>> getTokenSpanAnnotations(AnnotationTypeNLP<T> annotationType, int sentenceIndex) {
+		return getTokenSpanAnnotations(annotationType, new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
+	}
+	
+	public <T> List<Triple<TokenSpan, T, Double>> getTokenSpanAnnotationConfidences(AnnotationTypeNLP<T> annotationType) {
+		List<Triple<TokenSpan, T, Double>> annotations = new ArrayList<Triple<TokenSpan, T, Double>>();
+		for (int i = 0; i < getSentenceCount(); i++) {
+			if (getSentenceTokenCount(i) == 0)
+				continue;
+			annotations.addAll(getTokenSpanAnnotationConfidences(annotationType, i));
+		}
+		return annotations;
+	}
+	
+	public <T> List<Triple<TokenSpan, T, Double>> getTokenSpanAnnotationConfidences(AnnotationTypeNLP<T> annotationType, int sentenceIndex) {
+		return getTokenSpanAnnotationConfidences(annotationType, new TokenSpan(this, sentenceIndex, 0, 1), TokenSpan.ANY_CLOSE_RELATION);
+	}
+	
 	public <T> List<Triple<TokenSpan, T, Double>> getTokenSpanAnnotationConfidences(AnnotationTypeNLP<T> annotationType, TokenSpan tokenSpan) {
-		return getTokenSpanAnnotationConfidences(annotationType, tokenSpan, TokenSpan.ANY_RELATION);
+		return getTokenSpanAnnotationConfidences(annotationType, tokenSpan, TokenSpan.ANY_SHARING_RELATION);
 	}
 	
 	public <T> List<Triple<TokenSpan, T, Double>> getTokenSpanAnnotationConfidences(AnnotationTypeNLP<T> annotationType, TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations) {
@@ -146,7 +230,7 @@ public abstract class DocumentNLP extends Document {
 	}
 	
 	public <T> List<Pair<TokenSpan, T>> getTokenSpanAnnotations(AnnotationTypeNLP<T> annotationType, TokenSpan tokenSpan) {
-		return getTokenSpanAnnotations(annotationType, tokenSpan, TokenSpan.ANY_RELATION);
+		return getTokenSpanAnnotations(annotationType, tokenSpan, TokenSpan.ANY_SHARING_RELATION);
 	}
 	
 	public <T> List<Pair<TokenSpan, T>> getTokenSpanAnnotations(AnnotationTypeNLP<T> annotationType, TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations) {

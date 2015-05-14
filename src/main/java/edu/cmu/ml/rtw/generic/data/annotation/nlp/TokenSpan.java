@@ -3,15 +3,19 @@ package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
+
 /**
  * TokenSpan represents a contiguous span of tokens in a document.  
  * 
  * @author Bill
  */
 public class TokenSpan {
-	public static final Relation[] ANY_RELATION = new Relation[] { Relation.CONTAINS, Relation.CONTAINED_BY, Relation.EQUAL, Relation.OVERLAPS };
-	
+	public static final Relation[] ANY_SHARING_RELATION = new Relation[] { Relation.CONTAINS, Relation.CONTAINED_BY, Relation.EQUAL, Relation.OVERLAPS };
+	public static final Relation[] ANY_CLOSE_RELATION = new Relation[] { Relation.CONTAINS, Relation.CONTAINED_BY, Relation.EQUAL, Relation.OVERLAPS, Relation.SAME_SENTENCE };
+
 	public enum Relation {
+		SAME_SENTENCE,
 		CONTAINS,
 		CONTAINED_BY,
 		EQUAL,
@@ -103,6 +107,8 @@ public class TokenSpan {
 			return Relation.OVERLAPS;
 		else if (this.startTokenIndex < tokenSpan.endTokenIndex && this.endTokenIndex > tokenSpan.endTokenIndex)
 			return Relation.OVERLAPS;
+		else if (this.sentenceIndex == tokenSpan.sentenceIndex)
+			return Relation.SAME_SENTENCE;
 		else
 			return Relation.NONE;
 	}
@@ -124,6 +130,8 @@ public class TokenSpan {
 		JSONObject json = new JSONObject();
 		
 		try {
+			json.put("document", this.document.getName());
+			
 			if (includeSentence)
 				json.put("sentenceIndex", this.sentenceIndex);
 			json.put("startTokenIndex", this.startTokenIndex);
@@ -135,6 +143,29 @@ public class TokenSpan {
 		return json;
 	}
 	
+	public static TokenSpan fromJSON(JSONObject json, DocumentSet<DocumentNLP> documentSet, int sentenceIndex) {
+		try {
+			DocumentNLP document = documentSet.getDocumentByName(json.getString("document"));
+			if (document == null)
+				return null;
+			
+			return new TokenSpan(
+				document,
+				(sentenceIndex < 0) ? json.getInt("sentenceIndex") : sentenceIndex,
+				json.getInt("startTokenIndex"),
+				json.getInt("endTokenIndex")
+			);
+		} catch (JSONException e) {
+		
+		}
+		
+		return null;
+	}
+	
+	public static TokenSpan fromJSON(JSONObject json, DocumentSet<DocumentNLP> documentSet) {
+		return fromJSON(json, documentSet, -1);
+	}
+	
 	public static TokenSpan fromJSON(JSONObject json, DocumentNLP document, int sentenceIndex) {
 		try {
 			return new TokenSpan(
@@ -144,7 +175,7 @@ public class TokenSpan {
 				json.getInt("endTokenIndex")
 			);
 		} catch (JSONException e) {
-			e.printStackTrace();
+		
 		}
 		
 		return null;

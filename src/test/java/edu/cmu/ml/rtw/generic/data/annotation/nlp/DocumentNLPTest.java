@@ -16,11 +16,11 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 public class DocumentNLPTest {	
 	@Test
 	public void testNLPAnnotationAndMicroSerialization() {
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.POS);
+		/*testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.POS);
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.NER);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.COREF);
+		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.COREF);*/
 		testNLPAnnotationAndMicroSerializationDisabledFrom(null);
 	}
 	
@@ -54,7 +54,7 @@ public class DocumentNLPTest {
 		for (int i = 0; i < annotations.size(); i++) {
 			JSONObject jsonCopy = annotationsCopy.get(i).toJson();
 			JSONObject jsonCopyCopy = annotationsCopyCopy.get(i).toJson();
-			System.out.println(jsonCopyCopy);
+			//System.out.println(jsonCopyCopy);
 			
 			try {
 				jsonCopy.put("annotationTime", "");

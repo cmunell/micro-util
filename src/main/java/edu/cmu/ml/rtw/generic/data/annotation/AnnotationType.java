@@ -6,7 +6,7 @@ import edu.cmu.ml.rtw.generic.util.StringSerializable;
 public class AnnotationType<T> {
 	public enum SerializationType {
 		ENUM,      // deserialize to enum
-		IDENTITY,  // deserialize to string
+		IDENTITY,  // deserialize to string, boolean, integer, or double
 		JSON,      // deserialize to JSONSerializable
 		STRING,    // deserialize to StringSerializable
 		OTHER
@@ -26,7 +26,10 @@ public class AnnotationType<T> {
 			this.serializationType = SerializationType.STRING;
 		else if (this.annotationClass.isEnum())
 			this.serializationType = SerializationType.ENUM;
-		else if (String.class.isAssignableFrom(this.annotationClass))
+		else if (String.class.isAssignableFrom(this.annotationClass)
+				|| Boolean.class.isAssignableFrom(this.annotationClass)
+				|| Integer.class.isAssignableFrom(this.annotationClass)
+				|| Double.class.isAssignableFrom(this.annotationClass))
 			this.serializationType = SerializationType.IDENTITY;
 		else
 			this.serializationType = SerializationType.OTHER;

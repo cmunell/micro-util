@@ -67,7 +67,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		@Override
 		T deserialize(Document document, int sentenceIndex, Object serializedObj) {
-			return annotationClass.cast(Enum.valueOf((Class<Enum>)annotationClass, serializedObj.toString()));
+			return (T)annotationClass.cast(Enum.valueOf((Class<Enum>)annotationClass, serializedObj.toString()));
 		}
 
 		@Override

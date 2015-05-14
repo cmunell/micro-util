@@ -112,6 +112,10 @@ public class DataTools {
 	protected OutputWriter outputWriter;
 	protected Timer timer;
 	
+	public DataTools() {
+		this(new OutputWriter());
+	}
+	
 	public DataTools(OutputWriter outputWriter) {
 		this.gazetteers = new HashMap<String, Gazetteer>();
 		this.cleanFns = new HashMap<String, DataTools.StringTransform>();

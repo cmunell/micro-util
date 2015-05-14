@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.data;
 
+/*
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -9,10 +10,10 @@ import org.junit.Test;
 
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum.Tools;
-import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.OutputWriter;*/
 
 public class ContextTest {
-	@Test
+	/* FIXME Needs refactored @Test
 	public void testContextSerializationSelfValue() {
 		testContextSerializationSelf("value x=\"1\";\n");
 	}
@@ -137,5 +138,5 @@ public class ContextTest {
 		Tools<String> datumTools = TestDatum.getStringTools(tools);
 		Context<TestDatum<String>, String> context = Context.deserialize(datumTools, contextInputStr);
 		Assert.assertEquals(contextOutputStr, context.toString());
-	}
+	}*/
 }

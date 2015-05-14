@@ -50,6 +50,8 @@ public class PipelineNLP extends Pipeline {
 		PipelineNLP welded = new PipelineNLP();
 		welded.annotators.putAll(this.annotators);
 		welded.annotators.putAll(pipeline.annotators);
+		welded.annotationOrder.addAll(this.annotationOrder);
+		welded.annotationOrder.addAll(pipeline.annotationOrder);
 		return welded;
 	}
 }

@@ -31,6 +31,10 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 		return this.name;
 	}
 	
+	public D getDocumentByName(String name) {
+		return this.documents.get(name);
+	}
+	 
 	protected abstract DocumentSet<D> makeInstance(String name);
 	
 	public List<DocumentSet<D>> makePartition(int parts, Random random) {

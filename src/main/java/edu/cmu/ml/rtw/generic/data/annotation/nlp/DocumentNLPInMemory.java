@@ -50,15 +50,15 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		AnnotationTypeNLP.COREF
 	};
 	
-	private String languageAnnotatorName;
-	private String originalTextAnnotatorName;
-	private String tokenAnnotatorName;
-	private String posAnnotatorName;
-	private String dependencyParseAnnotatorName;
-	private String constituencyParseAnnotatorName;
-	private String nerAnnotatorName;
-	private String corefAnnotatorName;
-	private Map<AnnotationTypeNLP<?>, String> otherAnnotatorNames;
+	protected String languageAnnotatorName;
+	protected String originalTextAnnotatorName;
+	protected String tokenAnnotatorName;
+	protected String posAnnotatorName;
+	protected String dependencyParseAnnotatorName;
+	protected String constituencyParseAnnotatorName;
+	protected String nerAnnotatorName;
+	protected String corefAnnotatorName;
+	protected Map<AnnotationTypeNLP<?>, String> otherAnnotatorNames;
 	
 	protected Double languageConf;
 	protected Double originalTextConf;
@@ -76,10 +76,10 @@ public class DocumentNLPInMemory extends DocumentNLP {
 	protected Map<Integer, List<Triple<TokenSpan, String, Double>>> ner;
 	protected Map<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>> coref;
 	
-	private Map<AnnotationTypeNLP<?>, Pair<?, Double>> otherDocumentAnnotations;
-	private Map<AnnotationTypeNLP<?>, Map<Integer, ?>> otherSentenceAnnotations;
-	private Map<AnnotationTypeNLP<?>, Map<Integer, List<Triple<TokenSpan, ?, Double>>>> otherTokenSpanAnnotations;
-	private Map<AnnotationTypeNLP<?>, Pair<?, Double>[][]> otherTokenAnnotations;
+	protected Map<AnnotationTypeNLP<?>, Pair<?, Double>> otherDocumentAnnotations;
+	protected Map<AnnotationTypeNLP<?>, Map<Integer, ?>> otherSentenceAnnotations;
+	protected Map<AnnotationTypeNLP<?>, Map<Integer, List<Triple<TokenSpan, ?, Double>>>> otherTokenSpanAnnotations;
+	protected Map<AnnotationTypeNLP<?>, Pair<?, Double>[][]> otherTokenAnnotations;
 	
 	public DocumentNLPInMemory(DataTools dataTools) {
 		super(dataTools);
@@ -595,14 +595,26 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					JSONArray annotationJson = json.getJSONArray(annotationType.getType());
 					for (int i = 0; i < annotationJson.length(); i++) {
 						JSONObject sentenceAnnotationJson = annotationJson.getJSONObject(i);  
-						JSONArray annotationSpansJson = sentenceAnnotationJson.getJSONArray(annotationType.getType() + "Spans");
-						int sentenceIndex = sentenceAnnotationJson.getInt("sentence");
-						List<Triple<TokenSpan, ?, Double>> annotationSpans = new ArrayList<Triple<TokenSpan, ?, Double>>();
-						for (int j = 0; j < annotationSpansJson.length(); j++)
-							annotationSpans.add(new Triple<TokenSpan, Object, Double>(TokenSpan.fromJSON(annotationSpansJson.getJSONObject(j).getJSONObject("tokenSpan"), this, sentenceIndex),
-																	annotationType.deserialize(this, sentenceIndex, annotationSpansJson.getJSONObject(j).get("type")), null));
-						
-						tokenSpanAnnotations.put(sentenceIndex, annotationSpans);
+						String spansStr = annotationType.getType() + "Spans";
+						if (!sentenceAnnotationJson.has("sentence") || !sentenceAnnotationJson.has(spansStr)) {
+							// This case is here for backward compatability for annotations that aren't
+							// stored by sentence
+							JSONObject pairJson = annotationJson.getJSONObject(i);
+							TokenSpan tokenSpan = TokenSpan.fromJSON(pairJson.getJSONObject("tokenSpan"), this);
+							Object annotationObj =  annotationType.deserialize(this, tokenSpan.getSentenceIndex(), pairJson.getJSONObject("annotation"));
+							if (!tokenSpanAnnotations.containsKey(tokenSpan.getSentenceIndex()))
+								tokenSpanAnnotations.put(tokenSpan.getSentenceIndex(), new ArrayList<Triple<TokenSpan, ?, Double>>());
+							tokenSpanAnnotations.get(tokenSpan.getSentenceIndex()).add(new Triple<TokenSpan, Object, Double>(tokenSpan, annotationObj, null));
+						} else {
+							JSONArray annotationSpansJson = sentenceAnnotationJson.getJSONArray(spansStr);
+							int sentenceIndex = sentenceAnnotationJson.getInt("sentence");
+							List<Triple<TokenSpan, ?, Double>> annotationSpans = new ArrayList<Triple<TokenSpan, ?, Double>>();
+							for (int j = 0; j < annotationSpansJson.length(); j++)
+								annotationSpans.add(new Triple<TokenSpan, Object, Double>(TokenSpan.fromJSON(annotationSpansJson.getJSONObject(j).getJSONObject("tokenSpan"), this, sentenceIndex),
+																		annotationType.deserialize(this, sentenceIndex, annotationSpansJson.getJSONObject(j).get("type")), null));
+							
+							tokenSpanAnnotations.put(sentenceIndex, annotationSpans);
+						}
 					}	
 					
 					this.otherTokenSpanAnnotations.put(annotationType, tokenSpanAnnotations);

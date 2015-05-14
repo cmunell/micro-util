@@ -44,7 +44,7 @@ public class DependencyParseTest {
 				stanfordPipe);
 		
 		DependencyParse parse = document.getDependencyParse(0);
-		System.out.println(parse);
+		//System.out.println(parse);
 	
 		List<Dependency> deps = parse.getGovernedDependencies(4-1);
 		Assert.assertEquals("mark", deps.get(0).getType());
