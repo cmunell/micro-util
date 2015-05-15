@@ -10,7 +10,7 @@ import edu.cmu.ml.rtw.generic.model.annotator.Pipeline;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
-public class PipelineNLP extends Pipeline {
+public abstract class PipelineNLP extends Pipeline {
 	protected DocumentNLP document;
 	
 	public PipelineNLP() {
@@ -45,13 +45,8 @@ public class PipelineNLP extends Pipeline {
 		AnnotatorToken<T> annotator = (AnnotatorToken<T>)this.annotators.get(annotationType);
 		return annotator.annotate(this.document);
 	}
-
+	
 	public PipelineNLP weld(PipelineNLP pipeline) {
-		PipelineNLP welded = new PipelineNLP();
-		welded.annotators.putAll(this.annotators);
-		welded.annotators.putAll(pipeline.annotators);
-		welded.annotationOrder.addAll(this.annotationOrder);
-		welded.annotationOrder.addAll(pipeline.annotationOrder);
-		return welded;
+		return new PipelineNLPWelded(this, pipeline);
 	}
 }
