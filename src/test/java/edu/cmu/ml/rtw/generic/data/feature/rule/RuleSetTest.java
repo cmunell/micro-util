@@ -3,7 +3,6 @@ package edu.cmu.ml.rtw.generic.data.feature.rule;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
 import org.junit.Assert;
 
 import edu.cmu.ml.rtw.generic.data.Context;

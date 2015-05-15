@@ -10,8 +10,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import edu.cmu.ml.rtw.generic.util.MathUtil;
+import java.util.Set;
+
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 /**
  * 
@@ -20,11 +21,20 @@ import edu.cmu.ml.rtw.generic.util.MathUtil;
  * @param Document type
  */
 public abstract class DocumentSet<D extends Document> implements Collection<D> {
+	protected interface DocumentLoader<D> {
+		D load(String documentFileName);
+	}
+	
 	private String name;
-	protected Map<String, D> documents;
+	
+	protected DocumentLoader<D> documentLoader;
+	protected String directoryPath;
+	
+	protected Map<String, Pair<String, D>> fileNamesAndDocuments;
 	
 	public DocumentSet(String name) {
-		this.documents = new HashMap<String, D>();
+		this.name = name;
+		this.fileNamesAndDocuments = new HashMap<String, Pair<String, D>>();
 	}
 	
 	public String getName() {
@@ -32,11 +42,24 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	}
 	
 	public D getDocumentByName(String name) {
-		return this.documents.get(name);
+		if (this.fileNamesAndDocuments.containsKey(name)) {
+			Pair<String, D> fileNameAndDocument = this.fileNamesAndDocuments.get(name);
+			if (fileNameAndDocument.getSecond() == null)
+				fileNameAndDocument.setSecond(this.documentLoader.load(fileNameAndDocument.getFirst()));
+				
+			return fileNameAndDocument.getSecond();
+		} else {
+			return null;
+		}
+	}
+	
+	public Set<String> getDocumentNames() {
+		return this.fileNamesAndDocuments.keySet();
 	}
 	 
-	protected abstract DocumentSet<D> makeInstance(String name);
+	protected abstract DocumentSet<D> makeInstance();
 	
+	/* FIXME Implement these later 
 	public List<DocumentSet<D>> makePartition(int parts, Random random) {
 		double[] distribution = new double[parts];
 		String[] names = new String[distribution.length];
@@ -57,8 +80,10 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	}
 	
 	public List<DocumentSet<D>> makePartition(double[] distribution, String[] names, Random random) {
+		
 		List<D> documentList = new ArrayList<D>();
 		documentList.addAll(this.documents.values());
+		
 		List<Integer> documentPermutation = new ArrayList<Integer>();
 		for (int i = 0; i < documentList.size(); i++)
 			documentPermutation.add(i);
@@ -82,11 +107,11 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 		}
 		
 		return partition;
-	} 
+	} */
 	
 	public boolean saveToJSONDirectory(String directoryPath) {
-		for (D document : this.documents.values()) {
-			if (!document.saveToJSONFile(new File(directoryPath, document.getName() + ".json").getAbsolutePath()))
+		for (String name : getDocumentNames()) {
+			if (!getDocumentByName(name).saveToJSONFile(new File(directoryPath, name + ".json").getAbsolutePath()))
 				return false;
 		}
 		
@@ -94,9 +119,9 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <D extends Document, S extends DocumentSet<D>> S loadFromJSONDirectory(String name, String directoryPath, D genericDocument, S genericDataSet) {
+	public static <D extends Document, S extends DocumentSet<D>> S loadFromJSONDirectory(String directoryPath, D genericDocument, S genericDataSet) {
 		File directory = new File(directoryPath);
-		DocumentSet<D> documentSet = genericDataSet.makeInstance(name);
+		DocumentSet<D> documentSet = genericDataSet.makeInstance();
 		try {
 			if (!directory.exists() || !directory.isDirectory())
 				throw new IllegalArgumentException("Invalid directory: " + directory.getAbsolutePath());
@@ -121,8 +146,16 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 			    }
 			});
 			
+			documentSet.directoryPath = directoryPath;
+			documentSet.documentLoader = new DocumentLoader<D>() {
+				@Override
+				public D load(String documentFileName) {
+					return (D)genericDocument.makeInstanceFromJSONFile((new File(directoryPath, documentFileName)).getAbsolutePath());
+				}
+			};
+			
 			for (File file : tempFiles) {
-				documentSet.add((D)genericDocument.makeInstanceFromJSONFile(file.getAbsolutePath()));
+				documentSet.fileNamesAndDocuments.put(file.getName(), new Pair<String, D>(file.getName(), null));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -134,7 +167,7 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	
 	@Override
 	public boolean add(D d) {
-		this.documents.put(d.getName(), d);
+		this.fileNamesAndDocuments.put(d.getName(), new Pair<String, D>(null, d));
 		return true;
 	}
 
@@ -148,13 +181,13 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 
 	@Override
 	public void clear() {
-		this.documents.clear();
+		this.fileNamesAndDocuments.clear();
 	}
 
 	@Override
 	public boolean contains(Object o) {
 		Document d = (Document)o;
-		return this.documents.containsKey(d.getName());
+		return this.fileNamesAndDocuments.containsKey(d.getName());
 	}
 
 	@Override
@@ -169,21 +202,21 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 
 	@Override
 	public boolean isEmpty() {
-		return this.documents.isEmpty();
+		return this.fileNamesAndDocuments.isEmpty();
 	}
 
 	@Override
 	public Iterator<D> iterator() {
-		return this.documents.values().iterator();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean remove(Object o) {
 		Document d = (Document)o;
-		if (!this.documents.containsKey(d.getName()))
+		if (!this.fileNamesAndDocuments.containsKey(d.getName()))
 			return false;
 		
-		this.documents.remove(d.getName());
+		this.fileNamesAndDocuments.remove(d.getName());
 		
 		return true;
 	}
@@ -198,33 +231,33 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		Map<String, D> retainedDocuments = new HashMap<String, D>();
+		Map<String, Pair<String, D>> retainedDocuments = new HashMap<String, Pair<String, D>>();
 		
 		for (Object o : c) {
 			Document d = (Document)o;
-			if (this.documents.containsKey(d.getName()))
-				retainedDocuments.put(d.getName(), this.documents.get(d.getName()));
+			if (this.fileNamesAndDocuments.containsKey(d.getName()))
+				retainedDocuments.put(d.getName(), this.fileNamesAndDocuments.get(d.getName()));
 		}
 		
-		boolean changed = retainedDocuments.size() != this.documents.size();
-		this.documents = retainedDocuments;
+		boolean changed = retainedDocuments.size() != this.fileNamesAndDocuments.size();
+		this.fileNamesAndDocuments = retainedDocuments;
 		
 		return changed;
 	}
 
 	@Override
 	public int size() {
-		return this.documents.size();
+		return this.fileNamesAndDocuments.size();
 	}
 
 	@Override
 	public Object[] toArray() {
-		return this.documents.values().toArray();
+		return this.fileNamesAndDocuments.values().toArray();
 	}
 
 	@Override
 	public <T> T[] toArray(T[] a) {
-		return this.documents.values().toArray(a);
+		return this.fileNamesAndDocuments.values().toArray(a);
 	}
 
 }

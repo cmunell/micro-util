@@ -13,20 +13,6 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
-/**
- * 
- * Document represents a JSON-serializable text document with 
- * various NLP annotations (e.g. PoS tags, parses, etc).  The methods
- * for getting the NLP annotations are kept abstract so 
- * that they can be implemented in ways that allow for
- * caching in cases when all of the documents don't fit
- * in memory.  In-memory implementations of these methods
- * are given by the edu.cmu.ml.rtw.generic.data.annotation.DocumentInMemory 
- * class.
- * 
- * @author Bill McDowell
- *
- */
 public abstract class Document implements JSONSerializable {
 	protected DataTools dataTools;
 	protected String name;

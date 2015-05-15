@@ -18,12 +18,13 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	}
 
 	@Override 
-	public DocumentSet<D> makeInstance(String name) {
-		return new DocumentSetNLP<D>(name);
+	public DocumentSet<D> makeInstance() {
+		return new DocumentSetNLP<D>(getName());
 	}
 	
 	public boolean saveToMicroDirectory(String directoryPath, Collection<AnnotationTypeNLP<?>> annotationTypes) {
-		for (D document : this.documents.values()) {
+		for (String name : getDocumentNames()) {
+			D document = getDocumentByName(name);
 			DocumentAnnotation documentAnnotation = document.toMicroAnnotation(annotationTypes);
 			documentAnnotation.writeToFile(new File(directoryPath, document.getName()).getAbsolutePath());
 		}
@@ -35,7 +36,8 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		try {
 			BufferedWriter w = new BufferedWriter(new FileWriter(filePath));
 		
-			for (D document : this.documents.values()) {
+			for (String name : getDocumentNames()) {
+				D document = getDocumentByName(name);
 				DocumentAnnotation documentAnnotation = document.toMicroAnnotation(annotationTypes);
 				List<Annotation> annotations = documentAnnotation.getAllAnnotations();
 				for (Annotation annotation : annotations) {

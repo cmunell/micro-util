@@ -28,6 +28,13 @@ public class TokenSpan {
 	private int startTokenIndex; // 0-based token index (inclusive)
 	private int endTokenIndex; // 0-based token index (exclusive)
 	
+	/**
+	 * 
+	 * @param document
+	 * @param sentenceIndex
+	 * @param startTokenIndex (inclusive)
+	 * @param endTokenIndex (exclusive)
+	 */
 	public TokenSpan(DocumentNLP document, int sentenceIndex, int startTokenIndex, int endTokenIndex) {
 		this.document = document;
 		this.sentenceIndex = sentenceIndex;
@@ -76,10 +83,17 @@ public class TokenSpan {
 		return this.sentenceIndex;
 	}
 	
+	/**
+	 * @return first token index in the token span (inclusive)
+	 */
 	public int getStartTokenIndex() {
 		return this.startTokenIndex;
 	}
 	
+	/**
+	 * 
+	 * @return last token index of the token span (exclusive)
+	 */
 	public int getEndTokenIndex() {
 		return this.endTokenIndex;
 	}
