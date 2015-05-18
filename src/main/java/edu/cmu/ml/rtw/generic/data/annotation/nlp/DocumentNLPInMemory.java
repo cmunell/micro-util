@@ -885,7 +885,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			return new Annotation(spanStart, 
 								  spanEnd,
 								  slot,
-								  annotator,
+								  annotator != null ? annotator : "",
 								  this.name,
 								  value.toString(),
 								  confidence,
@@ -895,7 +895,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			return new Annotation(spanStart, 
 					  spanEnd,
 					  slot,
-					  annotator,
+					  annotator != null ? annotator : "",
 					  this.name,
 					  (JSONObject)value,
 					  confidence,
@@ -938,7 +938,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 				annotations.add(makeMicroAnnotation(0, 
 						lastCharIndex, 
 						entry.getKey().getType(), 
-						this.otherAnnotatorNames.get(entry.getKey()), 
+						(this.otherAnnotatorNames != null) ? this.otherAnnotatorNames.get(entry.getKey()) : "", 
 						annotationTime,
 						entry.getKey().serialize(entry.getValue().getFirst()),
 						entry.getValue().getSecond()));
@@ -1045,7 +1045,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					annotations.add(makeMicroAnnotation(this.tokens[sentenceEntry.getKey()][0].getCharSpanStart(), 
 							this.tokens[sentenceEntry.getKey()][this.tokens[sentenceEntry.getKey()].length - 1].getCharSpanEnd(), 
 							entry.getKey().getType(), 
-							this.otherAnnotatorNames.get(entry.getKey()), 
+							(this.otherAnnotatorNames != null) ? this.otherAnnotatorNames.get(entry.getKey()) : "", 
 							annotationTime,
 							entry.getKey().serialize(pair.getFirst()),
 							(Double)pair.getSecond()));
@@ -1063,7 +1063,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						annotations.add(makeMicroAnnotation(this.tokens[sentenceEntry.getKey()][span.getFirst().getStartTokenIndex()].getCharSpanStart(), 
 								this.tokens[sentenceEntry.getKey()][span.getFirst().getEndTokenIndex()-1].getCharSpanEnd(), 
 								entry.getKey().getType(), 
-								this.otherAnnotatorNames.get(entry.getKey()), 
+								(this.otherAnnotatorNames != null) ? this.otherAnnotatorNames.get(entry.getKey()) : "", 
 								annotationTime,
 								entry.getKey().serialize(span.getSecond()),
 								span.getThird()));	
@@ -1083,7 +1083,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						annotations.add(makeMicroAnnotation(this.tokens[i][j].getCharSpanStart(), 
 								this.tokens[i][j].getCharSpanEnd(), 
 								entry.getKey().getType(), 
-								this.otherAnnotatorNames.get(entry.getKey()), 
+								(this.otherAnnotatorNames != null) ? this.otherAnnotatorNames.get(entry.getKey()) : "", 
 								annotationTime,
 								entry.getKey().serialize(anno[i][j].getFirst()),
 								anno[i][j].getSecond()));
@@ -1219,7 +1219,10 @@ public class DocumentNLPInMemory extends DocumentNLP {
 
 	@Override
 	public boolean hasAnnotationType(AnnotationType<?> annotationType) {
-		return ((this.otherAnnotatorNames != null) && this.otherAnnotatorNames.containsKey(annotationType))
+		return ((this.otherDocumentAnnotations != null) && this.otherDocumentAnnotations.containsKey(annotationType))
+				|| ((this.otherSentenceAnnotations != null) && this.otherSentenceAnnotations.containsKey(annotationType))
+				|| ((this.otherTokenSpanAnnotations != null) && this.otherTokenSpanAnnotations.containsKey(annotationType))
+				|| ((this.otherTokenAnnotations != null) && this.otherTokenAnnotations.containsKey(annotationType))
 				|| (annotationType.equals(AnnotationTypeNLP.ORIGINAL_TEXT) && this.originalText != null)
 				|| (annotationType.equals(AnnotationTypeNLP.LANGUAGE) && this.language != null)
 				|| (annotationType.equals(AnnotationTypeNLP.TOKEN) && this.tokens != null)
@@ -1235,8 +1238,14 @@ public class DocumentNLPInMemory extends DocumentNLP {
 	public Collection<AnnotationType<?>> getAnnotationTypes() {
 		List<AnnotationType<?>> annotationTypes = new ArrayList<AnnotationType<?>>();
 		
-		if (this.otherAnnotatorNames != null)
-			annotationTypes.addAll(this.otherAnnotatorNames.keySet());
+		if (this.otherDocumentAnnotations != null)
+			annotationTypes.addAll(this.otherDocumentAnnotations.keySet());
+		if (this.otherSentenceAnnotations != null)
+			annotationTypes.addAll(this.otherSentenceAnnotations.keySet());
+		if (this.otherTokenSpanAnnotations != null)
+			annotationTypes.addAll(this.otherTokenSpanAnnotations.keySet());
+		if (this.otherTokenAnnotations != null)
+			annotationTypes.addAll(this.otherTokenAnnotations.keySet());
 		
 		if (this.tokens != null) {
 			annotationTypes.add(AnnotationTypeNLP.TOKEN);
