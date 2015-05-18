@@ -60,6 +60,8 @@ public abstract class DocumentNLP extends Document {
 			while ((line = r.readLine()) != null) {
 				lines.append(line).append("\n");
 			}
+			
+			r.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
