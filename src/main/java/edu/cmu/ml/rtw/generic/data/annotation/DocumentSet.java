@@ -44,9 +44,12 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	public D getDocumentByName(String name) {
 		if (this.fileNamesAndDocuments.containsKey(name)) {
 			Pair<String, D> fileNameAndDocument = this.fileNamesAndDocuments.get(name);
-			if (fileNameAndDocument.getSecond() == null)
-				fileNameAndDocument.setSecond(this.documentLoader.load(fileNameAndDocument.getFirst()));
-				
+			
+			synchronized (fileNameAndDocument) {
+				if (fileNameAndDocument.getSecond() == null)
+					fileNameAndDocument.setSecond(this.documentLoader.load(fileNameAndDocument.getFirst()));
+			}
+			
 			return fileNameAndDocument.getSecond();
 		} else {
 			return null;
