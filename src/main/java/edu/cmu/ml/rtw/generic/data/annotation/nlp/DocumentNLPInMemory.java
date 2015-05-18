@@ -1286,6 +1286,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			return anno;
 		
 		Map<Integer, ?> sentenceAnnotation = this.otherSentenceAnnotations.get(annotationType);	
+		if (!sentenceAnnotation.containsKey(sentenceIndex))
+			return null;
+	
 		return annotationType.getAnnotationClass().cast(((Pair)sentenceAnnotation.get(sentenceIndex)).getFirst());
 	}
 	
@@ -1294,9 +1297,11 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		List<Pair<TokenSpan, T>> anno = super.getTokenSpanAnnotations(annotationType, tokenSpan, relationsToAnnotations);
 		if (anno != null)
 			return anno;
+		if (!this.otherTokenAnnotations.containsKey(annotationType))
+			return null;
 		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
 		if (tokenSpanAnnotation == null)
-			return null;
+			return new ArrayList<Pair<TokenSpan, T>>();
 		anno = new ArrayList<Pair<TokenSpan, T>>();
 		for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
 			anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
@@ -1328,6 +1333,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			return annoConf;
 		
 		Map<Integer, ?> sentenceAnnotation = this.otherSentenceAnnotations.get(annotationType);	
+		if (!sentenceAnnotation.containsKey(sentenceIndex))
+			return null;
+		
 		return (Double)(((Pair)sentenceAnnotation.get(sentenceIndex)).getSecond());
 	}
 	
@@ -1338,7 +1346,8 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			return anno;
 		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
 		if (tokenSpanAnnotation == null)
-			return null;
+			return new ArrayList<Triple<TokenSpan, T, Double>>(); 
+		
 		anno = new ArrayList<Triple<TokenSpan, T, Double>>();
 		for (Triple<TokenSpan, ?, Double> span : tokenSpanAnnotation)
 			anno.add(new Triple<TokenSpan, T, Double>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond()), span.getThird()));

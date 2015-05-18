@@ -205,7 +205,10 @@ public abstract class DocumentNLP extends Document {
 		for (int i = 0; i < getSentenceCount(); i++) {
 			if (getSentenceTokenCount(i) == 0)
 				continue;
-			annotations.addAll(getTokenSpanAnnotations(annotationType, i));
+			
+			List<Pair<TokenSpan, T>> sentenceAnnotations = getTokenSpanAnnotations(annotationType, i);
+			if (sentenceAnnotations != null)
+				annotations.addAll(sentenceAnnotations);
 		}
 		return annotations;
 	}
@@ -219,7 +222,9 @@ public abstract class DocumentNLP extends Document {
 		for (int i = 0; i < getSentenceCount(); i++) {
 			if (getSentenceTokenCount(i) == 0)
 				continue;
-			annotations.addAll(getTokenSpanAnnotationConfidences(annotationType, i));
+			List<Triple<TokenSpan, T, Double>> sentenceAnnotations = getTokenSpanAnnotationConfidences(annotationType, i);
+			if (sentenceAnnotations != null)
+				annotations.addAll(sentenceAnnotations);
 		}
 		return annotations;
 	}
