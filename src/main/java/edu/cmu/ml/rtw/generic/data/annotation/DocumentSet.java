@@ -135,7 +135,7 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 			
 			List<File> tempFiles = new ArrayList<File>();
 			for (File file : files) {
-				if (!file.isDirectory() && file.getName().endsWith(".json")) {
+				if (!file.isDirectory()) {
 					tempFiles.add(file);
 				}
 			}
