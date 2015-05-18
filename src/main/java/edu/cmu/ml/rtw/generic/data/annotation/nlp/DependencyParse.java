@@ -325,7 +325,7 @@ public class DependencyParse implements StringSerializable {
 	}
 	
 	public String toString() {
-		if (this.root == null)
+		if (this.root == null || this.tokenNodes == null)
 			return "";
 		
 		StringBuilder str = new StringBuilder();
