@@ -54,7 +54,7 @@ public class DocumentNLPTest {
 		for (int i = 0; i < annotations.size(); i++) {
 			JSONObject jsonCopy = annotationsCopy.get(i).toJson();
 			JSONObject jsonCopyCopy = annotationsCopyCopy.get(i).toJson();
-			//System.out.println(jsonCopyCopy);
+			System.out.println(jsonCopyCopy);
 			
 			try {
 				jsonCopy.put("annotationTime", "");
