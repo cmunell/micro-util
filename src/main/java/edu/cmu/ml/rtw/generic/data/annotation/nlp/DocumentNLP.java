@@ -327,4 +327,6 @@ public abstract class DocumentNLP extends Document {
 	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation);
 	public abstract Document makeInstanceFromMicroAnnotation(DocumentAnnotation documentAnnotation, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
 	public abstract DocumentAnnotation toMicroAnnotation(Collection<AnnotationTypeNLP<?>> annotationTypes);
+
+	public abstract Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
 }

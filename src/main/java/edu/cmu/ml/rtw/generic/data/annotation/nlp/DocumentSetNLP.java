@@ -11,6 +11,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.Annotation;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
+import edu.cmu.ml.rtw.generic.util.FileUtil;
 
 public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	public DocumentSetNLP(String name) {
@@ -86,6 +87,33 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>("");
 		for (DocumentAnnotation documentAnnotation : documentAnnotations) {
 			documentSet.add((D)genericDocument.makeInstanceFromMicroAnnotation(documentAnnotation, pipeline, skipAnnotators));
+		}
+	
+		return documentSet;
+	}
+	
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromTextPathThroughPipeline(String name, Language language, String path, D genericDocument) {
+		return loadFromTextPathThroughPipeline(name, language, path, genericDocument, null, null);
+	}
+	
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromTextPathThroughPipeline(String name, Language language, String path, D genericDocument, PipelineNLP pipeline) {
+		return loadFromTextPathThroughPipeline(name, language, path, genericDocument, pipeline, null);
+	}
+
+	
+	@SuppressWarnings("unchecked")
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromTextPathThroughPipeline(String name, Language language, String path, D genericDocument, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators) {
+		File filePath = new File(path);
+		File[] files = null;
+		if (filePath.isDirectory()) {
+			files = filePath.listFiles();
+		} else {
+			files = new File[] { filePath };
+		}
+		
+		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>(name);
+		for (File file : files) {
+			documentSet.add((D)genericDocument.makeInstanceFromText(file.getName(), FileUtil.readFile(file), language, pipeline, skipAnnotators));
 		}
 	
 		return documentSet;

@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
+import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
@@ -1446,5 +1447,11 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			|| (this.otherTokenSpanAnnotations != null && this.otherTokenSpanAnnotations.containsKey(annotationType) && this.otherTokenSpanAnnotations.get(annotationType).size() > 0 && this.otherTokenSpanAnnotations.get(annotationType).values().iterator().next().get(0).getThird() != null)
 			|| (this.otherTokenAnnotations != null && this.otherTokenAnnotations.containsKey(annotationType) && this.otherTokenAnnotations.get(annotationType).length > 0 && this.otherTokenAnnotations.get(annotationType)[0][0].getSecond() != null);
 
+	}
+
+	@Override
+	public Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline,
+			Collection<AnnotationTypeNLP<?>> skipAnnotators) {
+		return new DocumentNLPInMemory(this.dataTools, name, text, language, pipeline, skipAnnotators);
 	}
 }
