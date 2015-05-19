@@ -27,6 +27,7 @@ import edu.cmu.ml.rtw.generic.util.Triple;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
@@ -105,6 +106,8 @@ public class PipelineNLPStanford extends PipelineNLP {
 			throw new IllegalArgumentException("Can't disable tokenization");
 		} else if (disableFrom.equals(AnnotationTypeNLP.POS)) {
 			propsStr = "tokenize, ssplit";
+		} else if (disableFrom.equals(AnnotationTypeNLP.LEMMA)) {
+			propsStr = "tokenize, ssplit, pos";
 		} else if (disableFrom.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE)) {
 			propsStr = "tokenize, ssplit, pos, lemma";
 		} else if (disableFrom.equals(AnnotationTypeNLP.DEPENDENCY_PARSE)) {
@@ -172,7 +175,32 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return posTags;
 			}
 		});
+		
+		if (disableFrom != null && disableFrom.equals(AnnotationTypeNLP.LEMMA))
+			return true;
 
+		addAnnotator(AnnotationTypeNLP.LEMMA,  new AnnotatorToken<String>() {
+			public String getName() { return "stanford"; }
+			public AnnotationType<String> produces() { return AnnotationTypeNLP.LEMMA; };
+			public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
+			public boolean measuresConfidence() { return false; }
+			@SuppressWarnings("unchecked")
+			public Pair<String, Double>[][] annotate(DocumentNLP document) {
+				List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
+				Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[sentences.size()][];
+				for (int i = 0; i < sentences.size(); i++) {
+					List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
+					lemmas[i] = (Pair<String, Double>[])new Pair[sentenceTokens.size()];
+					for (int j = 0; j < sentenceTokens.size(); j++) {
+						String lemma = sentenceTokens.get(j).get(LemmaAnnotation.class);  
+						lemmas[i][j] = new Pair<String, Double>(lemma, null);
+					}
+				}
+				
+				return lemmas;
+			}
+		});
+		
 		if (disableFrom != null && disableFrom.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE))
 			return true;
 		

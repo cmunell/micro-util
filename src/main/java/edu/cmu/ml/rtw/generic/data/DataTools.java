@@ -160,6 +160,7 @@ public class DataTools {
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.TOKEN);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.SENTENCE);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.POS);
+		this.addAnnotationTypeNLP(AnnotationTypeNLP.LEMMA);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.NER);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.COREF);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.DEPENDENCY_PARSE);

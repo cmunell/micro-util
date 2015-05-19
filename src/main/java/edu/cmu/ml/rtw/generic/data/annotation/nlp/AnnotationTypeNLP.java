@@ -19,6 +19,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public static final AnnotationTypeNLP<TokenSpanCluster> COREF = new AnnotationTypeNLP<TokenSpanCluster>("coref", TokenSpanCluster.class, Target.TOKEN_SPAN);
 	public static final AnnotationTypeNLP<PoSTag> POS = new AnnotationTypeNLP<PoSTag>("pos", PoSTag.class, Target.TOKEN);
 	public static final AnnotationTypeNLP<Token> TOKEN = new AnnotationTypeNLP<Token>("token", Token.class, Target.TOKEN);
+	public static final AnnotationTypeNLP<String> LEMMA = new AnnotationTypeNLP<String>("lemma", String.class, Target.TOKEN);
 	
 	protected static abstract class Serializer<T> {
 		protected T makeInstance(Class<T> annotationClass, Document document, int sentenceIndex) {
