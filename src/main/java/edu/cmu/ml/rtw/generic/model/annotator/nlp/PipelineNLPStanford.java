@@ -47,29 +47,16 @@ import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.IntPair;
 
 public class PipelineNLPStanford extends PipelineNLP {
-	private StanfordCoreNLP tokenPipeline;
 	private StanfordCoreNLP nlpPipeline;
-	private int minSentenceAnnotationLength;
-	private int maxSentenceAnnotationLength;
 	private Annotation annotatedText;
 	
 	public PipelineNLPStanford() {
-		this(0, Integer.MAX_VALUE);
-	}
-	
-	
-	public PipelineNLPStanford(int minSentenceAnnotationLength, int maxSentenceAnnotationLength) {
 		super();
-		this.minSentenceAnnotationLength = minSentenceAnnotationLength;
-		this.maxSentenceAnnotationLength = maxSentenceAnnotationLength;
 	}
 	
 	public PipelineNLPStanford(PipelineNLPStanford pipeline) {
 		this.document = pipeline.document;
-		this.tokenPipeline = pipeline.tokenPipeline;
 		this.nlpPipeline = pipeline.nlpPipeline;
-		this.minSentenceAnnotationLength = pipeline.minSentenceAnnotationLength;
-		this.maxSentenceAnnotationLength = pipeline.maxSentenceAnnotationLength;
 		this.annotatedText = pipeline.annotatedText;
 		this.annotators = pipeline.annotators;
 		this.annotationOrder = pipeline.annotationOrder;
@@ -84,7 +71,6 @@ public class PipelineNLPStanford extends PipelineNLP {
 	}
 	
 	public boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer) {
-		Properties tokenProps = new Properties();
 		Properties props = new Properties();
 		
 		if (tokenizer != null) {
@@ -92,14 +78,9 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return false;
 			
 			String tokenizerClass = tokenizer.getClass().getName();
-			tokenProps.put("customAnnotatorClass.tokenize", tokenizerClass);
-		    tokenProps.put("customAnnotatorClass.ssplit", tokenizerClass);
 		    props.put("customAnnotatorClass.tokenize", tokenizerClass);
 		    props.put("customAnnotatorClass.ssplit", tokenizerClass);
 		}
-		
-		tokenProps.put("annotators", "tokenize, ssplit");
-		this.tokenPipeline = new StanfordCoreNLP(tokenProps);
 		
 		String propsStr = "";
 		if (disableFrom == null) {
@@ -443,52 +424,13 @@ public class PipelineNLPStanford extends PipelineNLP {
 		if (!super.setDocument(document))
 			return false;
 		
-		if (this.tokenPipeline == null) {
+		if (this.nlpPipeline == null)
 			if (!initialize())
 				return false;
-		}
 		
-		this.annotatedText = new Annotation(filterText(document.getOriginalText()));
+		this.annotatedText = new Annotation(document.getOriginalText());
 		this.nlpPipeline.annotate(this.annotatedText);
 		
 		return true;
 	}
-	
-	@SuppressWarnings("unchecked")
-	private String filterText(String text) {
-		if (this.minSentenceAnnotationLength == 0 && this.maxSentenceAnnotationLength == Integer.MAX_VALUE)
-			return text;
-		
-		Annotation tempAnnotatedText = this.annotatedText;
-		this.annotatedText = new Annotation(text);
-		this.tokenPipeline.annotate(this.annotatedText);
-		Pair<Token, Double>[][] tokens = ((AnnotatorToken<Token>)this.annotators.get(AnnotationTypeNLP.TOKEN)).annotate(this.document);
-		this.annotatedText = tempAnnotatedText;
-		
-		StringBuilder cleanTextBuilder = new StringBuilder();
-		for (int i = 0; i < tokens.length; i++) {
-			if (tokens[i].length < this.minSentenceAnnotationLength || tokens[i].length > this.maxSentenceAnnotationLength)
-				continue;
-			
-			int endSymbolsStartToken = tokens[i].length + 1;
-			for (int j = tokens[i].length - 1; j >= 0; j--) {
-				if (tokens[i][j].getFirst().getStr().matches("[^A-Za-z0-9]+")) {
-					endSymbolsStartToken = j;
-				} else {
-					break;
-				}
-			}
-			
-			for (int j = 0; j < tokens[i].length; j++) {
-				cleanTextBuilder.append(tokens[i][j]);
-				if (j < endSymbolsStartToken - 1)
-					cleanTextBuilder.append(" ");
-			}
-			
-			cleanTextBuilder.append(" ");
-		}
-		
-		return cleanTextBuilder.toString().trim();
-	}
-	
 }
