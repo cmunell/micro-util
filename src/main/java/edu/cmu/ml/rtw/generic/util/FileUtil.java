@@ -55,13 +55,16 @@ public class FileUtil {
 	}
 	
 	public static BufferedReader getFileReader(String path) {
-		InputStream resource = FileUtil.class.getClassLoader().getResourceAsStream(path);
 		try { 
-			if (resource != null)
-				return new BufferedReader(new InputStreamReader(resource));
 			File file = new File(path);
 			if (file.exists())
 				return new BufferedReader(new FileReader(file));
+			
+			InputStream resource = FileUtil.class.getClassLoader().getResourceAsStream(path);
+			
+			if (resource != null)
+				return new BufferedReader(new InputStreamReader(resource));
+			
 			
 			System.err.println("WARNING: FileUtil failed to read file at " + path); // Do something better later
 		} catch (Exception e) { System.err.println("WARNING: FileUtil failed to read file at " + path); e.printStackTrace(); }
