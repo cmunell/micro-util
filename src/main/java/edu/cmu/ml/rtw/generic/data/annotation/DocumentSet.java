@@ -42,15 +42,27 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	}
 	
 	public D getDocumentByName(String name) {
+		return getDocumentByName(name, true);
+	}
+	
+	public D getDocumentByName(String name, boolean keepInMemory) {
 		if (this.fileNamesAndDocuments.containsKey(name)) {
 			Pair<String, D> fileNameAndDocument = this.fileNamesAndDocuments.get(name);
 			
-			synchronized (fileNameAndDocument) {
+			if (keepInMemory) {
+				synchronized (fileNameAndDocument) {
+					if (fileNameAndDocument.getSecond() == null)
+						fileNameAndDocument.setSecond(this.documentLoader.load(fileNameAndDocument.getFirst()));
+				}
+				
+				return fileNameAndDocument.getSecond();
+			} else {
 				if (fileNameAndDocument.getSecond() == null)
-					fileNameAndDocument.setSecond(this.documentLoader.load(fileNameAndDocument.getFirst()));
+					return this.documentLoader.load(fileNameAndDocument.getFirst());
+				else
+					return fileNameAndDocument.getSecond();
 			}
 			
-			return fileNameAndDocument.getSecond();
 		} else {
 			return null;
 		}
