@@ -125,6 +125,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		
 		this.originalText = text;
 		
+		if (pipeline == null)
+			return;
+		
 		runThroughPipeline(pipeline, skipAnnotators);
 		
 		this.originalText = null;
@@ -1055,10 +1058,13 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		}
 		
 		if (this.otherTokenSpanAnnotations != null) {
+			System.out.println("Skipped at null"); // FIXME
 			for (Entry<AnnotationTypeNLP<?>, Map<Integer, List<Triple<TokenSpan, ?, Double>>>> entry : this.otherTokenSpanAnnotations.entrySet()) {
-				if (!annotationTypes.contains(entry.getKey()))
+				if (!annotationTypes.contains(entry.getKey())) {
+					System.out.println("Skipped at missing annotation type..as.df.asdf"); // FIXME
 					continue;
-				
+				}
+				System.out.println("Goot to  sentnec"); // FIXME
 				for (Entry<Integer, List<Triple<TokenSpan, ?, Double>>> sentenceEntry : entry.getValue().entrySet()) {
 					for (Triple<TokenSpan, ?, Double> span : sentenceEntry.getValue()) {
 						annotations.add(makeMicroAnnotation(this.tokens[sentenceEntry.getKey()][span.getFirst().getStartTokenIndex()].getCharSpanStart(), 
