@@ -347,7 +347,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					for (Entry<AnnotationTypeNLP<?>, Pair<?, Double>[][]> entry : this.otherTokenAnnotations.entrySet()) {
 						JSONArray jsonObjs = new JSONArray();
 						
-						for (int j = 0; j < entry.getValue().length; j++)
+						for (int j = 0; j < entry.getValue()[i].length; j++)
 							jsonObjs.put(entry.getKey().serialize(entry.getValue()[i][j].getFirst()));
 						
 						sentenceJson.put(entry.getKey().getType() + "s", jsonObjs);
