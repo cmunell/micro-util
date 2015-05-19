@@ -359,8 +359,8 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 				|| !internalAssignments.contains("bias"))
 			return true;
 		
-		int weightVectorSize = Integer.valueOf(internalAssignments.get("featureVocabularySize").getValue().toString());
-		double bias = Double.valueOf(internalAssignments.get("bias").getValue().toString());
+		int weightVectorSize = Integer.valueOf(((Obj.Value)internalAssignments.get("featureVocabularySize").getValue()).getStr());
+		double bias = Double.valueOf(((Obj.Value)internalAssignments.get("bias").getValue()).getStr());
 		
 		TreeMap<Integer, Double> nonZeroWeights = new TreeMap<Integer, Double>();
 		

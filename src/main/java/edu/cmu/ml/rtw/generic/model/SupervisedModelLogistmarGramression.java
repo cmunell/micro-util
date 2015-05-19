@@ -754,7 +754,7 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 		Map<Integer, Double> u_pMap = new HashMap<Integer, Double>(); 
 		Map<Integer, Double> u_nMap = new HashMap<Integer, Double>();
 		
-		this.sizeF_0 = Integer.valueOf(internalAssignments.get("sizeF_0").getValue().toString());
+		this.sizeF_0 = Integer.valueOf(((Obj.Value)internalAssignments.get("sizeF_0").getValue()).getStr());
 		
 		Obj.Array biasArray = (Obj.Array)internalAssignments.get("bias").getValue();
 		u_pMap.put(0, Double.valueOf(biasArray.getStr(0)));

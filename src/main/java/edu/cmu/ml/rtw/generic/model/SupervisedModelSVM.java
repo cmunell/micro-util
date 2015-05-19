@@ -499,17 +499,17 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		setLabelIndices();
 		
 		if (internalAssignments.contains("trainingIterations"))
-			this.trainingIterations = Integer.valueOf(internalAssignments.get("trainingIterations").getValue().toString());
+			this.trainingIterations = Integer.valueOf(((Obj.Value)internalAssignments.get("trainingIterations").getValue()).getStr());
 		if (internalAssignments.contains("earlyStopIfNoLabelChange"))
-			this.earlyStopIfNoLabelChange = Boolean.valueOf(internalAssignments.get("earlyStopIfNoLabelChange").getValue().toString());
+			this.earlyStopIfNoLabelChange = Boolean.valueOf(((Obj.Value)internalAssignments.get("earlyStopIfNoLabelChange").getValue()).getStr());
 		
 		if (!internalAssignments.contains("t") || !internalAssignments.contains("numWeights"))
 			return true;
 		
-		int numWeights = Integer.valueOf(internalAssignments.get("numWeights").getValue().toString());
+		int numWeights = Integer.valueOf(((Obj.Value)internalAssignments.get("numWeights").getValue()).getStr());
 		this.numFeatures = numWeights / this.labelIndices.size();
 		
-		this.t = Integer.valueOf(internalAssignments.get("t").getValue().toString());
+		this.t = Integer.valueOf(((Obj.Value)internalAssignments.get("t").getValue()).getStr());
 		this.featureNames = new HashMap<Integer, String>();
 		
 		this.feature_w = new HashMap<Integer, Double>();
