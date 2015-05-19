@@ -327,7 +327,7 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 		for (List<String> lines : descendingWeights.values()) {
 			for (String line : lines) {
 				internalAssignments.add(
-					Assignment.assignmentTyped(null, Context.ARRAY_STR, "w-" + i, Obj.stringValue(line))
+					Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + i, Obj.stringValue(line))
 				);
 				
 				i++;

@@ -771,14 +771,14 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 				if (!feature.fromParse(null, referenceName, fnObj))
 					return false;
 				this.constructedFeatures.addFeature(feature);
-			} else if (assignment.getName().startsWith("u-")) {
+			} else if (assignment.getName().startsWith("u_")) {
 				Obj.Array uArr = (Obj.Array)assignment.getValue();
 				int uIndex = Integer.valueOf(uArr.getStr(5));
 				double u_p = Double.valueOf(uArr.getStr(3));
 				double u_n = Double.valueOf(uArr.getStr(4));
 				u_pMap.put(uIndex, u_p);
 				u_nMap.put(uIndex, u_n);
-			} else if (assignment.getName().startsWith("cToP-")) {
+			} else if (assignment.getName().startsWith("cToP_")) {
 				int childIndex = Integer.valueOf(assignment.getName().substring(5));
 				List<Integer> parentIndices = new ArrayList<Integer>();
 				
@@ -856,7 +856,7 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 			String c_n_i = String.valueOf(cEntry.getValue().getSecond());
 			
 			Obj.Array weight = Obj.array(new String[] { feature_i, c_p_i, c_n_i, u_p_i, u_n_i, i });
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "u-" + cEntry.getKey() + ((constructedFeature) ? "-c" : ""), weight));
+			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "u_" + cEntry.getKey() + ((constructedFeature) ? "-c" : ""), weight));
 		}
 		
 		for (int i = 0; i < this.constructedFeatures.getFeatureCount(); i++) {
@@ -869,7 +869,7 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 			for (Integer parent : entry.getValue())
 				array.add(Obj.stringValue(parent.toString()));
 			
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "cToP-" + entry.getKey(), array));
+			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "cToP_" + entry.getKey(), array));
 		}
 		
 		this.nonZeroFeatureNamesF_0 = null; // Assumes convert toParse only once... add back in if memory issues

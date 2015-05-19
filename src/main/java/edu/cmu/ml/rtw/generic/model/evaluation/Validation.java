@@ -61,7 +61,7 @@ public abstract class Validation<D extends Datum<L>, L> {
 	}
 	
 	public boolean outputModel() {
-		this.datumTools.getDataTools().getOutputWriter().modelWriteln(this.model.toString());
+		this.datumTools.getDataTools().getOutputWriter().modelWriteln("model m=" + this.model.toString() + ";");
 		return true;
 	}
 	

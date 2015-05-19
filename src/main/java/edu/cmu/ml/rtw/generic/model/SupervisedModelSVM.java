@@ -520,7 +520,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		
 		for (int i = 0; i < internalAssignments.size(); i++) {
 			Assignment assignment = internalAssignments.get(i);
-			if (assignment.getName().startsWith("b-")) {
+			if (assignment.getName().startsWith("b_")) {
 				Obj.Array bArr = (Obj.Array)assignment.getValue();
 				
 				double b = Double.valueOf(bArr.getStr(1));
@@ -529,7 +529,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 				
 				this.bias_b[index] = b;
 				this.bias_G[index] = G;
-			} else if (assignment.getName().startsWith("w-")) {
+			} else if (assignment.getName().startsWith("w_")) {
 				Obj.Array wArr = (Obj.Array)assignment.getValue();
 				
 				String featureName = wArr.getStr(1);
@@ -579,7 +579,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			
 			Obj.Array biasArray = Obj.array(new String[] { label, b, G, index });
 			internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.ARRAY_STR, "b-" + index, biasArray)
+				Assignment.assignmentTyped(null, Context.ARRAY_STR, "b_" + index, biasArray)
 			);
 		}
 		
@@ -612,7 +612,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			
 			Obj.Array weightArray = Obj.array(new String[] { label, featureName, w, G, labelIndexStr, featureIndexStr });
 			internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.ARRAY_STR, "w-" + weightIndex, weightArray)
+				Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + weightIndex, weightArray)
 			);
 		}
 		

@@ -366,7 +366,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 		for (int i = 0; i < internalAssignments.size(); i++) {
 			Assignment assignment = internalAssignments.get(i);
-			if (assignment.getName().startsWith("w-")) {
+			if (assignment.getName().startsWith("w_")) {
 				Obj.Array wArray = (Obj.Array)assignment.getValue();
 				int index = Integer.valueOf(wArray.getStr(2));
 				double w = Double.valueOf(wArray.getStr(1));
@@ -422,7 +422,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 			int index = weight.getFirst();
 			String featureName = this.nonZeroFeatureNames.get(index);
 			Obj.Array weightArr = Obj.array(new String[]{ featureName, String.valueOf(w), String.valueOf(index) });
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "w-" + index, weightArr));
+			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + index, weightArr));
 		}
 		
 		// this.nonZeroFeatureNames = null; Assumes convert toParse only once... add back in if memory issues
