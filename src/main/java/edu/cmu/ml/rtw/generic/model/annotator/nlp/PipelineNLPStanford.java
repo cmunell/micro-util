@@ -71,6 +71,8 @@ public class PipelineNLPStanford extends PipelineNLP {
 		this.minSentenceAnnotationLength = pipeline.minSentenceAnnotationLength;
 		this.maxSentenceAnnotationLength = pipeline.maxSentenceAnnotationLength;
 		this.annotatedText = pipeline.annotatedText;
+		this.annotators = pipeline.annotators;
+		this.annotationOrder = pipeline.annotationOrder;
 	}
 	
 	public boolean initialize() {
