@@ -25,14 +25,14 @@ public class DocumentNLPTest {
 	}
 	
 	private void testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP<?> disabledFrom) {
-		PipelineNLPStanford stanfordPipe = new PipelineNLPStanford(7);
+		PipelineNLPStanford stanfordPipe = new PipelineNLPStanford();//7);
 		stanfordPipe = new PipelineNLPStanford(stanfordPipe);
 		Assert.assertTrue(stanfordPipe.initialize(disabledFrom));
 		DataTools dataTools = new DataTools(new OutputWriter());
 		
 		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
+				"He died of cancer in August 2014.", //"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
 				Language.English, 
 				stanfordPipe);
 		

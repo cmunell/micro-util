@@ -914,7 +914,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		DateTime annotationTime = DateTime.now();
 		List<Annotation> annotations = new ArrayList<Annotation>();
 		
-		int lastCharIndex = this.tokens[this.tokens.length-1][this.tokens[this.tokens.length - 1].length - 1].getCharSpanEnd();
+		int lastCharIndex = (this.tokens.length > 0) ? this.tokens[this.tokens.length-1][this.tokens[this.tokens.length - 1].length - 1].getCharSpanEnd() : 0;
 		if (this.originalText != null && annotationTypes.contains(AnnotationTypeNLP.ORIGINAL_TEXT)) {
 			annotations.add(makeMicroAnnotation(0, 
 												lastCharIndex, 

@@ -117,8 +117,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 			propsStr = "tokenize, ssplit, pos, lemma, parse, ner";
 		}
 
-		props.put("pos.maxlen", String.valueOf(this.maxSentenceLength));
-		props.put("parse.maxlen", String.valueOf(this.maxSentenceLength));
+		if (this.maxSentenceLength != 0) {
+			props.put("pos.maxlen", String.valueOf(this.maxSentenceLength));
+			props.put("parse.maxlen", String.valueOf(this.maxSentenceLength));
+		}
 		
 		props.put("annotators", propsStr);
 		this.nlpPipeline = new StanfordCoreNLP(props);
