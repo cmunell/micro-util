@@ -303,6 +303,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					json.put(entry.getKey().getType(), entry.getKey().serialize(entry.getValue().getFirst()));
 			}
 			
+			if (this.tokens == null)
+				return json;
+				
 			int sentenceCount = getSentenceCount();
 			for (int i = 0; i < sentenceCount; i++) {
 				int tokenCount = getSentenceTokenCount(i);
@@ -483,6 +486,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					this.otherDocumentAnnotations.put(annotationType, new Pair<Object, Double>(annotationType.deserialize(this, json.get(annotationType.getType())), null));
 				}
 			}
+			
+			if (!json.has("sentences"))
+				return true;
 			
 			JSONArray sentences = json.getJSONArray("sentences");
 			this.tokens = new Token[sentences.length()][];
@@ -669,16 +675,20 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		
 		List<Annotation> annotations = documentAnnotation.getAllAnnotations();
 		Map<AnnotationType<?>, TreeMap<Integer, Annotation>> orderedAnnotations = new HashMap<AnnotationType<?>, TreeMap<Integer, Annotation>>();
+		boolean hasNonDocumentAnnotations = false;
 		for (Annotation annotation : annotations) {
 			AnnotationType<?> annotationType = this.dataTools.getAnnotationTypeNLP(annotation.getSlot());
 			if (annotationType == null)
 				continue;
+			if (((AnnotationTypeNLP<?>)annotationType).getTarget() != AnnotationTypeNLP.Target.DOCUMENT)
+				hasNonDocumentAnnotations = true;
+			
 			if (!orderedAnnotations.containsKey(annotationType))
 				orderedAnnotations.put(annotationType, new TreeMap<Integer, Annotation>());
 			orderedAnnotations.get(annotationType).put(annotation.getSpanStart(), annotation);
 		}
 		
-		if (!orderedAnnotations.containsKey(AnnotationTypeNLP.SENTENCE) || !orderedAnnotations.containsKey(AnnotationTypeNLP.TOKEN))
+		if (hasNonDocumentAnnotations && (!orderedAnnotations.containsKey(AnnotationTypeNLP.SENTENCE) || !orderedAnnotations.containsKey(AnnotationTypeNLP.TOKEN)))
 			throw new UnsupportedOperationException("Document must contain sentence annotations.");
 		
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.ORIGINAL_TEXT)) {
@@ -726,8 +736,10 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			}
 		}
 		
-		TreeMap<Integer, Annotation> sentenceAnnotations = orderedAnnotations.get(AnnotationTypeNLP.SENTENCE);
+		if (!hasNonDocumentAnnotations)
+			return true;
 		
+		TreeMap<Integer, Annotation> sentenceAnnotations = orderedAnnotations.get(AnnotationTypeNLP.SENTENCE);
 		this.tokens = new Token[sentenceAnnotations.size()][];
 		this.tokenAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().getAnnotator();
 		boolean tokenConf = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().getConfidence() != null;
@@ -914,7 +926,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		DateTime annotationTime = DateTime.now();
 		List<Annotation> annotations = new ArrayList<Annotation>();
 		
-		int lastCharIndex = (this.tokens.length > 0) ? this.tokens[this.tokens.length-1][this.tokens[this.tokens.length - 1].length - 1].getCharSpanEnd() : 0;
+		int lastCharIndex = (this.tokens != null && this.tokens.length > 0) ? this.tokens[this.tokens.length-1][this.tokens[this.tokens.length - 1].length - 1].getCharSpanEnd() : 0;
 		if (this.originalText != null && annotationTypes.contains(AnnotationTypeNLP.ORIGINAL_TEXT)) {
 			annotations.add(makeMicroAnnotation(0, 
 												lastCharIndex, 
@@ -956,6 +968,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		boolean outputCon = annotationTypes.contains(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 		boolean outputNer = annotationTypes.contains(AnnotationTypeNLP.NER);
 		boolean outputCoref = annotationTypes.contains(AnnotationTypeNLP.COREF);
+		
+		if (this.tokens == null)
+			return new DocumentAnnotation(this.name, annotations);
 		
 		for (int i = 0; i < this.tokens.length; i++) {
 			if (outputTokens || outputPoS) {
