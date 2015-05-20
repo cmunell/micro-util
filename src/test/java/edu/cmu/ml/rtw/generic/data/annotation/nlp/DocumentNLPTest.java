@@ -18,21 +18,21 @@ public class DocumentNLPTest {
 	public void testNLPAnnotationAndMicroSerialization() {
 		/*testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.POS);
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.CONSTITUENCY_PARSE);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);
+		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);*/
 		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.NER);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.COREF);*/
-		testNLPAnnotationAndMicroSerializationDisabledFrom(null);
+		/*testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.COREF);
+		testNLPAnnotationAndMicroSerializationDisabledFrom(null);*/
 	}
 	
 	private void testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP<?> disabledFrom) {
-		PipelineNLPStanford stanfordPipe = new PipelineNLPStanford();
+		PipelineNLPStanford stanfordPipe = new PipelineNLPStanford(7);
 		stanfordPipe = new PipelineNLPStanford(stanfordPipe);
 		Assert.assertTrue(stanfordPipe.initialize(disabledFrom));
 		DataTools dataTools = new DataTools(new OutputWriter());
 		
 		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"I. Jim learned to read at school. It was horrible, but he had to do it anyway.",
+				"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
 				Language.English, 
 				stanfordPipe);
 		

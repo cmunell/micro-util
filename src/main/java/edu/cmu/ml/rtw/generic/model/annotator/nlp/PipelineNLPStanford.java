@@ -49,9 +49,19 @@ import edu.stanford.nlp.util.IntPair;
 public class PipelineNLPStanford extends PipelineNLP {
 	private StanfordCoreNLP nlpPipeline;
 	private Annotation annotatedText;
+	private int maxSentenceLength;
+	
+	private int validSentenceCount;
+	private int[] originalToValidSentenceIndices;
 	
 	public PipelineNLPStanford() {
 		super();
+		this.maxSentenceLength = 0;
+	}
+	
+	public PipelineNLPStanford(int maxSentenceLength) {
+		super();
+		this.maxSentenceLength = maxSentenceLength;
 	}
 	
 	public PipelineNLPStanford(PipelineNLPStanford pipeline) {
@@ -60,6 +70,9 @@ public class PipelineNLPStanford extends PipelineNLP {
 		this.document = pipeline.document;
 		this.nlpPipeline = pipeline.nlpPipeline;
 		this.annotatedText = pipeline.annotatedText;
+		this.maxSentenceLength = pipeline.maxSentenceLength;
+		this.validSentenceCount = pipeline.validSentenceCount;
+		this.originalToValidSentenceIndices = pipeline.originalToValidSentenceIndices;
 		
 		for (AnnotationType<?> annotationType : pipeline.annotationOrder)
 			addAnnotator(annotationType);
@@ -104,6 +117,9 @@ public class PipelineNLPStanford extends PipelineNLP {
 			propsStr = "tokenize, ssplit, pos, lemma, parse, ner";
 		}
 
+		props.put("pos.maxlen", String.valueOf(this.maxSentenceLength));
+		props.put("parse.maxlen", String.valueOf(this.maxSentenceLength));
+		
 		props.put("annotators", propsStr);
 		this.nlpPipeline = new StanfordCoreNLP(props);
 		
@@ -151,6 +167,18 @@ public class PipelineNLPStanford extends PipelineNLP {
 		return true;
 	}
 	
+	private int getValidSentenceCount() {
+		return this.validSentenceCount;
+	}
+	
+	private int getValidSentenceIndex(int sentenceIndex) {
+		if (this.originalToValidSentenceIndices == null)
+			return sentenceIndex;
+		else
+			return this.originalToValidSentenceIndices[sentenceIndex];
+	}
+	
+	
 	private boolean addAnnotator(AnnotationType<?> annotationType) {
 		if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
 			addAnnotator(AnnotationTypeNLP.TOKEN,  new AnnotatorToken<Token>() {
@@ -161,15 +189,19 @@ public class PipelineNLPStanford extends PipelineNLP {
 				@SuppressWarnings("unchecked")
 				public Pair<Token, Double>[][] annotate(DocumentNLP document) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<Token, Double>[][] tokens = (Pair<Token, Double>[][])(new Pair[sentences.size()][]);
+					Pair<Token, Double>[][] tokens = (Pair<Token, Double>[][])(new Pair[getValidSentenceCount()][]);
 					for(int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						tokens[i] = (Pair<Token, Double>[])new Pair[sentenceTokens.size()];
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
+						tokens[validSentenceIndex] = (Pair<Token, Double>[])new Pair[sentenceTokens.size()];
 						for (int j = 0; j < sentenceTokens.size(); j++) {
 							String word = sentenceTokens.get(j).get(TextAnnotation.class); 
 							int charSpanStart = sentenceTokens.get(j).beginPosition();
 							int charSpanEnd = sentenceTokens.get(j).endPosition();
-							tokens[i][j] = new Pair<Token, Double>(new Token(document, word, charSpanStart, charSpanEnd), null);
+							tokens[validSentenceIndex][j] = new Pair<Token, Double>(new Token(document, word, charSpanStart, charSpanEnd), null);
 						}
 					}
 					
@@ -187,17 +219,22 @@ public class PipelineNLPStanford extends PipelineNLP {
 				@SuppressWarnings("unchecked")
 				public Pair<PoSTag, Double>[][] annotate(DocumentNLP document) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<PoSTag, Double>[][] posTags = (Pair<PoSTag, Double>[][])new Pair[sentences.size()][];
+					Pair<PoSTag, Double>[][] posTags = (Pair<PoSTag, Double>[][])new Pair[getValidSentenceCount()][];
+					
 					for (int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						posTags[i] = (Pair<PoSTag, Double>[])new Pair[sentenceTokens.size()];
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
+						posTags[validSentenceIndex] = (Pair<PoSTag, Double>[])new Pair[sentenceTokens.size()];
 						for (int j = 0; j < sentenceTokens.size(); j++) {
 							String pos = sentenceTokens.get(j).get(PartOfSpeechAnnotation.class);  
 							
 							if (pos.length() > 0 && !Character.isLetter(pos.toCharArray()[0]))
-								posTags[i][j] = new Pair<PoSTag, Double>(PoSTag.SYM, null);
+								posTags[validSentenceIndex][j] = new Pair<PoSTag, Double>(PoSTag.SYM, null);
 							else
-								posTags[i][j] = new Pair<PoSTag, Double>(PoSTag.valueOf(pos), null);
+								posTags[validSentenceIndex][j] = new Pair<PoSTag, Double>(PoSTag.valueOf(pos), null);
 						}
 					}
 					
@@ -215,13 +252,18 @@ public class PipelineNLPStanford extends PipelineNLP {
 				@SuppressWarnings("unchecked")
 				public Pair<String, Double>[][] annotate(DocumentNLP document) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[sentences.size()][];
+					Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[getValidSentenceCount()][];
+					
 					for (int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						lemmas[i] = (Pair<String, Double>[])new Pair[sentenceTokens.size()];
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
+						lemmas[validSentenceIndex] = (Pair<String, Double>[])new Pair[sentenceTokens.size()];
 						for (int j = 0; j < sentenceTokens.size(); j++) {
 							String lemma = sentenceTokens.get(j).get(LemmaAnnotation.class);  
-							lemmas[i][j] = new Pair<String, Double>(lemma, null);
+							lemmas[validSentenceIndex][j] = new Pair<String, Double>(lemma, null);
 						}
 					}
 					
@@ -239,12 +281,16 @@ public class PipelineNLPStanford extends PipelineNLP {
 				public Map<Integer, Pair<ConstituencyParse, Double>> annotate(DocumentNLP document) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					Map<Integer, Pair<ConstituencyParse, Double>> parses = new HashMap<Integer, Pair<ConstituencyParse, Double>>();
-					
+
 					for(int i = 0; i < sentences.size(); i++) {
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
 						Tree tree = sentences.get(i).get(TreeAnnotation.class);
 	
 						Constituent root = null;
-						parses.put(i, new Pair<ConstituencyParse, Double>(new ConstituencyParse(document, i, null), null));
+						parses.put(validSentenceIndex, new Pair<ConstituencyParse, Double>(new ConstituencyParse(document, validSentenceIndex, null), null));
 						
 						if (tree == null)
 							continue;
@@ -259,14 +305,14 @@ public class PipelineNLPStanford extends PipelineNLP {
 							if (!constituents.isEmpty()) {
 								while (!isStanfordTreeParent(currentTree, constituents.peek().getFirst())) {
 									Pair<Tree, List<Constituent>> currentNeighbor = constituents.pop();
-									ConstituencyParse.Constituent constituent = parses.get(i).getFirst().new Constituent(currentNeighbor.getFirst().label().value(), currentNeighbor.getSecond().toArray(new ConstituencyParse.Constituent[0]));
+									ConstituencyParse.Constituent constituent = parses.get(validSentenceIndex).getFirst().new Constituent(currentNeighbor.getFirst().label().value(), currentNeighbor.getSecond().toArray(new ConstituencyParse.Constituent[0]));
 									constituents.peek().getSecond().add(constituent);
 								}
 							}
 							
 							if (currentTree.isPreTerminal()) {
 								String label = currentTree.label().value();
-								ConstituencyParse.Constituent constituent = parses.get(i).getFirst().new Constituent(label, new TokenSpan(document, i, tokenIndex, tokenIndex + 1));
+								ConstituencyParse.Constituent constituent = parses.get(validSentenceIndex).getFirst().new Constituent(label, new TokenSpan(document, validSentenceIndex, tokenIndex, tokenIndex + 1));
 								tokenIndex++;
 								if (!constituents.isEmpty())
 									constituents.peek().getSecond().add(constituent);
@@ -281,12 +327,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 						
 						while (!constituents.isEmpty()) {
 							Pair<Tree, List<Constituent>> possibleRoot = constituents.pop();
-							root = parses.get(i).getFirst().new Constituent(possibleRoot.getFirst().label().value(), possibleRoot.getSecond().toArray(new ConstituencyParse.Constituent[0]));
+							root = parses.get(validSentenceIndex).getFirst().new Constituent(possibleRoot.getFirst().label().value(), possibleRoot.getSecond().toArray(new ConstituencyParse.Constituent[0]));
 							if (!constituents.isEmpty())
 								constituents.peek().getSecond().add(root);
 						}
 						
-						parses.put(i, new Pair<ConstituencyParse, Double>(new ConstituencyParse(document, i, root), null));
+						parses.put(validSentenceIndex, new Pair<ConstituencyParse, Double>(new ConstituencyParse(document, validSentenceIndex, root), null));
 					}
 					
 					return parses;
@@ -313,12 +359,16 @@ public class PipelineNLPStanford extends PipelineNLP {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					Map<Integer, Pair<DependencyParse, Double>> parses = new HashMap<Integer, Pair<DependencyParse, Double>>();
 					for(int i = 0; i < sentences.size(); i++) {
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
 						SemanticGraph sentenceDependencyGraph = sentences.get(i).get(CollapsedCCProcessedDependenciesAnnotation.class);
 						
 						Set<IndexedWord> sentenceWords = sentenceDependencyGraph.vertexSet();
 						
 						Map<Integer, Pair<List<DependencyParse.Dependency>, List<DependencyParse.Dependency>>> nodesToDeps = new HashMap<Integer, Pair<List<DependencyParse.Dependency>, List<DependencyParse.Dependency>>>();
-						parses.put(i, new Pair<DependencyParse, Double>(new DependencyParse(document, i, null, null), null));
+						parses.put(validSentenceIndex, new Pair<DependencyParse, Double>(new DependencyParse(document, validSentenceIndex, null, null), null));
 						int maxIndex = -1;
 						for (IndexedWord sentenceWord1 : sentenceWords) {
 							for (IndexedWord sentenceWord2 : sentenceWords) {
@@ -333,7 +383,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 								
 								maxIndex = Math.max(depIndex, Math.max(govIndex, maxIndex));
 								
-								DependencyParse.Dependency dependency = parses.get(i).getFirst().new Dependency(govIndex, depIndex, relation.getShortName());
+								DependencyParse.Dependency dependency = parses.get(validSentenceIndex).getFirst().new Dependency(govIndex, depIndex, relation.getShortName());
 								
 								if (!nodesToDeps.containsKey(govIndex))
 									nodesToDeps.put(govIndex, new Pair<List<Dependency>, List<Dependency>>(new ArrayList<Dependency>(), new ArrayList<Dependency>()));
@@ -364,10 +414,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 						Node[] tokenNodes = new Node[maxIndex+1];
 						for (int j = 0; j < tokenNodes.length; j++)
 							if (nodesToDeps.containsKey(j))
-								tokenNodes[j] = parses.get(i).getFirst().new Node(j, nodesToDeps.get(j).getFirst().toArray(new Dependency[0]), nodesToDeps.get(j).getSecond().toArray(new Dependency[0]));
+								tokenNodes[j] = parses.get(validSentenceIndex).getFirst().new Node(j, nodesToDeps.get(j).getFirst().toArray(new Dependency[0]), nodesToDeps.get(j).getSecond().toArray(new Dependency[0]));
 						
-						Node rootNode = parses.get(i).getFirst().new Node(-1, new Dependency[0], nodesToDeps.get(-1).getSecond().toArray(new Dependency[0]));
-						parses.put(i, new Pair<DependencyParse, Double>(new DependencyParse(document, i, rootNode, tokenNodes), null));
+						Node rootNode = parses.get(validSentenceIndex).getFirst().new Node(-1, new Dependency[0], nodesToDeps.get(-1).getSecond().toArray(new Dependency[0]));
+						parses.put(validSentenceIndex, new Pair<DependencyParse, Double>(new DependencyParse(document, validSentenceIndex, rootNode, tokenNodes), null));
 					}
 					
 					return parses;
@@ -389,7 +439,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					String[][] ner = new String[sentences.size()][];
 					for(int i = 0; i < sentences.size(); i++) {
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
+						
 						ner[i] = new String[sentenceTokens.size()];
 						for (int j = 0; j < sentenceTokens.size(); j++) {
 							ner[i][j] = sentenceTokens.get(j).get(NamedEntityTagAnnotation.class); 
@@ -398,6 +453,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					List<Triple<TokenSpan, String, Double>> nerAnnotations = new ArrayList<Triple<TokenSpan, String, Double>>();
 					for (int i = 0; i < ner.length; i++) {
+						int validSentenceIndex = getValidSentenceIndex(i);
+						if (validSentenceIndex < 0)
+							continue;
+						
 						for (int j = 0; j < ner[i].length; j++) {
 							if (ner[i][j] != null) {
 								int endTokenIndex = j + 1;
@@ -409,7 +468,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 									ner[i][k] = null;
 								}
 								
-								nerAnnotations.add(new Triple<TokenSpan, String, Double>(new TokenSpan(document, i, j, endTokenIndex), ner[i][j], null));
+								nerAnnotations.add(new Triple<TokenSpan, String, Double>(new TokenSpan(document, validSentenceIndex, j, endTokenIndex), ner[i][j], null));
 							}
 						}
 					}
@@ -432,8 +491,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 					for (Entry<Integer, CorefChain> entry : corefGraph.entrySet()) {
 						CorefChain corefChain = entry.getValue();
 						CorefMention representativeMention = corefChain.getRepresentativeMention();
+						int representativeSentIndex = getValidSentenceIndex(representativeMention.sentNum - 1);
+						if (representativeSentIndex < 0)
+							continue;
+						
 						TokenSpan representativeSpan = new TokenSpan(document, 
-																	 representativeMention.sentNum - 1,
+																	 representativeSentIndex,
 																	 representativeMention.startIndex - 1,
 																	 representativeMention.endIndex - 1);
 						
@@ -441,8 +504,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 						Map<IntPair, Set<CorefMention>> mentionMap = corefChain.getMentionMap();
 						for (Entry<IntPair, Set<CorefMention>> spanEntry : mentionMap.entrySet()) {
 							for (CorefMention mention : spanEntry.getValue()) {
+								int validSentenceIndex = getValidSentenceIndex(mention.sentNum - 1);
+								if (validSentenceIndex < 0)
+									continue;
+								
 								spans.add(new TokenSpan(document,
-															mention.sentNum - 1,
+															validSentenceIndex,
 															mention.startIndex - 1,
 															mention.endIndex - 1));
 							}
@@ -473,6 +540,25 @@ public class PipelineNLPStanford extends PipelineNLP {
 		
 		this.annotatedText = new Annotation(document.getOriginalText());
 		this.nlpPipeline.annotate(this.annotatedText);
+		
+		List<CoreMap> sentences = this.annotatedText.get(SentencesAnnotation.class);
+		if (this.maxSentenceLength == 0) {
+			this.validSentenceCount = sentences.size();
+			this.originalToValidSentenceIndices = null;
+		} else {
+			this.validSentenceCount = 0;
+			this.originalToValidSentenceIndices = new int[sentences.size()];
+			for(int i = 0; i < sentences.size(); i++) {
+				List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
+				if (sentenceTokens.size() <= this.maxSentenceLength) {
+					this.originalToValidSentenceIndices[i] = this.validSentenceCount;
+					this.validSentenceCount++;
+				} else {
+					this.originalToValidSentenceIndices[i] = -1;
+				}
+			}
+		}
+		
 		
 		return true;
 	}
