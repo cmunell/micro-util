@@ -402,7 +402,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 						Collection<IndexedWord> rootDeps = sentenceDependencyGraph.getRoots();
 						for (IndexedWord rootDep : rootDeps) {
 							int depIndex = rootDep.index() - 1;
-							DependencyParse.Dependency dependency = parses.get(i).getFirst().new Dependency(-1, depIndex, "root");
+							DependencyParse.Dependency dependency = parses.get(validSentenceIndex).getFirst().new Dependency(-1, depIndex, "root");
 							
 							if (!nodesToDeps.containsKey(depIndex))
 								nodesToDeps.put(depIndex, new Pair<List<Dependency>, List<Dependency>>(new ArrayList<Dependency>(), new ArrayList<Dependency>()));
