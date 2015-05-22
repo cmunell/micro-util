@@ -121,7 +121,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		this.name = name;
 		this.language = language;
 		this.languageConf = 1.0;
-		this.languageAnnotatorName = "";
+		this.languageAnnotatorName = "cmunell_0.0.1";
 		
 		this.originalText = text;
 		
