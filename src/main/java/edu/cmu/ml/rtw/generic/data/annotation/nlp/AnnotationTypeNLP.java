@@ -13,8 +13,8 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public static final AnnotationTypeNLP<String> ORIGINAL_TEXT = new AnnotationTypeNLP<String>("text", String.class, Target.DOCUMENT);
 	public static final AnnotationTypeNLP<Language> LANGUAGE = new AnnotationTypeNLP<Language>("language", Language.class, Target.DOCUMENT);
 	public static final AnnotationTypeNLP<String> SENTENCE = new AnnotationTypeNLP<String>("sentence", String.class, Target.SENTENCE);
-	public static final AnnotationTypeNLP<DependencyParse> DEPENDENCY_PARSE = new AnnotationTypeNLP<DependencyParse>("dependency_parse", DependencyParse.class, Target.SENTENCE);
-	public static final AnnotationTypeNLP<ConstituencyParse> CONSTITUENCY_PARSE = new AnnotationTypeNLP<ConstituencyParse>("constituency_parse", ConstituencyParse.class, Target.SENTENCE);
+	public static final AnnotationTypeNLP<DependencyParse> DEPENDENCY_PARSE = new AnnotationTypeNLP<DependencyParse>("dep-parse", DependencyParse.class, Target.SENTENCE);
+	public static final AnnotationTypeNLP<ConstituencyParse> CONSTITUENCY_PARSE = new AnnotationTypeNLP<ConstituencyParse>("con-parse", ConstituencyParse.class, Target.SENTENCE);
 	public static final AnnotationTypeNLP<String> NER = new AnnotationTypeNLP<String>("ner", String.class, Target.TOKEN_SPAN);
 	public static final AnnotationTypeNLP<TokenSpanCluster> COREF = new AnnotationTypeNLP<TokenSpanCluster>("coref", TokenSpanCluster.class, Target.TOKEN_SPAN);
 	public static final AnnotationTypeNLP<PoSTag> POS = new AnnotationTypeNLP<PoSTag>("pos", PoSTag.class, Target.TOKEN);
