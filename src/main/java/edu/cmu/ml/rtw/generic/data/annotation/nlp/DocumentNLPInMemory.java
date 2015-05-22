@@ -253,7 +253,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 							sentenceMap.put(triple.getFirst().getSentenceIndex(), new ArrayList<Triple<TokenSpan, ?, Double>>());
 						sentenceMap.get(triple.getFirst().getSentenceIndex()).add(triple);
 					}
-					 
+					
 					this.otherTokenSpanAnnotations.put(annotationType, sentenceMap);
 				} else if (annotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN) {
 					if (this.otherTokenAnnotations == null)
@@ -1317,6 +1317,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		List<Pair<TokenSpan, T>> anno = super.getTokenSpanAnnotations(annotationType, tokenSpan, relationsToAnnotations);
 		if (anno != null)
 			return anno;
+		
 		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
 		if (tokenSpanAnnotation == null)
 			return new ArrayList<Pair<TokenSpan, T>>();
