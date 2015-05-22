@@ -32,7 +32,7 @@ public class DocumentNLPTest {
 		
 		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"He died of cancer in August 2014.", //"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
+				"",//"He died of cancer in August 2014.", //"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
 				Language.English, 
 				stanfordPipe);
 		

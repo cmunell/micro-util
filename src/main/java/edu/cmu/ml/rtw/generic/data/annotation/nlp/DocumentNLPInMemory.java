@@ -142,8 +142,11 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			AnnotationTypeNLP<?> annotationType = (AnnotationTypeNLP<?>)pipeline.getAnnotationType(annotatorIndex);
 			if (skipAnnotators != null && skipAnnotators.contains(annotationType))
 				continue;
+			if (!pipeline.meetsAnnotatorRequirements(annotationType, this))
+				throw new UnsupportedOperationException("Document does not meet annotation type requirements for " + annotationType.getType() + " annotator.");
+
 			
-			if (annotationType.equals(AnnotationTypeNLP.TOKEN) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.TOKEN, this)) {
+			if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
 				this.tokenAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.TOKEN);
 				Pair<Token, Double>[][] tokens = pipeline.annotateTokens(AnnotationTypeNLP.TOKEN);
 				boolean tokenConf = pipeline.annotatorMeasuresConfidence(AnnotationTypeNLP.TOKEN);
@@ -162,7 +165,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 							this.tokensConf[i][j] = tokens[i][j].getSecond();
 					}
 				}
-			} else if (annotationType.equals(AnnotationTypeNLP.POS) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.POS, this)) {
+			} else if (annotationType.equals(AnnotationTypeNLP.POS)) {				
 				this.posAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.POS);
 				Pair<PoSTag, Double>[][] pos = pipeline.annotateTokens(AnnotationTypeNLP.POS);
 				boolean posConf = pipeline.annotatorMeasuresConfidence(AnnotationTypeNLP.POS);
@@ -181,7 +184,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 							this.posTagsConf[i][j] = pos[i][j].getSecond();
 					}
 				}
-			} else if (annotationType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.CONSTITUENCY_PARSE, this)) {
+			} else if (annotationType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE)) {			
 				this.constituencyParseAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 				Map<Integer, Pair<ConstituencyParse, Double>> parses = pipeline.annotateSentences(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 				this.constituencyParses = new ConstituencyParse[this.tokens.length];
@@ -195,7 +198,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					if (consConf)
 						this.constituencyParsesConf[parse.getKey()] = parse.getValue().getSecond();
 				}
-			} else if (annotationType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.DEPENDENCY_PARSE, this)) {
+			} else if (annotationType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE)) {
 				this.dependencyParseAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.DEPENDENCY_PARSE);
 				Map<Integer, Pair<DependencyParse, Double>> parses = pipeline.annotateSentences(AnnotationTypeNLP.DEPENDENCY_PARSE);
 				
@@ -209,7 +212,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					if (depConf) 
 						this.dependencyParsesConf[parse.getKey()] = parse.getValue().getSecond();
 				}
-			} else if (annotationType.equals(AnnotationTypeNLP.NER) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.NER, this)) {
+			} else if (annotationType.equals(AnnotationTypeNLP.NER)) {
 				this.nerAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.NER);
 				List<Triple<TokenSpan, String, Double>> ner = pipeline.annotateTokenSpans(AnnotationTypeNLP.NER);
 				this.ner = new HashMap<Integer, List<Triple<TokenSpan, String, Double>>>();
@@ -218,7 +221,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						this.ner.put(nerSpan.getFirst().getSentenceIndex(), new ArrayList<Triple<TokenSpan, String, Double>>());
 					this.ner.get(nerSpan.getFirst().getSentenceIndex()).add(nerSpan);
 				}
-			} else if (annotationType.equals(AnnotationTypeNLP.COREF) && pipeline.meetsAnnotatorRequirements(AnnotationTypeNLP.COREF, this)) {
+			} else if (annotationType.equals(AnnotationTypeNLP.COREF)) {
 				this.corefAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.COREF);
 				List<Triple<TokenSpan, TokenSpanCluster, Double>> coref = pipeline.annotateTokenSpans(AnnotationTypeNLP.COREF);
 				this.coref = new HashMap<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>>();
@@ -227,7 +230,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						this.coref.put(corefSpan.getFirst().getSentenceIndex(), new ArrayList<Triple<TokenSpan, TokenSpanCluster, Double>>());
 					this.coref.get(corefSpan.getFirst().getSentenceIndex()).add(corefSpan);
 				}
-			} else if (pipeline.meetsAnnotatorRequirements(annotationType, this)) {
+			} else {
 				if (this.otherAnnotatorNames == null)
 					this.otherAnnotatorNames = new HashMap<AnnotationTypeNLP<?>, String>();
 				this.otherAnnotatorNames.put(annotationType, pipeline.getAnnotatorName(annotationType));
