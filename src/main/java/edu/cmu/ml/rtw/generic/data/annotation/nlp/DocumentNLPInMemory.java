@@ -1320,7 +1320,8 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		List<Pair<TokenSpan, T>> anno = super.getTokenSpanAnnotations(annotationType, tokenSpan, relationsToAnnotations);
 		if (anno != null)
 			return anno;
-		
+		if (this.otherTokenSpanAnnotations == null || this.otherTokenSpanAnnotations.get(annotationType) == null)
+			System.out.println("ERROR " + annotationType.getType() + " NULL on " + getName() + ((this.otherTokenSpanAnnotations == null ) ? " (obj)" : " (entry)"));
 		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
 		if (tokenSpanAnnotation == null)
 			return new ArrayList<Pair<TokenSpan, T>>();
