@@ -140,11 +140,13 @@ public class DocumentNLPInMemory extends DocumentNLP {
 
 		for (int annotatorIndex = 0; annotatorIndex < pipeline.getAnnotatorCount(); annotatorIndex++) {
 			AnnotationTypeNLP<?> annotationType = (AnnotationTypeNLP<?>)pipeline.getAnnotationType(annotatorIndex);
-			if (skipAnnotators != null && skipAnnotators.contains(annotationType))
+			if (skipAnnotators != null && skipAnnotators.contains(annotationType)) {
 				continue;
-			if (!pipeline.meetsAnnotatorRequirements(annotationType, this))
-				throw new UnsupportedOperationException("Document does not meet annotation type requirements for " + annotationType.getType() + " annotator.");
+			}
 
+			if (!pipeline.meetsAnnotatorRequirements(annotationType, this)) {
+				throw new UnsupportedOperationException("Document does not meet annotation type requirements for " + annotationType.getType() + " annotator.");
+			}
 			
 			if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
 				this.tokenAnnotatorName = pipeline.getAnnotatorName(AnnotationTypeNLP.TOKEN);
@@ -1320,8 +1322,6 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		List<Pair<TokenSpan, T>> anno = super.getTokenSpanAnnotations(annotationType, tokenSpan, relationsToAnnotations);
 		if (anno != null)
 			return anno;
-		if (this.otherTokenSpanAnnotations == null || this.otherTokenSpanAnnotations.get(annotationType) == null)
-			System.out.println("ERROR " + annotationType.getType() + " NULL on " + getName() + ((this.otherTokenSpanAnnotations == null ) ? " (obj)" : " (entry)"));
 		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
 		if (tokenSpanAnnotation == null)
 			return new ArrayList<Pair<TokenSpan, T>>();

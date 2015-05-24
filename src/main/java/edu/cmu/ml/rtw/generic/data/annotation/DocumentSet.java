@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.cmu.ml.rtw.generic.util.Pair;
 
@@ -34,7 +35,7 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	
 	public DocumentSet(String name) {
 		this.name = name;
-		this.fileNamesAndDocuments = new HashMap<String, Pair<String, D>>();
+		this.fileNamesAndDocuments = new ConcurrentHashMap<String, Pair<String, D>>();
 	}
 	
 	public String getName() {
@@ -170,7 +171,8 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 			};
 			
 			for (File file : tempFiles) {
-				documentSet.fileNamesAndDocuments.put(file.getName(), new Pair<String, D>(file.getName(), null));
+				String fileName = file.getAbsolutePath().substring(directoryPath.length(), file.getAbsolutePath().length());
+				documentSet.fileNamesAndDocuments.put(fileName, new Pair<String, D>(fileName, null));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
