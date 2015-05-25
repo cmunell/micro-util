@@ -10,9 +10,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
 /**
@@ -74,9 +77,8 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 	}
 	 
 	protected abstract DocumentSet<D> makeInstance();
-	
-	/* FIXME Implement these later 
-	public List<DocumentSet<D>> makePartition(int parts, Random random) {
+	 
+	public <S extends DocumentSet<D>> List<S> makePartition(int parts, Random random, S genericSet) {
 		double[] distribution = new double[parts];
 		String[] names = new String[distribution.length];
 		for (int i = 0; i < distribution.length; i++) {
@@ -84,28 +86,29 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 			distribution[i] = 1.0/parts;
 		}
 	
-		return makePartition(distribution, names, random);
+		return makePartition(distribution, names, random, genericSet);
 	}
 	
-	public List<DocumentSet<D>> makePartition(double[] distribution, Random random) {
+	public <S extends DocumentSet<D>> List<S> makePartition(double[] distribution, Random random, S genericSet) {
 		String[] names = new String[distribution.length];
 		for (int i = 0; i < names.length; i++)
 			names[i] = String.valueOf(i);
 	
-		return makePartition(distribution, names, random);
+		return makePartition(distribution, names, random, genericSet);
 	}
 	
-	public List<DocumentSet<D>> makePartition(double[] distribution, String[] names, Random random) {
+	@SuppressWarnings("unchecked")
+	public <S extends DocumentSet<D>> List<S> makePartition(double[] distribution, String[] names, Random random, S genericSet) {
 		
-		List<D> documentList = new ArrayList<D>();
-		documentList.addAll(this.documents.values());
+		List<Entry<String, Pair<String, D>>> documentList = new ArrayList<Entry<String, Pair<String, D>>>();
+		documentList.addAll(this.fileNamesAndDocuments.entrySet());
 		
 		List<Integer> documentPermutation = new ArrayList<Integer>();
 		for (int i = 0; i < documentList.size(); i++)
 			documentPermutation.add(i);
 		
 		documentPermutation = MathUtil.randomPermutation(random, documentPermutation);
-		List<DocumentSet<D>> partition = new ArrayList<DocumentSet<D>>(distribution.length);
+		List<S> partition = new ArrayList<S>(distribution.length);
 		
 		int offset = 0;
 		for (int i = 0; i < distribution.length; i++) {
@@ -113,17 +116,22 @@ public abstract class DocumentSet<D extends Document> implements Collection<D> {
 			if (i == distribution.length - 1 && offset + partSize < documentList.size())
 				partSize = documentList.size() - offset;
 			
-			DocumentSet<D> part = makeInstance(names[i]);
+			DocumentSet<D> part = genericSet.makeInstance();
+			part.name = names[i];
+			part.directoryPath = this.directoryPath;
+			part.documentLoader = this.documentLoader;
+			
 			for (int j = offset; j < offset + partSize; j++) {
-				part.add(documentList.get(documentPermutation.get(j)));
+				Entry<String, Pair<String, D>> entry = documentList.get(documentPermutation.get(j));
+				part.fileNamesAndDocuments.put(entry.getKey(), entry.getValue());
 			}
 			
 			offset += partSize;
-			partition.add(part);
+			partition.add((S)part);
 		}
 		
 		return partition;
-	} */
+	} 
 	
 	public boolean saveToJSONDirectory(String directoryPath) {
 		for (String name : getDocumentNames()) {
