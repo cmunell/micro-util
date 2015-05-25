@@ -541,7 +541,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return false;
 		
 		this.annotatedText = new Annotation(document.getOriginalText());
-		this.nlpPipeline.annotate(this.annotatedText);
+		
+		synchronized (this.nlpPipeline) {
+			this.nlpPipeline.annotate(this.annotatedText);
+		}
 		
 		List<CoreMap> sentences = this.annotatedText.get(SentencesAnnotation.class);
 		if (this.maxSentenceLength == 0) {
