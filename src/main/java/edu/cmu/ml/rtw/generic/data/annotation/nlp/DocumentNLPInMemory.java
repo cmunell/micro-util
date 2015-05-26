@@ -668,18 +668,27 @@ public class DocumentNLPInMemory extends DocumentNLP {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation) {
+          return fromMicroAnnotation(documentAnnotation, null);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation, String originalText) {
 		if (this.dataTools == null)
 			throw new UnsupportedOperationException("Data tools must not be null to deserialize from micro-reading annotations");
 		
 		this.name = documentAnnotation.getDocumentId();
+		this.originalText = originalText;
 		
 		List<Annotation> annotations = documentAnnotation.getAllAnnotations();
 		Map<AnnotationType<?>, TreeMap<Integer, Annotation>> orderedAnnotations = new HashMap<AnnotationType<?>, TreeMap<Integer, Annotation>>();
 		boolean hasNonDocumentAnnotations = false;
 		for (Annotation annotation : annotations) {
 			AnnotationType<?> annotationType = this.dataTools.getAnnotationTypeNLP(annotation.getSlot());
-			if (annotationType == null)
+			if (annotationType == null) {
+                          System.out.println("NULL ANNOTATION TYPE FOR SLOT: " + annotation.getSlot());
 				continue;
+                        }
 			if (((AnnotationTypeNLP<?>)annotationType).getTarget() != AnnotationTypeNLP.Target.DOCUMENT)
 				hasNonDocumentAnnotations = true;
 			
@@ -877,6 +886,10 @@ public class DocumentNLPInMemory extends DocumentNLP {
 				} else if (otherAnnotationType.getTarget() == AnnotationTypeNLP.Target.SENTENCE) {
 					if (otherAnnotations.containsKey(sentenceStart)) {
 						Map<Integer, Pair<Object, Double>> sentenceMap = (Map<Integer, Pair<Object, Double>>)this.otherSentenceAnnotations.get(otherAnnotationType);
+                                                if (sentenceMap == null) {
+                                                  sentenceMap = new HashMap<Integer, Pair<Object, Double>>();
+                                                  this.otherSentenceAnnotations.put(otherAnnotationType, sentenceMap);
+                                                }
 						sentenceMap.put(sentenceIndex, new Pair<Object, Double>(
 								otherAnnotationType.deserialize(this, sentenceIndex, otherAnnotations.get(sentenceStart).getValue()), otherAnnotations.get(sentenceStart).getConfidence()));
 					}
@@ -886,6 +899,9 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
 						sentenceAnno.add(new Triple<TokenSpan, Object, Double>(tokenSpan, otherAnnotationType.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
 					}
+                                        if (!this.otherTokenSpanAnnotations.containsKey(otherAnnotationType)) {
+                                          this.otherTokenSpanAnnotations.put(otherAnnotationType, new HashMap<Integer, List<Triple<TokenSpan, ? , Double>>>());
+                                        }
 					this.otherTokenSpanAnnotations.get(otherAnnotationType).put(sentenceIndex, sentenceAnno);
 				}
 			}
@@ -1114,6 +1130,202 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		
 		return new DocumentAnnotation(this.name, annotations);
 	}
+
+  @Override
+  public String toHtmlString(Collection<AnnotationTypeNLP<?>> annotationTypes) {
+    StringBuilder htmlBuilder = new StringBuilder();
+    beginHtml(htmlBuilder);
+    if (this.originalText == null) {
+      throw new RuntimeException("You really need to have the original text to output html...");
+    }
+    htmlBuilder.append("<div class=\"textLabel\"><h3>Document Text</h3></div>");
+    htmlBuilder.append("<div class=\"text\">");
+    htmlBuilder.append(AnnotationTypeNLP.ORIGINAL_TEXT.toHtml(originalText));
+    htmlBuilder.append("</div>");
+
+    htmlBuilder.append("<div class=\"annotations\">");
+    htmlBuilder.append("<h3>Annotations</h3>");
+    htmlBuilder.append("<ul>");
+    if (this.language != null && annotationTypes != null && annotationTypes.contains(AnnotationTypeNLP.LANGUAGE)) {
+      htmlBuilder.append("<div class=\"annotation\">\n");
+      htmlBuilder.append(AnnotationTypeNLP.LANGUAGE.toHtml(language));
+      htmlBuilder.append("</div>\n");
+    }
+
+    if (this.otherDocumentAnnotations != null) {
+      for (Entry<AnnotationTypeNLP<?>, Pair<?, Double>> entry : this.otherDocumentAnnotations.entrySet()) {
+        if (!annotationTypes.contains(entry.getKey())) continue;
+        htmlBuilder.append("<div class=\"annotation\">\n");
+        htmlBuilder.append(entry.getKey().toHtml(entry.getValue().getFirst()));
+        htmlBuilder.append("</div>\n");
+      }
+    }
+
+    boolean outputPoS = annotationTypes == null || annotationTypes.contains(AnnotationTypeNLP.POS);
+    boolean outputDep = annotationTypes == null || annotationTypes.contains(AnnotationTypeNLP.DEPENDENCY_PARSE);
+    boolean outputCon = annotationTypes == null || annotationTypes.contains(AnnotationTypeNLP.CONSTITUENCY_PARSE);
+    boolean outputNer = annotationTypes == null || annotationTypes.contains(AnnotationTypeNLP.NER);
+    boolean outputCoref = annotationTypes == null || annotationTypes.contains(AnnotationTypeNLP.COREF);
+
+    if (this.tokens == null) {
+      endHtml(htmlBuilder);
+      return htmlBuilder.toString();
+    }
+
+    for (int i = 0; i < this.tokens.length; i++) {
+      if (outputPoS && this.posTags != null) {
+        for (int j = 0; j < this.tokens[i].length; j++) {
+          htmlBuilder.append("<div class=\"annotation\">\n");
+          htmlBuilder.append(AnnotationTypeNLP.POS.toHtml(this.posTags[i][j]));
+          htmlBuilder.append("</div>\n");
+        }
+      }
+
+      if (this.dependencyParses != null && outputDep) {
+        htmlBuilder.append("<div class=\"annotation\">\n");
+        htmlBuilder.append(AnnotationTypeNLP.DEPENDENCY_PARSE.toHtml(getDependencyParse(i)));
+        htmlBuilder.append("</div>\n");
+      }
+
+      if (this.constituencyParses != null && outputCon) {
+        htmlBuilder.append("<div class=\"annotation\">\n");
+        htmlBuilder.append(AnnotationTypeNLP.CONSTITUENCY_PARSE.toHtml(getConstituencyParse(i)));
+        htmlBuilder.append("</div>\n");
+      }
+
+      if (this.ner != null && outputNer && this.ner.containsKey(i)) {
+        List<Triple<TokenSpan, String, Double>> sentenceNer = this.ner.get(i);
+        for (Triple<TokenSpan, String, Double> nerSpan : sentenceNer) {
+          htmlBuilder.append("<div class=\"annotation\">\n");
+          htmlBuilder.append(AnnotationTypeNLP.NER.toHtml(nerSpan.getSecond()));
+          htmlBuilder.append("</div>\n");
+        }
+      }
+
+      if (this.coref != null && outputCoref && this.coref.containsKey(i)) {
+        List<Triple<TokenSpan, TokenSpanCluster, Double>> sentenceCoref = this.coref.get(i);
+        for (Triple<TokenSpan, TokenSpanCluster, Double> corefSpan : sentenceCoref) {
+          htmlBuilder.append("<div class=\"annotation\">\n");
+          htmlBuilder.append(AnnotationTypeNLP.COREF.toHtml(corefSpan.getSecond()));
+          htmlBuilder.append("</div>\n");
+        }
+      }
+    }
+
+    if (this.otherSentenceAnnotations != null) {
+      for (Entry<AnnotationTypeNLP<?>, Map<Integer, ?>> entry : this.otherSentenceAnnotations.entrySet()) {
+        System.out.println("other sentence annotation of type " + entry.getKey());
+        if (annotationTypes != null && !annotationTypes.contains(entry.getKey()))
+          continue;
+
+        for (Entry<Integer, ?> sentenceEntry : entry.getValue().entrySet()) {
+          Pair pair = (Pair)sentenceEntry.getValue();
+          System.out.println("Sentence annotation: " + entry.getKey().serialize(pair.getFirst()));
+          int sentenceId = sentenceEntry.getKey();
+          int sentenceStart = tokens[sentenceId][0].getCharSpanStart();
+          int sentenceEnd = tokens[sentenceId][tokens[sentenceId].length - 1].getCharSpanEnd();
+          htmlBuilder.append("<div class=\"annotation\"");
+          htmlBuilder.append(" spanStart=\"" + sentenceStart + "\"");
+          htmlBuilder.append(" spanEnd=\"" + sentenceEnd + "\"");
+          htmlBuilder.append(">\n");
+          htmlBuilder.append("Type: " + entry.getKey().toString());
+          htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(pair.getFirst()));
+          htmlBuilder.append("</div>\n");
+        }
+      }
+    }
+
+    if (this.otherTokenSpanAnnotations != null) {
+      for (Entry<AnnotationTypeNLP<?>, Map<Integer, List<Triple<TokenSpan, ?, Double>>>> entry : this.otherTokenSpanAnnotations.entrySet()) {
+        System.out.println("other token span annotation of type " + entry.getKey());
+        if (annotationTypes != null && !annotationTypes.contains(entry.getKey())) {
+          continue;
+        }
+
+        for (Entry<Integer, List<Triple<TokenSpan, ?, Double>>> sentenceEntry : entry.getValue().entrySet()) {
+          for (Triple<TokenSpan, ?, Double> span : sentenceEntry.getValue()) {
+            System.out.println("Token span annotation: " + entry.getKey().serialize(span.getSecond()));
+            int sentenceId = sentenceEntry.getKey();
+            int spanStart = tokens[sentenceId][span.getFirst().getStartTokenIndex()].getCharSpanStart();
+            int spanEnd = tokens[sentenceId][span.getFirst().getEndTokenIndex()-1].getCharSpanEnd(); 
+            htmlBuilder.append("<div class=\"annotation\"");
+            htmlBuilder.append(" spanStart=\"" + spanStart + "\"");
+            htmlBuilder.append(" spanEnd=\"" + spanEnd + "\"");
+            htmlBuilder.append(">\n");
+            htmlBuilder.append("Type: " + entry.getKey().toString());
+            htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(span.getSecond()));
+            htmlBuilder.append("</div>\n");
+          }
+        }
+      }
+    }
+
+    if (this.otherTokenAnnotations != null) {
+      for (Entry<AnnotationTypeNLP<?>, Pair<?, Double>[][]> entry : this.otherTokenAnnotations.entrySet()) {
+        System.out.println("other token annotation of type " + entry.getKey());
+        if (annotationTypes != null && !annotationTypes.contains(entry.getKey()))
+          continue;
+
+        Pair<?, Double>[][] anno = entry.getValue();
+        for (int i = 0; i < anno.length; i++) {
+          for (int j = 0; j < anno[i].length; j++) {
+            System.out.println("Token annotation: " + entry.getKey().serialize(anno[i][j].getFirst()));
+            int spanStart = tokens[i][j].getCharSpanStart();
+            int spanEnd = tokens[i][j].getCharSpanEnd();
+            htmlBuilder.append("<div class=\"annotation\"");
+            htmlBuilder.append(" spanStart=\"" + spanStart + "\"");
+            htmlBuilder.append(" spanEnd=\"" + spanEnd + "\"");
+            htmlBuilder.append(">\n");
+            htmlBuilder.append("Type: " + entry.getKey().toString());
+            htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(anno[i][j].getFirst()));
+            htmlBuilder.append("</div>\n");
+          }
+        }
+      }
+    }
+    htmlBuilder.append("</ul></div>\n");
+    endHtml(htmlBuilder);
+    htmlBuilder.append("</body></html>");
+
+    return htmlBuilder.toString();
+  }
+
+  private void beginHtml(StringBuilder htmlBuilder) {
+    htmlBuilder.append("<html>");
+    htmlBuilder.append("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>");
+    htmlBuilder.append("<body>");
+  }
+
+  private void endHtml(StringBuilder htmlBuilder) {
+    // Add some javascript at the end of the body.  Pretty ugly to be developing javascript here,
+    // but it's either this or making an html page that isn't stand-alone...
+    htmlBuilder.append("<script type=\"text/javascript\">\n");
+    htmlBuilder.append("//# sourceURL=annotations.js\n");
+    htmlBuilder.append("var text = $(\".text\").html()\n");
+    htmlBuilder.append("$(document).ready(function() {\n");
+    htmlBuilder.append("  $(\".annotation\").hover(function() {\n");
+    htmlBuilder.append("    var spanStart = $(this).attr(\"spanStart\");\n");
+    htmlBuilder.append("    var spanEnd = $(this).attr(\"spanEnd\");\n");
+    htmlBuilder.append("    highlightSpan([spanStart, spanEnd]);\n");
+    htmlBuilder.append("  },\n");
+    htmlBuilder.append("  removeHighlight);\n");
+    htmlBuilder.append("});\n");
+    htmlBuilder.append("function highlightSpan(span) {\n");
+    htmlBuilder.append("  var before = text.slice(0, span[0]);\n");
+    htmlBuilder.append("  var after = text.slice(span[1]);\n");
+    htmlBuilder.append("  var to_highlight = text.slice(span[0], span[1]);\n");
+    htmlBuilder.append("  var highlighted = before + '<span class=\"highlight\">' + to_highlight + '</span>' + after;\n");
+    htmlBuilder.append("  $(\".text\").html(highlighted);\n");
+    htmlBuilder.append("}\n");
+    htmlBuilder.append("function removeHighlight() {\n");
+    htmlBuilder.append("  $(\".text\").html(text);\n");
+    htmlBuilder.append("}\n");
+    htmlBuilder.append("</script>\n");
+    // And some simple CSS so that the highlight shows up.
+    htmlBuilder.append("<style>.highlight { background-color: red }</style>\n");
+    // And then close the html document.
+    htmlBuilder.append("</body></html>");
+  }
 
 	@Override
 	public int getSentenceCount() {

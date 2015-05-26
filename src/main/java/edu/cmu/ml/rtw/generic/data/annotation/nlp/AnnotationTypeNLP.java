@@ -62,6 +62,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		
 		abstract T deserialize(Document document, int sentenceIndex, Object serializedObj);
 		abstract Object serialize(T obj);
+		abstract String toHtml(T obj);
 	}
 	
 	protected Serializer<T> enumSerializer = new Serializer<T>() {
@@ -75,6 +76,11 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		Object serialize(T obj) {
 			return obj.toString();
 		}
+
+                @Override
+                String toHtml(T obj) {
+                  return obj.toString();
+                }
 	};
 	
 	protected Serializer<T> identitySerializer = new Serializer<T>() {
@@ -87,6 +93,11 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		Object serialize(T obj) {
 			return obj;
 		}
+
+                @Override
+                String toHtml(T obj) {
+                  return obj.toString();
+                }
 	};
 
 	protected Serializer<T> jsonSerializer = new Serializer<T>() {
@@ -106,6 +117,11 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		Object serialize(T obj) {
 			return ((JSONSerializable)obj).toJSON();
 		}
+
+                @Override
+                String toHtml(T obj) {
+                  return ((JSONSerializable)obj).toJSON().toString();
+                }
 	};
 	
 	protected Serializer<T> stringSerializer = new Serializer<T>() {
@@ -125,6 +141,11 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		Object serialize(T obj) {
 			return ((StringSerializable)obj).toString();
 		}
+
+                @Override
+                String toHtml(T obj) {
+                  return ((StringSerializable)obj).toString();
+                }
 	};
 	
 	public enum Target {
@@ -179,4 +200,8 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public Object serialize(Object obj) {
 		return this.serializer.serialize(this.annotationClass.cast(obj));
 	}
+
+        public String toHtml(Object obj) {
+          return this.serializer.toHtml(this.annotationClass.cast(obj));
+        }
 }

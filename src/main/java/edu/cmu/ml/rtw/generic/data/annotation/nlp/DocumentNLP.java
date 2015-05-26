@@ -301,6 +301,10 @@ public abstract class DocumentNLP extends Document {
 		return toMicroAnnotation(this.dataTools.getAnnotationTypesNLP());
 	}
 	
+	public String toHtmlString() {
+		return toHtmlString(null);
+	}
+	
 	public abstract String getOriginalText();
 	public abstract Language getLanguage();
 	public abstract int getSentenceCount();
@@ -325,8 +329,10 @@ public abstract class DocumentNLP extends Document {
 	public abstract List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence(TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations);
 	
 	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation);
+	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation, String originalText);
 	public abstract Document makeInstanceFromMicroAnnotation(DocumentAnnotation documentAnnotation, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
 	public abstract DocumentAnnotation toMicroAnnotation(Collection<AnnotationTypeNLP<?>> annotationTypes);
+	public abstract String toHtmlString(Collection<AnnotationTypeNLP<?>> annotationTypes);
 
 	public abstract Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
 }
