@@ -19,12 +19,12 @@ import edu.cmu.ml.rtw.generic.util.FileUtil;
  * A collection of annotations for a document. All of the annotations
  * within an instance of this class have the same value for their
  * {@code getDocumentId()} method.
- * 
+ *
  * <p>
  * {@code DocumentAnnotation} is immutable.
- * 
+ *
  * @author jayant
- * 
+ *
  */
 public class DocumentAnnotation {
 
@@ -40,14 +40,14 @@ public class DocumentAnnotation {
    * Reads in the document annotations stored in {@code filename}.
    * This file is in the one-JSON-object-per-line format described on
    * the wiki:
-   * 
+   *
    * {@link http://rtw.ml.cmu.edu/wiki/index.php/Annotation}
-   * 
+   *
    * A single file may contain annotations for multiple documents. Each
    * document's annotations are returned aggregated into a single
    * DocumentAnnotation. Annotations with no document id are assigned
-   * the id {@code null} and aggregated in the same fashion. 
-   * 
+   * the id {@code null} and aggregated in the same fashion.
+   *
    * @param filename
    * @return
    */
@@ -56,14 +56,14 @@ public class DocumentAnnotation {
     BufferedReader reader = FileUtil.getFileReader(filename);
     String line = null;
     try {
-	  while ((line = reader.readLine()) != null) {
+      while ((line = reader.readLine()) != null) {
         Annotation a = Annotation.fromJsonString(line);
-	    documentAnnotations.put(a.getDocumentId(), a);
-	  }
-	} catch (IOException e) {
+        documentAnnotations.put(a.getDocumentId(), a);
+      }
+    } catch (IOException e) {
       return null;
-	}
-    
+    }
+
     List<DocumentAnnotation> docAnnotations = Lists.newArrayList();
     for (String key : documentAnnotations.keySet()) {
       DocumentAnnotation docAnnotation = new DocumentAnnotation(key,
@@ -72,7 +72,7 @@ public class DocumentAnnotation {
     }
     return docAnnotations;
   }
-  
+
   /**
    * Gets the id of the annotated document.
    */
@@ -82,7 +82,7 @@ public class DocumentAnnotation {
 
   /**
    * Gets all of the annotations for this document.
-   * 
+   *
    * @return
    */
   public List<Annotation> getAllAnnotations() {
@@ -91,7 +91,7 @@ public class DocumentAnnotation {
 
   /**
    * Gets all annotations of a particular slot in this document.
-   * 
+   *
    * @param slot
    * @return
    */
@@ -109,7 +109,7 @@ public class DocumentAnnotation {
    * Gets all of the annotations for the given span, i.e., the
    * annotations for which {@code annotation.spanStart == spanStart}
    * and {@code annotation.spanEnd == spanEnd}.
-   * 
+   *
    */
   public List<Annotation> getAnnotationsForSpan(int spanStart, int spanEnd) {
     List<Annotation> result = Lists.newArrayList();
@@ -124,13 +124,13 @@ public class DocumentAnnotation {
   /**
    * Returns a new {@code DocumentAnnotation} containing all of the
    * annotations in both {@code this} and {@code other}.
-   * 
+   *
    * @param other
    * @return
    */
   public DocumentAnnotation merge(DocumentAnnotation other) {
     Preconditions.checkArgument(other.documentId == this.documentId);
-    
+
     List<Annotation> newAnnotations = Lists.newArrayList();
     newAnnotations.addAll(annotations);
     newAnnotations.addAll(other.getAllAnnotations());

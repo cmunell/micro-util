@@ -46,11 +46,11 @@ public enum PoSTag {
 	VBD, // Verb, past tense                        -- (Freeling: V..I... V..S...)
 	VBG, // Verb, gerund or present participle      -- (Freeling: V.G.... V.PP...)
 	VBN, // Verb, past participle                   -- (Freeling: V.PI... V.PS...)
-	VBP, // Verb, non­3rd person singular present   -- (Freeling: V..P.S.)
+	VBP, // Verb, non-3rd person singular present   -- (Freeling: V..P.S.)
 	VBZ, // Verb, 3rd person singular present       -- (Freeling: V..P3S.)
-	WDT, // Wh­determiner                           -- (Freeling: None)
-	WP, // Wh­pronoun                               -- (Freeling: PT...... PR......)
-	WP$, // Possessive wh­pronoun                   -- (Freeling: None)
-	WRB, // Wh­adverb                               -- (Freeling: None)
+	WDT, // Wh-determiner                           -- (Freeling: None)
+	WP, // Wh-pronoun                               -- (Freeling: PT...... PR......)
+	WP$, // Possessive wh-pronoun                   -- (Freeling: None)
+	WRB, // Wh-adverb                               -- (Freeling: None)
 	Other // Unknown								-- (Frelinng: Everything else
 }

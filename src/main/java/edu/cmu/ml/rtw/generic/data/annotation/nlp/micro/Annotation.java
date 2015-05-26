@@ -121,6 +121,7 @@ public class Annotation {
       }
 
       Double confidence = json.optDouble("confidence");
+      if (confidence.isNaN()) confidence = null;
       String annotationTimeString = json.getString("annotationTime");
       DateTime annotationTime = new DateTime(annotationTimeString);
       String justification = json.optString("justification", null);
