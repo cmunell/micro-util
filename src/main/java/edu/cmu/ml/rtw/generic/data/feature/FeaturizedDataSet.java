@@ -68,8 +68,9 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 		 
 		this.featureList = new ArrayList<Feature<D, L>>();
 		this.featureVocabularySize = 0;
-		for (Feature<D, L> feature : features)
-			addFeature(feature);
+		if (features != null)
+			for (Feature<D, L> feature : features)
+				addFeature(feature);
 		
 		this.featureVocabularyNames = new ConcurrentHashMap<Integer, String>();
 		this.featureVocabularyValues = new ConcurrentHashMap<Integer, Vector>();

@@ -71,14 +71,11 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	
 	@Override
 	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
-		data.getDatumTools().getDataTools().getOutputWriter().debugWriteln("Composite model running binary classifiers...");
 		Map<D, L> classifications = new HashMap<D, L>();
 		final FeaturizedDataSet<T, Boolean> binaryData = (FeaturizedDataSet<T, Boolean>)data.makeBinary(this.binaryContext);
 		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, data.getMaxThreads());
-		data.getDatumTools().getDataTools().getOutputWriter().debugWriteln("Finished composite model running binary classifier.");
-		
+			
 		// Generate label for each datum (in parallel)
-		data.getDatumTools().getDataTools().getOutputWriter().debugWriteln("Composite model constructing composite labels...");
 		binaryData.map(new Fn<T, T>() {
 			@Override
 			public T apply(T datum) {
@@ -92,8 +89,6 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 				return datum;
 			}
 		}, data.getMaxThreads());
-		
-		data.getDatumTools().getDataTools().getOutputWriter().debugWriteln("Finished composite model constructing composite labels.");
 		
 		return classifications;
 	}

@@ -184,7 +184,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 	private boolean addAnnotator(AnnotationType<?> annotationType) {
 		if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
 			addAnnotator(AnnotationTypeNLP.TOKEN,  new AnnotatorToken<Token>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<Token> produces() { return AnnotationTypeNLP.TOKEN; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.ORIGINAL_TEXT }; }
 				public boolean measuresConfidence() { return false; }
@@ -214,7 +214,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.POS)) {
 			addAnnotator(AnnotationTypeNLP.POS,  new AnnotatorToken<PoSTag>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<PoSTag> produces() { return AnnotationTypeNLP.POS; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN }; }
 				public boolean measuresConfidence() { return false; }
@@ -247,7 +247,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.LEMMA)) {
 			addAnnotator(AnnotationTypeNLP.LEMMA,  new AnnotatorToken<String>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<String> produces() { return AnnotationTypeNLP.LEMMA; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
 				public boolean measuresConfidence() { return false; }
@@ -276,7 +276,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE)) {
 			addAnnotator(AnnotationTypeNLP.CONSTITUENCY_PARSE,  new AnnotatorSentence<ConstituencyParse>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<ConstituencyParse> produces() { return AnnotationTypeNLP.CONSTITUENCY_PARSE; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
 				public boolean measuresConfidence() { return false; }
@@ -353,7 +353,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE)) {
 			addAnnotator(AnnotationTypeNLP.DEPENDENCY_PARSE,  new AnnotatorSentence<DependencyParse>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<DependencyParse> produces() { return AnnotationTypeNLP.DEPENDENCY_PARSE; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE }; }
 				public boolean measuresConfidence() { return false; }
@@ -429,7 +429,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.NER)) {
 			addAnnotator(AnnotationTypeNLP.NER,  new AnnotatorTokenSpan<String>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<String> produces() { return AnnotationTypeNLP.NER; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE, AnnotationTypeNLP.DEPENDENCY_PARSE }; }
 				public boolean measuresConfidence() { return false; }
@@ -482,7 +482,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.COREF)) {
 			addAnnotator(AnnotationTypeNLP.COREF,  new AnnotatorTokenSpan<TokenSpanCluster>() {
-				public String getName() { return "stanford"; }
+				public String getName() { return "stanford_3.5.2"; }
 				public AnnotationType<TokenSpanCluster> produces() { return AnnotationTypeNLP.COREF; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE, AnnotationTypeNLP.DEPENDENCY_PARSE, AnnotationTypeNLP.NER }; }
 				public boolean measuresConfidence() { return false; }
@@ -541,7 +541,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return false;
 		
 		this.annotatedText = new Annotation(document.getOriginalText());
-		this.nlpPipeline.annotate(this.annotatedText);
+		
+		synchronized (this.nlpPipeline) {
+			this.nlpPipeline.annotate(this.annotatedText);
+		}
 		
 		List<CoreMap> sentences = this.annotatedText.get(SentencesAnnotation.class);
 		if (this.maxSentenceLength == 0) {

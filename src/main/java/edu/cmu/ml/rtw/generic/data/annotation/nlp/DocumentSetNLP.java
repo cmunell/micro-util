@@ -4,7 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
@@ -12,6 +15,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.Annotation;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	public DocumentSetNLP(String name) {
@@ -55,14 +59,14 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	}
 
 	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument) {
-		return loadFromMicroPathThroughPipeline(name, path, genericDocument, null, null);
+		return loadFromMicroPathThroughPipeline(name, path, genericDocument, null, null, true);
 	}
 	
 	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument, PipelineNLP pipeline) {
-		return loadFromMicroPathThroughPipeline(name, path, genericDocument, pipeline, null);
+		return loadFromMicroPathThroughPipeline(name, path, genericDocument, pipeline, null, true);
 	}
 	
-	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators) {
+	public static <D extends DocumentNLP> DocumentSetNLP<D> loadFromMicroPathThroughPipeline(String name, String path, D genericDocument, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators, boolean oneDocumentPerFile) {
 		File filePath = new File(path);
 		File[] files = null;
 		if (filePath.isDirectory()) {
@@ -74,8 +78,33 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		// FIXME: This assumes that documents are not split across files
 		// Might want to remove this assumption...
 		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>(name);
-		for (File file : files) {
-			documentSet.addAll(loadFromMicroFileThroughPipeline(file, genericDocument, pipeline, skipAnnotators));
+		
+		Collections.sort(Arrays.asList(files), new Comparator<File>() { // Ensure determinism
+		    public int compare(File o1, File o2) {
+		        return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
+		    }
+		});
+		
+		if (oneDocumentPerFile) {
+			documentSet.directoryPath = path;
+			documentSet.documentLoader = new DocumentLoader<D>() {
+				@Override
+				public D load(String documentFileName) {
+					DocumentSetNLP<D> documents = loadFromMicroFileThroughPipeline(new File(path, documentFileName), genericDocument, pipeline, skipAnnotators);
+					if (documents.size() == 0)
+						return null;
+					else 
+						return documents.getDocumentByName(documents.getDocumentNames().toArray()[0].toString(), false);
+				}
+			};
+			
+			for (File file : files) {
+				documentSet.fileNamesAndDocuments.put(file.getName(), new Pair<String, D>(file.getName(), null));
+			} 
+		} else {
+			for (File file : files) {
+				documentSet.addAll(loadFromMicroFileThroughPipeline(file, genericDocument, pipeline, skipAnnotators));
+			}
 		}
 	
 		return documentSet;
@@ -112,8 +141,23 @@ public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 		}
 		
 		DocumentSetNLP<D> documentSet = new DocumentSetNLP<D>(name);
+		
+		Collections.sort(Arrays.asList(files), new Comparator<File>() { // Ensure determinism
+		    public int compare(File o1, File o2) {
+		        return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
+		    }
+		});
+		
+		documentSet.directoryPath = path;
+		documentSet.documentLoader = new DocumentLoader<D>() {
+			@Override
+			public D load(String documentFileName) {
+				return (D)genericDocument.makeInstanceFromText(name, FileUtil.readFile(new File(path, documentFileName)), language, pipeline, skipAnnotators);
+			}
+		};
+		
 		for (File file : files) {
-			documentSet.add((D)genericDocument.makeInstanceFromText(file.getName(), FileUtil.readFile(file), language, pipeline, skipAnnotators));
+			documentSet.fileNamesAndDocuments.put(file.getName(), new Pair<String, D>(file.getName(), null));
 		}
 	
 		return documentSet;
