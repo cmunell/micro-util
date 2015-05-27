@@ -308,9 +308,13 @@ public abstract class DocumentNLP extends Document {
 	}
 	
 	public boolean saveToHtmlFile(String path) {
+		return saveToHtmlFile(path, new ArrayList<AnnotationTypeNLP<?>>());
+	}
+	
+	public boolean saveToHtmlFile(String path, Collection<AnnotationTypeNLP<?>> annotationTypes) {
 		try {
 			BufferedWriter w = new BufferedWriter(new FileWriter(path));
-			w.write(toHtmlString());
+			w.write(toHtmlString(annotationTypes));
 			w.close();
 		} catch (IOException e) {
 			e.printStackTrace();
