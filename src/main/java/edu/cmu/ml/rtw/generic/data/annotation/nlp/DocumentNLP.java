@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -305,6 +307,19 @@ public abstract class DocumentNLP extends Document {
 		return toHtmlString(null);
 	}
 	
+	public boolean saveToHtmlFile(String path) {
+		try {
+			BufferedWriter w = new BufferedWriter(new FileWriter(path));
+			w.write(toHtmlString());
+			w.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+	}
+	
 	public abstract String getOriginalText();
 	public abstract Language getLanguage();
 	public abstract int getSentenceCount();
@@ -334,5 +349,5 @@ public abstract class DocumentNLP extends Document {
 	public abstract DocumentAnnotation toMicroAnnotation(Collection<AnnotationTypeNLP<?>> annotationTypes);
 	public abstract String toHtmlString(Collection<AnnotationTypeNLP<?>> annotationTypes);
 
-	public abstract Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
+	public abstract Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators, boolean keepOriginalText);
 }
