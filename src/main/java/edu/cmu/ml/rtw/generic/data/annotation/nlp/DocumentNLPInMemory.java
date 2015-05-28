@@ -446,21 +446,21 @@ public class DocumentNLPInMemory extends DocumentNLP {
 				JSONObject annotatorsJson = json.getJSONObject("annotators");
 				String[] annotatorTypes = JSONObject.getNames(annotatorsJson);
 				for (String annotatorType : annotatorTypes) {
-					if (annotatorType.equals(AnnotationTypeNLP.ORIGINAL_TEXT))
+					if (annotatorType.equals(AnnotationTypeNLP.ORIGINAL_TEXT.getType()))
 						this.originalTextAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.LANGUAGE))
+					else if (annotatorType.equals(AnnotationTypeNLP.LANGUAGE.getType()))
 						this.languageAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.TOKEN))
+					else if (annotatorType.equals(AnnotationTypeNLP.TOKEN.getType()))
 						this.tokenAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.POS))
+					else if (annotatorType.equals(AnnotationTypeNLP.POS.getType()))
 						this.posAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE))
+					else if (annotatorType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE.getType()))
 						this.constituencyParseAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE))
+					else if (annotatorType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE.getType()))
 						this.dependencyParseAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.NER))
+					else if (annotatorType.equals(AnnotationTypeNLP.NER.getType()))
 						this.nerAnnotatorName = annotatorsJson.getString(annotatorType);
-					else if (annotatorType.equals(AnnotationTypeNLP.COREF))
+					else if (annotatorType.equals(AnnotationTypeNLP.COREF.getType()))
 						this.corefAnnotatorName = annotatorsJson.getString(annotatorType);
 					else {
 						if (this.otherAnnotatorNames == null)

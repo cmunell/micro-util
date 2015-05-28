@@ -21,6 +21,7 @@ import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
 
 public class JSONTokenizer implements Annotator {
+	
 	public JSONTokenizer() {
 		
 	}
