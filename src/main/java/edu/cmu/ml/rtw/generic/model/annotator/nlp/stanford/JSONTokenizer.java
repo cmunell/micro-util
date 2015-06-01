@@ -11,13 +11,10 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPInMemory;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.Annotator;
-import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
 
 public class JSONTokenizer implements Annotator {
@@ -35,22 +32,38 @@ public class JSONTokenizer implements Annotator {
 		try {
 			DocumentNLP document = new DocumentNLPInMemory(null, new JSONObject(annotation.toString()));
 			List<CoreMap> sentences = new ArrayList<CoreMap>();
+			int tokenOffset = 0;
+			List<CoreLabel> allTokens = new ArrayList<CoreLabel>();
 			for (int i = 0; i < document.getSentenceCount(); i++) {
-				CoreMap sentence = new ArrayCoreMap();
 				List<CoreLabel> tokens = new ArrayList<CoreLabel>();
+				StringBuilder sentenceText = new StringBuilder();
 				for (int j = 0; j < document.getSentenceTokenCount(i); j++) {
 					CoreLabel token = new CoreLabel();
 					token.setBeginPosition(document.getToken(i, j).getCharSpanStart());
 					token.setEndPosition(document.getToken(i, j).getCharSpanEnd());
 					token.setSentIndex(i);
-					token.set(TextAnnotation.class, document.getTokenStr(i, j));
+					token.setIndex(j + 1);
+					token.set(CoreAnnotations.TextAnnotation.class, document.getTokenStr(i, j));
+					token.setValue(document.getTokenStr(i, j));
 					tokens.add(token);
+					sentenceText.append(document.getTokenStr(i, j)).append(" ");
 				}
-				sentence.set(TokensAnnotation.class, tokens);
+				
+				Annotation sentence = new Annotation(sentenceText.toString().trim());
+				sentence.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, document.getToken(i, 0).getCharSpanStart());
+				sentence.set(CoreAnnotations.CharacterOffsetEndAnnotation.class, document.getToken(i, document.getSentenceTokenCount(i) - 1).getCharSpanEnd());
+				sentence.set(CoreAnnotations.TokensAnnotation.class, tokens);
+				sentence.set(CoreAnnotations.TokenBeginAnnotation.class, tokenOffset);
+				tokenOffset += tokens.size();
+				sentence.set(CoreAnnotations.TokenEndAnnotation.class, tokenOffset);
+				sentence.set(CoreAnnotations.SentenceIndexAnnotation.class, sentences.size());
+				
 				sentences.add(sentence);
+				allTokens.addAll(tokens);
 			}
 			
-			annotation.set(SentencesAnnotation.class, sentences);
+			annotation.set(CoreAnnotations.SentencesAnnotation.class, sentences);
+			annotation.set(CoreAnnotations.TokensAnnotation.class, allTokens);
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return;

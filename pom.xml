@@ -94,6 +94,12 @@
   		<version>3.5.2</version>
   		<classifier>models</classifier>
   	</dependency>
+  	<dependency>
+  		<groupId>edu.stanford.nlp</groupId>
+  		<artifactId>stanford-corenlp</artifactId>
+  		<version>3.5.2</version>
+  		<classifier>sources</classifier>
+  	</dependency>
 	<dependency>
   		<groupId>org.apache.logging.log4j</groupId>
   		<artifactId>log4j-core</artifactId>

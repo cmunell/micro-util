@@ -1,54 +1,48 @@
 package edu.cmu.ml.rtw.generic.model.annotator.nlp;
-/*
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.stanford.nlp.dcoref.CorefChain;
-import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraph.OutputFormat;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
-import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.IntPair;
+import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPInMemory;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.Language;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.Token;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.stanford.JSONTokenizer;
-*/
+
 public class NLPAnnotatorStanfordTest {
-	/* FIXME Refactor this @Test
+	@Test
 	public void testJSONTokenizer() {
-		NLPAnnotatorStanford annotator = new NLPAnnotatorStanford();
-		annotator.disableConstituencyParses();
-		annotator.disableDependencyParses();
-		annotator.initializePipeline(new JSONTokenizer());
-		annotator.setText("{\"sentences\" : [ { \"tokens\": [ { \"str\" : \"the\", \"s\" : 0, \"e\" : 3 }, " +
-															 "{ \"str\" : \"dog\", \"s\" : 4, \"e\" : 7 }, " +
-															 "{ \"str\" : \"barks\", \"s\" : 8, \"e\" : 13 }"
-														+ " ] }, " +
-											 "{ \"tokens\": [ ] } ]" +
-						  "}");
+		PipelineNLPStanford pipeline = new PipelineNLPStanford();
+		pipeline.initialize(null, new JSONTokenizer());
 		
-		Token[][] tokens = annotator.makeTokens();
-		Assert.assertEquals("the", tokens[0][0].getStr());
-		Assert.assertEquals("dog", tokens[0][1].getStr());
-		Assert.assertEquals("barks", tokens[0][2].getStr());
+		DocumentNLP document = new DocumentNLPInMemory(new DataTools(), 
+													   "document", 
+													   "{\"sentences\" : [ { \"tokens\": [ { \"str\" : \"the\", \"s\" : 0, \"e\" : 3 }, " +
+																 "{ \"str\" : \"dog\", \"s\" : 4, \"e\" : 7 }, " +
+																 "{ \"str\" : \"barks\", \"s\" : 8, \"e\" : 13 }," +
+																 "{ \"str\" : \".\", \"s\" : 14, \"e\" : 15 }" +
+																 " ] }, " +
+													   "{ \"tokens\": ["  +
+													   			 "{ \"str\" : \"the\", \"s\" : 16, \"e\" : 19 }, " +
+																 "{ \"str\" : \"bee\", \"s\" : 20, \"e\" : 23 }, " +
+																 "{ \"str\" : \"stings\", \"s\" : 24, \"e\" : 30 }," +		 
+																 "{ \"str\" : \".\", \"s\" : 31, \"e\" : 32 }" +	
+													   "] } ]" +
+													   "}",
+													   Language.English,
+													   pipeline);
+				
+		Assert.assertEquals("the", document.getTokenStr(0, 0));
+		Assert.assertEquals("dog", document.getTokenStr(0, 1));
+		Assert.assertEquals("barks", document.getTokenStr(0, 2));
 		
-		PoSTag[][] pos = annotator.makePoSTags();
-		Assert.assertEquals(PoSTag.DT, pos[0][0]);
-		Assert.assertEquals(PoSTag.NN, pos[0][1]);
-		Assert.assertEquals(PoSTag.VBZ, pos[0][2]);
+		Assert.assertEquals(PoSTag.DT, document.getPoSTag(0, 0));
+		Assert.assertEquals(PoSTag.NN, document.getPoSTag(0, 1));
+		Assert.assertEquals(PoSTag.VBZ, document.getPoSTag(0, 2));
 	}
 	
-	@Test
+	/* FIXME Refactor later @Test
 	public void scratchSentenceParse() {
 		NLPAnnotatorStanford annotator = new NLPAnnotatorStanford();
 		annotator.initializePipeline();
