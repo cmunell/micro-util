@@ -341,8 +341,12 @@ public class DependencyParse implements StringSerializable {
 	
 	@Override
 	public boolean fromString(String str) {
-		if (str.trim().length() == 0)
+		if (str.trim().length() == 0) {
+			this.root =  this.new Node(-1, new Dependency[0], new Dependency[0]);
+			this.tokenNodes = new Node[0];
+			
 			return true;
+		}
 		
 		String[] strParts = str.split("\n");
 		Map<Integer, Pair<List<Dependency>, List<Dependency>>> nodesToDeps = new HashMap<Integer, Pair<List<Dependency>, List<Dependency>>>();
