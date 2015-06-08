@@ -686,37 +686,36 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		this.originalText = originalText;
 		
 		List<Annotation> annotations = documentAnnotation.getAllAnnotations();
-		Map<AnnotationType<?>, TreeMap<Integer, Annotation>> orderedAnnotations = new HashMap<AnnotationType<?>, TreeMap<Integer, Annotation>>();
+		Map<AnnotationType<?>, TreeMap<Integer, List<Annotation>>> orderedAnnotations = new HashMap<AnnotationType<?>, TreeMap<Integer, List<Annotation>>>();
 		boolean hasNonDocumentAnnotations = false;
 		for (Annotation annotation : annotations) {
 			AnnotationType<?> annotationType = this.dataTools.getAnnotationTypeNLP(annotation.getSlot());
-			if (annotationType == null) {
-                          System.out.println("NULL ANNOTATION TYPE FOR SLOT: " + annotation.getSlot());
-				continue;
-                        }
+			
 			if (((AnnotationTypeNLP<?>)annotationType).getTarget() != AnnotationTypeNLP.Target.DOCUMENT)
 				hasNonDocumentAnnotations = true;
 			
 			if (!orderedAnnotations.containsKey(annotationType))
-				orderedAnnotations.put(annotationType, new TreeMap<Integer, Annotation>());
-			orderedAnnotations.get(annotationType).put(annotation.getSpanStart(), annotation);
+				orderedAnnotations.put(annotationType, new TreeMap<Integer, List<Annotation>>());
+			if (!orderedAnnotations.get(annotationType).containsKey(annotation.getSpanStart()))
+				orderedAnnotations.get(annotationType).put(annotation.getSpanStart(),  new ArrayList<Annotation>(3));
+			orderedAnnotations.get(annotationType).get(annotation.getSpanStart()).add(annotation);
 		}
 		
 		if (hasNonDocumentAnnotations && (!orderedAnnotations.containsKey(AnnotationTypeNLP.SENTENCE) || !orderedAnnotations.containsKey(AnnotationTypeNLP.TOKEN)))
 			throw new UnsupportedOperationException("Document must contain sentence annotations.");
 		
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.ORIGINAL_TEXT)) {
-			TreeMap<Integer, Annotation> textAnnotations = orderedAnnotations.get(AnnotationTypeNLP.ORIGINAL_TEXT);
-			this.originalText = AnnotationTypeNLP.ORIGINAL_TEXT.deserialize(this, textAnnotations.firstEntry().getValue().getValue());
-			this.originalTextAnnotatorName = textAnnotations.firstEntry().getValue().getAnnotator();
-			this.originalTextConf = textAnnotations.firstEntry().getValue().getConfidence();
+			TreeMap<Integer, List<Annotation>> textAnnotations = orderedAnnotations.get(AnnotationTypeNLP.ORIGINAL_TEXT);
+			this.originalText = AnnotationTypeNLP.ORIGINAL_TEXT.deserialize(this, textAnnotations.firstEntry().getValue().get(0).getValue());
+			this.originalTextAnnotatorName = textAnnotations.firstEntry().getValue().get(0).getAnnotator();
+			this.originalTextConf = textAnnotations.firstEntry().getValue().get(0).getConfidence();
 		}
 
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.LANGUAGE)) {
-			TreeMap<Integer, Annotation> languageAnnotations = orderedAnnotations.get(AnnotationTypeNLP.LANGUAGE);
-			this.language = AnnotationTypeNLP.LANGUAGE.deserialize(this, languageAnnotations.firstEntry().getValue().getValue());
-			this.languageAnnotatorName = languageAnnotations.firstEntry().getValue().getAnnotator();
-			this.languageConf = languageAnnotations.firstEntry().getValue().getConfidence();
+			TreeMap<Integer, List<Annotation>> languageAnnotations = orderedAnnotations.get(AnnotationTypeNLP.LANGUAGE);
+			this.language = AnnotationTypeNLP.LANGUAGE.deserialize(this, languageAnnotations.firstEntry().getValue().get(0).getValue());
+			this.languageAnnotatorName = languageAnnotations.firstEntry().getValue().get(0).getAnnotator();
+			this.languageConf = languageAnnotations.firstEntry().getValue().get(0).getConfidence();
 		}
 		
 		List<AnnotationTypeNLP<?>> otherAnnotationTypes = new ArrayList<AnnotationTypeNLP<?>>(); // Other non-document annotation types
@@ -727,7 +726,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			
 			if (this.otherAnnotatorNames == null)
 				this.otherAnnotatorNames = new HashMap<AnnotationTypeNLP<?>, String>();
-			this.otherAnnotatorNames.put(annotationType, orderedAnnotations.get(annotationType).firstEntry().getValue().getAnnotator());
+			this.otherAnnotatorNames.put(annotationType, orderedAnnotations.get(annotationType).firstEntry().getValue().get(0).getAnnotator());
 			
 			if (annotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN) {
 				otherAnnotationTypes.add(annotationType);
@@ -745,7 +744,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			} else if (annotationType.getTarget() == AnnotationTypeNLP.Target.DOCUMENT) {
 				if (this.otherDocumentAnnotations == null)
 					this.otherDocumentAnnotations = new HashMap<AnnotationTypeNLP<?>, Pair<?, Double>>();
-				Annotation otherDocAnno = orderedAnnotations.get(annotationType).firstEntry().getValue();
+				Annotation otherDocAnno = orderedAnnotations.get(annotationType).firstEntry().getValue().get(0);
 				this.otherDocumentAnnotations.put(annotationType, new Pair<Object, Double>(annotationType.deserialize(this, otherDocAnno.getValue()), otherDocAnno.getConfidence()));			
 			}
 		}
@@ -753,18 +752,18 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		if (!hasNonDocumentAnnotations)
 			return true;
 		
-		TreeMap<Integer, Annotation> sentenceAnnotations = orderedAnnotations.get(AnnotationTypeNLP.SENTENCE);
+		TreeMap<Integer, List<Annotation>> sentenceAnnotations = orderedAnnotations.get(AnnotationTypeNLP.SENTENCE);
 		this.tokens = new Token[sentenceAnnotations.size()][];
-		this.tokenAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().getAnnotator();
-		boolean tokenConf = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().getConfidence() != null;
+		this.tokenAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().get(0).getAnnotator();
+		boolean tokenConf = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).firstEntry().getValue().get(0).getConfidence() != null;
 		if (tokenConf)
 			this.tokensConf = new double[sentenceAnnotations.size()][];
 		
 		boolean posConf = false;
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.POS)) {
 			this.posTags = new PoSTag[sentenceAnnotations.size()][];
-			this.posAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.POS).firstEntry().getValue().getAnnotator();
-			posConf = orderedAnnotations.get(AnnotationTypeNLP.POS).firstEntry().getValue().getConfidence() != null;
+			this.posAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.POS).firstEntry().getValue().get(0).getAnnotator();
+			posConf = orderedAnnotations.get(AnnotationTypeNLP.POS).firstEntry().getValue().get(0).getConfidence() != null;
 			if (posConf)
 				this.posTagsConf = new double[sentenceAnnotations.size()][];
 		}
@@ -772,8 +771,8 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		boolean consConf = false;
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.CONSTITUENCY_PARSE)) {
 			this.constituencyParses = new ConstituencyParse[sentenceAnnotations.size()];
-			this.constituencyParseAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE).firstEntry().getValue().getAnnotator();
-			consConf = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE).firstEntry().getValue().getConfidence() != null;
+			this.constituencyParseAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE).firstEntry().getValue().get(0).getAnnotator();
+			consConf = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE).firstEntry().getValue().get(0).getConfidence() != null;
 			if (consConf)
 				this.constituencyParsesConf = new double[sentenceAnnotations.size()];
 		
@@ -782,108 +781,117 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		boolean depConf = false;
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.DEPENDENCY_PARSE)) {
 			this.dependencyParses = new DependencyParse[sentenceAnnotations.size()];	
-			this.dependencyParseAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE).firstEntry().getValue().getAnnotator();
-			depConf = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE).firstEntry().getValue().getConfidence() != null;
+			this.dependencyParseAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE).firstEntry().getValue().get(0).getAnnotator();
+			depConf = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE).firstEntry().getValue().get(0).getConfidence() != null;
 			if (depConf)
 				this.dependencyParsesConf = new double[sentenceAnnotations.size()];	
 		}
 		
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.NER)) {
 			this.ner = new HashMap<Integer, List<Triple<TokenSpan, String, Double>>>();
-			this.nerAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.NER).firstEntry().getValue().getAnnotator();
-			
+			this.nerAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.NER).firstEntry().getValue().get(0).getAnnotator();
 		}
 		
 		if (orderedAnnotations.containsKey(AnnotationTypeNLP.COREF)) {
 			this.coref = new HashMap<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>>();
-			this.corefAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.COREF).firstEntry().getValue().getAnnotator();	
+			this.corefAnnotatorName = orderedAnnotations.get(AnnotationTypeNLP.COREF).firstEntry().getValue().get(0).getAnnotator();	
 		}
 		
 		int sentenceIndex = 0;
-		for (Entry<Integer, Annotation> sentenceEntry : sentenceAnnotations.entrySet()) {
+		for (Entry<Integer, List<Annotation>> sentenceEntry : sentenceAnnotations.entrySet()) {
 			int sentenceStart = sentenceEntry.getKey();
-			int sentenceEnd = sentenceEntry.getValue().getSpanEnd();
+			int sentenceEnd = sentenceEntry.getValue().get(0).getSpanEnd();
 			
-			SortedMap<Integer, Annotation> sentenceTokens = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).subMap(sentenceStart, sentenceEnd);
+			SortedMap<Integer, List<Annotation>> sentenceTokens = orderedAnnotations.get(AnnotationTypeNLP.TOKEN).subMap(sentenceStart, sentenceEnd);
 			this.tokens[sentenceIndex] = new Token[sentenceTokens.size()];
 			if (tokenConf)
 				this.tokensConf[sentenceIndex] = new double[sentenceTokens.size()];
 			
 			int tokenIndex = 0;
-			for (Annotation token : sentenceTokens.values()) {
-				this.tokens[sentenceIndex][tokenIndex] = new Token(this, token.getValue().toString(), token.getSpanStart(), token.getSpanEnd());
+			for (List<Annotation> token : sentenceTokens.values()) {
+				this.tokens[sentenceIndex][tokenIndex] = new Token(this, token.get(0).getValue().toString(), token.get(0).getSpanStart(), token.get(0).getSpanEnd());
 				if (tokenConf)
-					this.tokensConf[sentenceIndex][tokenIndex] = token.getConfidence();
+					this.tokensConf[sentenceIndex][tokenIndex] = token.get(0).getConfidence();
 				tokenIndex++;
 			}
 			
 			if (this.posTags != null) {
-				SortedMap<Integer, Annotation> sentencePoS =  orderedAnnotations.get(AnnotationTypeNLP.POS).subMap(sentenceStart, sentenceEnd);
+				SortedMap<Integer, List<Annotation>> sentencePoS =  orderedAnnotations.get(AnnotationTypeNLP.POS).subMap(sentenceStart, sentenceEnd);
 				if (sentencePoS.size() != sentenceTokens.size())
 					return false;
 				int posIndex = 0;
 				this.posTags[sentenceIndex] = new PoSTag[sentencePoS.size()];
 				if (posConf)
 					this.posTagsConf[sentenceIndex] = new double[sentencePoS.size()];
-				for (Annotation pos : sentencePoS.values()) {
-					this.posTags[sentenceIndex][posIndex] = AnnotationTypeNLP.POS.deserialize(this, sentenceIndex, pos.getValue());
+				for (List<Annotation> pos : sentencePoS.values()) {
+					this.posTags[sentenceIndex][posIndex] = AnnotationTypeNLP.POS.deserialize(this, sentenceIndex, pos.get(0).getValue());
 					if (posConf)
-						this.posTagsConf[sentenceIndex][posIndex] = pos.getConfidence();
+						this.posTagsConf[sentenceIndex][posIndex] = pos.get(0).getConfidence();
 					posIndex++;
 				}
 			}
 			
 			if (this.dependencyParses != null) {
-				Map<Integer, Annotation> dependencyAnnotations = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE);
+				Map<Integer, List<Annotation>> dependencyAnnotations = orderedAnnotations.get(AnnotationTypeNLP.DEPENDENCY_PARSE);
 				if (!dependencyAnnotations.containsKey(sentenceStart))
 					return false;
-				this.dependencyParses[sentenceIndex] = AnnotationTypeNLP.DEPENDENCY_PARSE.deserialize(this, sentenceIndex, dependencyAnnotations.get(sentenceStart).getValue());
+				this.dependencyParses[sentenceIndex] = AnnotationTypeNLP.DEPENDENCY_PARSE.deserialize(this, sentenceIndex, dependencyAnnotations.get(sentenceStart).get(0).getValue());
 				if (depConf)
-					this.dependencyParsesConf[sentenceIndex] = dependencyAnnotations.get(sentenceStart).getConfidence();
+					this.dependencyParsesConf[sentenceIndex] = dependencyAnnotations.get(sentenceStart).get(0).getConfidence();
 			}
 			
 			if (this.constituencyParses != null) {
-				Map<Integer, Annotation> constituencyAnnotations = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE);
+				Map<Integer, List<Annotation>> constituencyAnnotations = orderedAnnotations.get(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 				if (!constituencyAnnotations.containsKey(sentenceStart))
 					return false;
-				this.constituencyParses[sentenceIndex] = AnnotationTypeNLP.CONSTITUENCY_PARSE.deserialize(this, sentenceIndex, constituencyAnnotations.get(sentenceStart).getValue());
+				this.constituencyParses[sentenceIndex] = AnnotationTypeNLP.CONSTITUENCY_PARSE.deserialize(this, sentenceIndex, constituencyAnnotations.get(sentenceStart).get(0).getValue());
 				if (consConf)
-					this.constituencyParsesConf[sentenceIndex] = constituencyAnnotations.get(sentenceStart).getConfidence();
+					this.constituencyParsesConf[sentenceIndex] = constituencyAnnotations.get(sentenceStart).get(0).getConfidence();
 			}
 			
 			if (this.ner != null) {
-				SortedMap<Integer, Annotation> sentenceNerAnnotations = orderedAnnotations.get(AnnotationTypeNLP.NER).subMap(sentenceStart, sentenceEnd);
+				SortedMap<Integer, List<Annotation>> sentenceNerAnnotations = orderedAnnotations.get(AnnotationTypeNLP.NER).subMap(sentenceStart, sentenceEnd);
 				if (sentenceNerAnnotations.size() != 0) {
 					List<Triple<TokenSpan, String, Double>> sentenceNer = new ArrayList<Triple<TokenSpan, String, Double>>();
-					for (Annotation annotation : sentenceNerAnnotations.values()) {
-						TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
-						sentenceNer.add(new Triple<TokenSpan, String, Double>(tokenSpan, AnnotationTypeNLP.NER.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+					for (List<Annotation> nerAnnotations : sentenceNerAnnotations.values()) {
+						for (Annotation annotation : nerAnnotations) {
+							if (!annotation.getAnnotator().equals(nerAnnotations.get(0).getAnnotator()))
+								continue;
+							
+							TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
+							sentenceNer.add(new Triple<TokenSpan, String, Double>(tokenSpan, AnnotationTypeNLP.NER.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+						}
 					}
 					this.ner.put(sentenceIndex, sentenceNer);
 				}
 			}
 			
 			if (this.coref != null) {
-				SortedMap<Integer, Annotation> sentenceCorefAnnotations = orderedAnnotations.get(AnnotationTypeNLP.COREF).subMap(sentenceStart, sentenceEnd);
+				SortedMap<Integer, List<Annotation>> sentenceCorefAnnotations = orderedAnnotations.get(AnnotationTypeNLP.COREF).subMap(sentenceStart, sentenceEnd);
 				if (sentenceCorefAnnotations.size() != 0) {
 					List<Triple<TokenSpan, TokenSpanCluster, Double>> sentenceCoref = new ArrayList<Triple<TokenSpan, TokenSpanCluster, Double>>();
-					for (Annotation annotation : sentenceCorefAnnotations.values()) {
-						TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
-						sentenceCoref.add(new Triple<TokenSpan, TokenSpanCluster, Double>(tokenSpan, AnnotationTypeNLP.COREF.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+					for (List<Annotation> corefAnnotations : sentenceCorefAnnotations.values()) {
+						for (Annotation annotation : corefAnnotations) {
+							if (!annotation.getAnnotator().equals(corefAnnotations.get(0).getAnnotator()))
+								continue;
+							
+							TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
+							sentenceCoref.add(new Triple<TokenSpan, TokenSpanCluster, Double>(tokenSpan, AnnotationTypeNLP.COREF.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+						}
 					}
 					this.coref.put(sentenceIndex, sentenceCoref);
 				}
 			}
 			
 			for (AnnotationTypeNLP<?> otherAnnotationType : otherAnnotationTypes) {
-				SortedMap<Integer, Annotation> otherAnnotations = orderedAnnotations.get(otherAnnotationType).subMap(sentenceStart, sentenceEnd);
+				SortedMap<Integer, List<Annotation>> otherAnnotations = orderedAnnotations.get(otherAnnotationType).subMap(sentenceStart, sentenceEnd);
 				if (otherAnnotations.size() == 0)
 					continue;
 				else if (otherAnnotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN) {
 					Pair<Object, Double>[] tokenAnnotations = new Pair[otherAnnotations.size()];
 					int i = 0;
-					for (Annotation annotation : otherAnnotations.values()) {
-						tokenAnnotations[i] = new Pair<Object, Double>(otherAnnotationType.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence());
+					for (List<Annotation> annotation : otherAnnotations.values()) {
+						tokenAnnotations[i] = new Pair<Object, Double>(otherAnnotationType.deserialize(this, sentenceIndex, annotation.get(0).getValue()), annotation.get(0).getConfidence());
 						i++;
 					}
 					
@@ -891,22 +899,25 @@ public class DocumentNLPInMemory extends DocumentNLP {
 				} else if (otherAnnotationType.getTarget() == AnnotationTypeNLP.Target.SENTENCE) {
 					if (otherAnnotations.containsKey(sentenceStart)) {
 						Map<Integer, Pair<Object, Double>> sentenceMap = (Map<Integer, Pair<Object, Double>>)this.otherSentenceAnnotations.get(otherAnnotationType);
-                                                if (sentenceMap == null) {
-                                                  sentenceMap = new HashMap<Integer, Pair<Object, Double>>();
-                                                  this.otherSentenceAnnotations.put(otherAnnotationType, sentenceMap);
-                                                }
+						
 						sentenceMap.put(sentenceIndex, new Pair<Object, Double>(
-								otherAnnotationType.deserialize(this, sentenceIndex, otherAnnotations.get(sentenceStart).getValue()), otherAnnotations.get(sentenceStart).getConfidence()));
+								otherAnnotationType.deserialize(this, sentenceIndex, otherAnnotations.get(sentenceStart).get(0).getValue()), otherAnnotations.get(sentenceStart).get(0).getConfidence()));
 					}
 				} else if (otherAnnotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN_SPAN) {
 					List<Triple<TokenSpan, ?, Double>> sentenceAnno = new ArrayList<Triple<TokenSpan, ?, Double>>();
-					for (Annotation annotation : otherAnnotations.values()) {
-						TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
-						sentenceAnno.add(new Triple<TokenSpan, Object, Double>(tokenSpan, otherAnnotationType.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+					for (List<Annotation> tokenSpanAnnotations : otherAnnotations.values()) {
+						for (Annotation annotation : tokenSpanAnnotations) {
+							if (!annotation.getAnnotator().equals(this.otherAnnotatorNames.get(otherAnnotationType)))
+								continue;
+							
+							TokenSpan tokenSpan = getTokenSpanFromCharSpan(sentenceIndex, annotation.getSpanStart(), annotation.getSpanEnd());
+							sentenceAnno.add(new Triple<TokenSpan, Object, Double>(tokenSpan, otherAnnotationType.deserialize(this, sentenceIndex, annotation.getValue()), annotation.getConfidence()));
+						}
 					}
-                                        if (!this.otherTokenSpanAnnotations.containsKey(otherAnnotationType)) {
-                                          this.otherTokenSpanAnnotations.put(otherAnnotationType, new HashMap<Integer, List<Triple<TokenSpan, ? , Double>>>());
-                                        }
+					
+					if (!this.otherTokenSpanAnnotations.containsKey(otherAnnotationType)) {
+						this.otherTokenSpanAnnotations.put(otherAnnotationType, new HashMap<Integer, List<Triple<TokenSpan, ? , Double>>>());
+					}
 					this.otherTokenSpanAnnotations.get(otherAnnotationType).put(sentenceIndex, sentenceAnno);
 				}
 			}
