@@ -95,7 +95,6 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 				return new HashMap<Integer, Double>();
 			}
 			
-			vector = new HashMap<Integer, Double>(extremum.getFirst().size());
 			for (Pair<String, Double> id : extremum.getFirst()) {
 				if (!this.vocabulary.containsKey(id.getFirst()))
 					continue;
@@ -108,7 +107,6 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 			}
 			
 		} else {
-			vector = new HashMap<Integer, Double>(1);
 			vector.put(offset, extremum.getSecond());
 		}
 		
@@ -118,6 +116,7 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 	
 	protected Pair<List<Pair<String,Double>>, Double> computeExtremum(D datum) {
 		String[] strs = this.stringExtractor.extract(datum);
+		
 		Pair<List<Pair<String,Double>>, Double> extremum = new Pair<List<Pair<String,Double>>, Double>(
 				null,
 				(this.extremumType == FeatureGazetteer.ExtremumType.Maximum) ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
