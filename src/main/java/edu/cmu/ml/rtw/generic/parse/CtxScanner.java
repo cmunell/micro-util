@@ -13,8 +13,10 @@ public class CtxScanner implements Scanner {
 		CtxSymbol.RCURLY_BRACE, CtxSymbol.LPAREN, CtxSymbol.RPAREN, CtxSymbol.DOLLAR, 
 		CtxSymbol.RIGHT_ARROW, CtxSymbol.RIGHT_ARROW};
 	private Reader reader;
-	private SymbolFactory symbolFactory;
+	private ComplexSymbolFactory symbolFactory;
 	private int nextChar;
+	private int nextCharLine = 1;
+	private int nextCharColumn = 1;
 	
 	public CtxScanner(String str) {
 		this(new StringReader(str));
@@ -38,42 +40,68 @@ public class CtxScanner implements Scanner {
 				continue;
 			} else if (nextChar == ',') {
 				advance();
-				return this.symbolFactory.newSymbol("COMMA", CtxSymbol.COMMA);
+				return this.symbolFactory.newSymbol("COMMA", CtxSymbol.COMMA, 
+							new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+							new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '=') {
 				advance();
-				return this.symbolFactory.newSymbol("EQUALS", CtxSymbol.EQUALS);
+				return this.symbolFactory.newSymbol("EQUALS", CtxSymbol.EQUALS, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == ';') {
 				advance();
-				return this.symbolFactory.newSymbol("SEMI", CtxSymbol.SEMI);
+				return this.symbolFactory.newSymbol("SEMI", CtxSymbol.SEMI, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == 'o') {
 				advance();
-				return this.symbolFactory.newSymbol("COMP", CtxSymbol.COMP);
+				return this.symbolFactory.newSymbol("COMP", CtxSymbol.COMP, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '[') {
 				advance();
-				return this.symbolFactory.newSymbol("LSQUARE_BRACKET", CtxSymbol.LSQUARE_BRACKET);
+				return this.symbolFactory.newSymbol("LSQUARE_BRACKET", CtxSymbol.LSQUARE_BRACKET, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == ']') {
 				advance();
-				return this.symbolFactory.newSymbol("RSQUARE_BRACKET", CtxSymbol.RSQUARE_BRACKET);
+				return this.symbolFactory.newSymbol("RSQUARE_BRACKET", CtxSymbol.RSQUARE_BRACKET, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '{') {
 				advance();
-				return this.symbolFactory.newSymbol("LCURLY_BRACE", CtxSymbol.LCURLY_BRACE);
+				return this.symbolFactory.newSymbol("LCURLY_BRACE", CtxSymbol.LCURLY_BRACE, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '}') {
 				advance();
-				return this.symbolFactory.newSymbol("RCURLY_BRACE", CtxSymbol.RCURLY_BRACE);
+				return this.symbolFactory.newSymbol("RCURLY_BRACE", CtxSymbol.RCURLY_BRACE, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '(') {
 				advance();
-				return this.symbolFactory.newSymbol("LPAREN", CtxSymbol.LPAREN);
+				return this.symbolFactory.newSymbol("LPAREN", CtxSymbol.LPAREN, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == ')') {
 				advance();
-				return this.symbolFactory.newSymbol("RPAREN", CtxSymbol.RPAREN);
+				return this.symbolFactory.newSymbol("RPAREN", CtxSymbol.RPAREN, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '$') {
 				advance();
-				return this.symbolFactory.newSymbol("DOLLAR", CtxSymbol.DOLLAR);
+				return this.symbolFactory.newSymbol("DOLLAR", CtxSymbol.DOLLAR, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else if (nextChar == '-') {
 				if (advance() != '>')
-					return this.symbolFactory.newSymbol("error", CtxSymbol.error);
+					return this.symbolFactory.newSymbol("error", CtxSymbol.error, 
+							new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+							new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 				advance();
-				return this.symbolFactory.newSymbol("RIGHT_ARROW", CtxSymbol.RIGHT_ARROW);
+				return this.symbolFactory.newSymbol("RIGHT_ARROW", CtxSymbol.RIGHT_ARROW, 
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+						new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+1));
 			} else {
 				return nextString();
 			}
@@ -116,11 +144,22 @@ public class CtxScanner implements Scanner {
 			advance();
 		} while (true);
 		
-		return this.symbolFactory.newSymbol("STRING", CtxSymbol.STRING, str.toString());
+		return this.symbolFactory.newSymbol("STRING", CtxSymbol.STRING, 
+				new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn),
+				new ComplexSymbolFactory.Location(this.nextCharLine, this.nextCharColumn+str.toString().length()),
+				str.toString());
 	}
 	
     private int advance() throws IOException  {
     	this.nextChar = this.reader.read();
+    	
+    	if ((char)this.nextChar == '\n') {
+    		this.nextCharColumn = 0;
+    		this.nextCharLine++;
+    	} else {
+    		this.nextCharColumn++;
+    	}
+    	
     	return this.nextChar;
     }
     
