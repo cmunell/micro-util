@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.data.feature.fn;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -14,9 +16,10 @@ public class FnFilter extends Fn<String, String> {
 		EQUAL
 	}
 	
-	private String[] parameterNames = { "filter", "type" };
+	private String[] parameterNames = { "filter", "type", "filterTransform" };
 	private String filter = "";
 	private Type type = Type.SUFFIX;
+	private Fn<String, String> filterTransform = null;
 	
 	private Context<?, ?> context;
 
@@ -40,6 +43,8 @@ public class FnFilter extends Fn<String, String> {
 			return Obj.stringValue(this.type.toString());
 		else if (parameter.equals("filter"))
 			return Obj.stringValue(this.filter);
+		else if (parameter.equals("filterTransform"))
+			return (this.filterTransform != null) ? this.filterTransform.toParse() : (new FnIdentity<String>()).toParse();
 		return null;
 	}
 
@@ -49,6 +54,8 @@ public class FnFilter extends Fn<String, String> {
 			this.type = Type.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("filter"))
 			this.filter = this.context.getMatchValue(parameterValue);
+		else if (parameter.equals("filterTransform"))
+			this.filterTransform = (parameterValue != null) ? this.context.getMatchOrConstructStrFn(parameterValue) : new FnIdentity<String>(); 
 		else
 			return false;
 		return true;
@@ -56,14 +63,25 @@ public class FnFilter extends Fn<String, String> {
 	
 	@Override
 	public <C extends Collection<String>> C compute(Collection<String> input, C output) {
-		if (this.filter.length() == 0 && this.type != Type.EQUAL) {
+		List<String> transFilterInput  = new ArrayList<String>();
+		transFilterInput.add(this.filter);
+		List<String> transFilter = new ArrayList<String>();
+		
+		if (this.filterTransform != null) {
+			transFilter = this.filterTransform.compute(transFilterInput, transFilter);
+		} else {
+			transFilter.add(this.filter);
+		}
+			
+		if (transFilter.size() == 1 && transFilter.get(0).length() == 0 && this.type != Type.EQUAL) {
 			output.addAll(input);
 		} else if (this.type == Type.EQUAL) {
-			if (input.contains(this.filter))
-				output.add(this.filter);
+			for (String filter : transFilter)
+				if (input.contains(filter))
+					output.add(filter);
 		} else {
 			for (String str : input) {
-				if (matchesFilter(str))
+				if (matchesFilter(str, transFilter))
 					output.add(str);
 			}
 		}
@@ -71,15 +89,19 @@ public class FnFilter extends Fn<String, String> {
 		return output;
 	}
 	
-	private boolean matchesFilter(String str) {
-		if (this.type == Type.SUFFIX)
-			return str.endsWith(this.filter);
-		else if (this.type == Type.PREFIX)
-			return str.startsWith(this.filter);
-		else if (this.type == Type.SUBSTRING)
-			return str.contains(this.filter) && !str.equals(this.filter);
-		else
-			return str.equals(this.filter);
+	private boolean matchesFilter(String str, List<String> filters) {
+		for (String filter : filters) {
+			if (this.type == Type.SUFFIX)
+				return str.endsWith(filter);
+			else if (this.type == Type.PREFIX)
+				return str.startsWith(filter);
+			else if (this.type == Type.SUBSTRING)
+				return str.contains(filter) && !str.equals(filter);
+			else
+				return str.equals(filter);
+		}
+		
+		return false;
 	}
 
 	@Override

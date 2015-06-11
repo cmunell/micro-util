@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import java_cup.runtime.ComplexSymbolFactory;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
@@ -851,7 +852,7 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 	
 	public static <D extends Datum<L>, L> Context<D, L> deserialize(Datum.Tools<D, L> datumTools, Reader reader) {
 		CtxScanner scanner = new CtxScanner(reader);
-		CtxParser parser = new CtxParser(scanner);
+		CtxParser parser = new CtxParser(scanner, new ComplexSymbolFactory());
 		AssignmentList parse = null;
 		try {
 			parse = (AssignmentList)parser.parse().value;
