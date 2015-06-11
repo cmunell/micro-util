@@ -90,7 +90,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 		Properties props = new Properties();
 		
 		if (tokenizer != null) {
-			if (!tokenizer.requirementsSatisfied().containsAll(Annotator.TOKENIZE_AND_SSPLIT) || tokenizer.requirementsSatisfied().size() != 2)
+			if (!tokenizer.requirementsSatisfied().containsAll(Annotator.TOKENIZE_AND_SSPLIT))
 				return false;
 			
 			String tokenizerClass = tokenizer.getClass().getName();
