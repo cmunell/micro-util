@@ -35,6 +35,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnHead;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramContext;
@@ -283,6 +284,7 @@ public abstract class Datum<L> {
 			addGenericStrFn(new FnAffix());
 			addGenericStrFn(new FnFilter());
 			addGenericStrFn(new FnGazetteerFilter());
+			addGenericStrFn(new FnGazetteer());
 		}
 		
 		public DataTools getDataTools() {
