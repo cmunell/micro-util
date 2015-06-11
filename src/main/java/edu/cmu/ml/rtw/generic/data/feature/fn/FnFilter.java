@@ -44,7 +44,7 @@ public class FnFilter extends Fn<String, String> {
 		else if (parameter.equals("filter"))
 			return Obj.stringValue(this.filter);
 		else if (parameter.equals("filterTransform"))
-			return (this.filterTransform != null) ? this.filterTransform.toParse() : (new FnIdentity<String>()).toParse();
+			return (this.filterTransform == null) ? null : this.filterTransform.toParse();
 		return null;
 	}
 
@@ -55,7 +55,7 @@ public class FnFilter extends Fn<String, String> {
 		else if (parameter.equals("filter"))
 			this.filter = this.context.getMatchValue(parameterValue);
 		else if (parameter.equals("filterTransform"))
-			this.filterTransform = (parameterValue != null) ? this.context.getMatchOrConstructStrFn(parameterValue) : new FnIdentity<String>(); 
+			this.filterTransform = (parameterValue == null) ? null : this.context.getMatchOrConstructStrFn(parameterValue); 
 		else
 			return false;
 		return true;
