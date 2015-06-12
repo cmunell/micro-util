@@ -44,6 +44,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
@@ -287,6 +288,7 @@ public abstract class Datum<L> {
 			addGenericStrFn(new FnFilter());
 			addGenericStrFn(new FnGazetteerFilter());
 			addGenericStrFn(new FnGazetteer());
+			addGenericStrFn(new FnSplit());
 			addGenericStrFn(new FnIdentity<String>());
 		}
 		
