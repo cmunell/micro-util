@@ -59,6 +59,9 @@ public class FnGazetteerFilter extends Fn<String, String> {
 	public <C extends Collection<String>> C compute(Collection<String> input, C output) {
 		for (String str : input) {
 			List<Pair<String, Double>> ids = this.gazetteer.getWeightedIds(str);
+			if (ids == null)
+				continue;
+			
 			for (Pair<String, Double> id : ids) {
 				if (id.getFirst().equals(this.idFilter) && id.getSecond() >= this.weightThreshold) {
 					output.add(str);
