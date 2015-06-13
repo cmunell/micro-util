@@ -611,7 +611,9 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 			int datumId = Integer.parseInt(plataniosDatum.name());
 			D datum = data.getDatumById(datumId);
 			Vector constructedF = this.constructedFeatures.computeFeatureVocabularyRange(datum, 0, this.constructedFeatures.getFeatureVocabularySize());
-			plataniosDatum.features().set(this.sizeF_0, this.sizeF_0 + this.constructedFeatures.getFeatureVocabularySize() - 1, constructedF);
+			
+			if (this.constructedFeatures.getFeatureVocabularySize() != 0)
+				plataniosDatum.features().set(this.sizeF_0, this.sizeF_0 + this.constructedFeatures.getFeatureVocabularySize() - 1, constructedF);
 			double p = posteriorForDatum(plataniosDatum, cPosNeg.getFirst(), cPosNeg.getSecond());
 			Map<L, Double> posterior = new HashMap<L, Double>();
 			
