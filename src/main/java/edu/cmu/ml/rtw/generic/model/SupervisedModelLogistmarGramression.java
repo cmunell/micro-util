@@ -858,7 +858,7 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 			String c_n_i = String.valueOf(cEntry.getValue().getSecond());
 			
 			Obj.Array weight = Obj.array(new String[] { feature_i, c_p_i, c_n_i, u_p_i, u_n_i, i });
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "u_" + cEntry.getKey() + ((constructedFeature) ? "-c" : ""), weight));
+			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "u_" + cEntry.getKey() + ((constructedFeature) ? "_c" : ""), weight));
 		}
 		
 		for (int i = 0; i < this.constructedFeatures.getFeatureCount(); i++) {
