@@ -322,7 +322,6 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 				int startVocabularyIndex = sizeF_0 + constructedFeatures.getFeatureVocabularySize();
 				endVocabularyIndex = startVocabularyIndex;
 				for (Entry<String, Obj> entry : featureChildObjs.entrySet()) {
-					System.out.println("NOTE: " + featureObj.getReferenceName() + " expanded to " + entry.getValue().toString());
 					Obj.Function featureChildFunction = (Obj.Function)entry.getValue();
 					FeatureTokenSpanFnFilteredVocab<D, L> featureChild = (FeatureTokenSpanFnFilteredVocab<D, L>)this.arkDataSet.getDatumTools().makeFeatureInstance(featureChildFunction.getName(), SupervisedModelLogistmarGramression.this.context);
 					
