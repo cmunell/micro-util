@@ -317,11 +317,6 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 				
 				String featureVocabStr = featureObj.getVocabularyTerm(dataSetIndex - featureStartIndex);
 				
-				if (featureVocabStr == null) {
-					System.out.println("NULL feature vocab str " + dataSetIndex + " " + featureStartIndex + " " + featureObj.getReferenceName());
-					System.exit(0);
-				}
-				
 				Map<String, Obj> featureStrAssignments = new TreeMap<String, Obj>();
 				featureStrAssignments.put("SRC_FEATURE", Obj.stringValue(featureObj.getReferenceName()));
 				featureStrAssignments.put("SRC_TERM", Obj.stringValue(featureVocabStr));
