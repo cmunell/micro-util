@@ -33,6 +33,7 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocabTrie;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnFilteredVocab;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
@@ -290,6 +291,7 @@ public abstract class Datum<L> {
 			addGenericStrFn(new FnGazetteer());
 			addGenericStrFn(new FnSplit());
 			addGenericStrFn(new FnIdentity<String>());
+			addGenericStrFn(new FnClean());
 		}
 		
 		public DataTools getDataTools() {
