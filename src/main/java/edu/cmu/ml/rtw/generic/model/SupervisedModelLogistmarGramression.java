@@ -309,6 +309,10 @@ public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends 
 					dataSetIndex = featureToExpand - sizeF_0;
 					featureObj = constructedFeatures.getFeatureByVocabularyIndex(dataSetIndex);
 					featureStartIndex = constructedFeatures.getFeatureStartVocabularyIndex(dataSetIndex);
+					
+					if (featureStartIndex < 0) {
+						throw new UnsupportedOperationException("ERROR: Failed to find constructed feature by index " + dataSetIndex);
+					}
 				}
 				
 				String featureVocabStr = featureObj.getVocabularyTerm(dataSetIndex - featureStartIndex);

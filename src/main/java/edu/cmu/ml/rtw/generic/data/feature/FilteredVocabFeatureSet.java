@@ -74,7 +74,15 @@ public class FilteredVocabFeatureSet<D extends Datum<L>, L> {
 	}
 	
 	public int getFeatureStartVocabularyIndex(int index) {
-		return this.features.floorKey(index);
+		for (Entry<Integer, FeatureTokenSpanFnFilteredVocab<D, L>> featureEntry : this.features.entrySet()) {
+			if (featureEntry.getKey() > index)
+				break;
+			
+			if (featureEntry.getValue().vocabularyContainsIndex(index - featureEntry.getKey()))
+				return featureEntry.getKey();
+		}
+		
+		return -1;
 	}
 	
 	public int getFeatureCount() {
