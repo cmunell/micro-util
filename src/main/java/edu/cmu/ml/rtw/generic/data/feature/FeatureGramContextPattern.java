@@ -16,6 +16,65 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTagClass;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FeatureGramContextPattern computes an indicator vector 
+ * whose components represent sequences of tokens before 
+ * or after mentions of a noun-phrase that match a given pattern 
+ * in terms of token strings and their parts of speech.
+ *
+ * Parameters:
+ *  beforePattern - pattern that the tokens before the noun-phrase token 
+ *  span must match for a context window to be retrieved
+ *  
+ *  afterPattern - pattern that the tokens after the noun-phrase token 
+ *  span must match for a context window to be retrieved
+ *	
+ *  capturePart - (can be BEFORE or AFTER) determines whether the sequence 
+ *  of tokens to retrieve is before or after the noun-phrase
+ *
+ *  captureGroup - determines the group number within the regular expression 
+ *  pattern to capture and return as the context token sequence
+ *  
+ *  scale - scaling method for components of the vector
+ *  
+ *  tokenExtractor - determines which token spans associated with the 
+ *  noun-phrase to consider for the contexts (currently this just 
+ *  returns the token spans containing the noun-phrase)
+ *
+ *  cleanFn - a function that transforms (cleans) each token in the 
+ *  noun-phrase context (for example, this currently does things like 
+ *  remove symbols, stemming, replacing digits...)
+ *  
+ *  minFeatureOccurrence - minimum number of times a context must occur 
+ *  across training examples for it to be included as a feature
+ *  scale (can be INDICATOR or NORMALIZED_IDF or NORMALIZED_TFIDF) determines 
+ *  how the value of a context window feature is scaled
+ *
+ * Patterns used for beforePattern and afterPattern
+ *  These are basically an extension of Java's regular expressions that allows 
+ *  specification of part-of-speech tag and token sequences in a short-hand notation. 
+ *  
+ *  The extensions to Java's regular expressions are:
+ *   A string in single quotes matches a token whose text is the string. For example, 
+ *   'string' matches a single token whose text is string
+ *   
+ *   A string without quotes matches a token whose part-of-speech tag is that string. 
+ *   For example, NNP matches a token whose part-of-speach tag is NNP.
+ *
+ *   <g:G> matches a token whose text is in gazetteer G
+ *   
+ *   <p:P1, P2,...,Pk> matches a token whose part-of-speech tag is in tag class P1, P2,... or Pk.
+ * 
+ *   {~R} matches anything that does not match pattern R, looking ahead.
+ *
+ *   <<~p:P1,P2,...,Pk> matches anything that does not have a token with part-of-speech in tag 
+ *   class P1, P2,... or Pk, looking backward.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureGramContextPattern<D extends Datum<L>, L> extends FeatureGram<D, L> {
 	public enum CapturePart {
 		BEFORE,

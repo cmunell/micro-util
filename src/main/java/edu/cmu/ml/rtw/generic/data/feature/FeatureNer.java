@@ -16,6 +16,24 @@ import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * FeatureNer computes a vector of indicators for 
+ * whether a given datum has corresponding token spans with
+ * some named-entity types.
+ * 
+ * Parameters:
+ *  tokenExtractor - extractor for computing token spans from
+ *  a datum
+ *  
+ *  useTypes - indicates whether there is a component in the 
+ *  computed vector for each named-entity type (PERSON, 
+ *  ORGANIZATION, etc)
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureNer<D extends Datum<L>, L> extends Feature<D, L> {
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	

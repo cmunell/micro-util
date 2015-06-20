@@ -16,8 +16,24 @@ import edu.cmu.ml.rtw.generic.util.StringUtil;
  * 
  * max_{g\in G} 1(S(d) is an initialism for g)
  * 
- * An 'allowPrefix' parameter determines whether S(d) must
- * be a full initialism, or just a partial (prefix) initialism.
+ * Parameters:
+ *  gazetteer - the gazetteer G over which to compute the feature
+ * 
+ *  stringExtractor - the string extractor S to extract strings from data
+ *
+ *  includeIds - indicates whether the computed feature vector should contain
+ *  a separate component for each id in the gazetteer corresponding to the input
+ *  string
+ *
+ *  includeWeights - indicates whether the computed feature vector should 
+ *  multiply the id components of the returned vector by their weights in the
+ *  gazetteer G (assuming includeIds=true)
+ * 
+ *  weightThreshold - the minimum weight threshold necessary for a component
+ *  of the returned vector to be non-zero
+ * 
+ *  allowPrefix - determines whether S(d) must be a full initialism, or just a 
+ *  partial (prefix) initialism.
  * 
  * @author Bill McDowell
  *

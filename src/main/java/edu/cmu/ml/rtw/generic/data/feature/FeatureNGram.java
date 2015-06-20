@@ -14,31 +14,37 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 /**
  * 
  * FeatureNGram computes n-gram features for datums.  For
- * a datum d and token-extractor T, and scaling function s:R->R the feature computes 
- * the vector:
+ * a datum d and token-extractor T, and scaling function s:R->R 
+ * the feature computes the vector:
  * 
  * <s(1(v_1\in F(T(d))))), s(1(v_2 \in F(T(d)))), ... , s(1(v_n \in F(T(d))))>
  * 
- * Where F(T(d)) is a subset of the tokens given by T(d) that 
- * depends on the 
+ * Where F(T(d)) is a set token span strings 
+ * related to spans extracted through
+ *  T(d) that depends on the 
  * particular n-gram feature that is being computed (e.g. NGramContext,
  * NGramDep, etc), and v_i 
  * is an n-gram in vocabulary of possible n-grams from the full
  * data-set.  
  * 
  * For examples of possible F, see the feature types that extend 
- * this class.  Possibilities for s are given by the Scale enum 
- * defined below.
+ * this class. 
  * 
- * The minFeatureOccurrence parameter determineds the minimum number
- * of times an n-gram must occur in the data-set for it to be included
- * as a component in the computed vectors.
+ * Parameters:
+ *  n - number of grams per n-gram 
+ *
+ * 	minFeatureOccurrence - minimum number of times an n-gram 
+ *  must occur across the data set for it to have a component 
+ *  in the computed vectors
  * 
- * The cleanFn parameter is a string cleaning function that is applied to
- * each gram in each n-gram before the vectors are computed.
+ * 	cleanFn - string cleaning function that grams are passed through
  * 
- * Optionally, if a clusterer parameter is provided, then grams of
- * the n-grams are first mapped to their clusters
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ * 
+ *  clusterer - optional clusterer that maps grams to their clusters
+ *  before combining them into n-(clustered)grams 
  * 
  * @author Bill McDowell
  * 

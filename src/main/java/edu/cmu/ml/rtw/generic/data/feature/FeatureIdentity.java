@@ -13,6 +13,10 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * FeatureIdentity returns a vector D(d) for double
  * extractor D applied to datum d.
  * 
+ * Parameters:
+ *  doubleExtractor - the extractor used to extract a double
+ *  from a datum
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

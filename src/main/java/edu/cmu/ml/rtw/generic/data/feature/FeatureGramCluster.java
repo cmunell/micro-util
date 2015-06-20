@@ -11,6 +11,29 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FeatureGramCluster computes an indicator vector
+ * whose components represent clusters that can be associated
+ * with a given datum.
+ * 
+ * Parameters:
+ * 	minFeatureOccurrence - minimum number of times a gram must occur across
+ *  the data set for it to have a component in the computed vectors
+ * 
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ * 
+ *  clusterer - the name of the token span clusterer to use
+ * 
+ * FIXME: Make it so that this doesn't inherit the cleanFn parameter... since it's 
+ * irrelevant
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureGramCluster<D extends Datum<L>, L> extends FeatureGram<D, L> {	
 	protected Clusterer<TokenSpan> clusterer;
 	

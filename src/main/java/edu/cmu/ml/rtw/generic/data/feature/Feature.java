@@ -14,23 +14,11 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
 /**
- * Feature represents an abstract feature to be computed on data and
- * used in a model.
- * 
- * Implementations of particular features derive from the Feature class,
- * and the Feature class is primarily responsible for providing the
- * methods necessary for deserializing features from
- * configuration files.  The features are defined by strings in the 
- * configuration file of the form:
- * 
- * feature(_[featureReferenceName](_ignored))=[featureGenericName]([parameterName1]=[parameterValue1],...)
- * 
- * Where strings in parentheses are optional and strings in square brackets
- * are replaced by feature specific information.
- * 
- * A feature's computed values are generally vectors of real values.  
- * Each component of a feature's vector has a name, and the set of all names 
- * for components is the feature's 'vocabulary'.
+ * Feature represents an abstract feature type to be computed on data and
+ * used in a model. Implementations of particular feature types derive
+ * from the Feature class.  A feature's computed values are generally vectors 
+ * of real values.  Each component of a feature's vector has a name, and 
+ * the set of all component names is the feature's 'vocabulary'.
  * 
  * @author Bill McDowell
  *

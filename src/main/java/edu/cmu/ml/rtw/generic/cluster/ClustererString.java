@@ -4,6 +4,13 @@ import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 
+/**
+ * ClustererString represents a method for clustering
+ * strings.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class ClustererString extends Clusterer<String> {
 	protected DataTools.StringTransform cleanFn;
 	

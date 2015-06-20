@@ -13,10 +13,26 @@ import edu.cmu.ml.rtw.generic.util.StringUtil;
  * For datum d, string extractor S, and gazetteer G, 
  * FeatureGazetteerEditDistance computes
  * 
- * max_{g\in G} E(g, S(d))
+ * min_{g\in G} E(g, S(d))
  * 
  * Where E is measures the normalized edit-distance 
  * between g and S(d).
+ * 
+ * Parameters:
+ * 	gazetteer - the gazetteer G over which to compute the feature
+ * 
+ *  stringExtractor - the string extractor S to extract strings from data
+ *
+ *  includeIds - indicates whether the computed feature vector should contain
+ *  a separate component for each id in the gazetteer corresponding to the input
+ *  string
+ *
+ *  includeWeights - indicates whether the computed feature vector should 
+ *  multiply the id components of the returned vector by their weights in the
+ *  gazetteer G (assuming includeIds=true)
+ * 
+ *  weightThreshold - the minimum weight threshold necessary for a component
+ *  of the returned vector to be non-zero
  * 
  * @author Bill McDowell
  *

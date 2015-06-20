@@ -19,21 +19,26 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 /**
  * FeatureConstituencyPath computes paths in constituency parse trees
  * between token spans
- * associated with a datum. For a datum d with source token-span extractor S,
- * and target token span extractor T, the feature computes vector:
+ * associated with a datum. For a datum d with source token span extractor S,
+ * and target token span extractor T, FeatureConstituencyPath computes vector:
  * 
  * <1(p_1 \in P(S(d),T(d)), 1(p_2 \in P(S(d),T(d))), ... , 1(p_n \in P(S(d),T(d)))>
  * 
  * Where P(S(d),T(d)) gives the set of shortest constituency paths between token spans
- * in S(d) and token spans in T(d), and p_i is a constituency path in the vocabulary
+ * in S(d) and token spans in T(d), and p_i is the ith constituency path in the vocabulary
  * of possible paths from the full data set containing d.
- *  
- * The 'minFeatureOccurrence' parameter determines the minimum number of times a
- * path p_i must appear in the full data set for it to have a component in the 
- * returned vectors.
+ *
+ * Parameters:
+ *  minFeatureOccurrence - determines the minimum number of times a
+ *  path p_i must appear in the full data set for it to have a component in the 
+ *  returned vectors.
  * 
- * The 'useRelationTypes' parameter determines whether the constituency paths corresponding
- * to components in the returned vector should be typed.
+ *  useRelationTypes - determines whether the constituency paths corresponding
+ *  to components in the returned vector should be typed.
+ * 
+ *  sourceTokenExtractor - token span extractor used to extract the source token spans
+ * 
+ *  targetTokenExtractor - token span extractor used to extract the target token spans
  * 
  * @author Jesse Dodge, Bill McDowell
  *

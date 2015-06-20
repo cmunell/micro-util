@@ -13,18 +13,38 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
 /**
- * FIXME Outdated documentation
- * 
  * For each datum d FeatureNGramContext computes a
  * vector:
  * 
  * <c(v_1\in C(T(d),k)), c(v_2 \in C(T(d),k)), ... , c(v_n \in C(T(d),k))>
  * 
- * Where T is a token extractor, C(T(d), k) computes a context of window-size
- * k of n-grams surrounding the tokens given by T(d) in a source text document,
+ * Where T is a token span extractor, C(T(d), k) computes all n-grams in a 
+ * context of window-size k surrounding the tokens given by T(d),
  * and c(v \in S) computes the number of occurrences of n-gram v in S.  The resulting
- * vector is given to methods in edu.cmu.ml.rtw.generic.data.feature.FeatureNGram to be normalized
- * and scaled in some way.
+ * vector is given to methods in edu.cmu.ml.rtw.generic.data.feature.FeatureNGram to 
+ * be normalized and scaled in some way.
+ * 
+ * Parameters:
+ *  n - number of grams per n-gram 
+ *
+ * 	minFeatureOccurrence - minimum number of times an n-gram 
+ *  must occur across the data set for it to have a component 
+ *  in the computed vectors
+ * 
+ * 	cleanFn - string cleaning function that grams are passed through
+ * 
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ * 
+ *  clusterer - optional clusterer that maps grams to their clusters
+ *  before combining them into n-(clustered)grams 
+ * 
+ *  maxGramDistance - (k) the number of tokens away from the token spans
+ *  extracted by tokenExtractor from which to take n-grams
+ *  
+ *  mode - determined whether the context is extracted from before each
+ *  token span, after each token span, or within each token span
  * 
  * @author Bill McDowell
  *

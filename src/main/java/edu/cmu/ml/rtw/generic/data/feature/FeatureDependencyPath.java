@@ -26,12 +26,17 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  * in S(d) and token spans in T(d), and p_i is a dependency path in the vocabulary
  * of possible paths from the full data set containing d.
  *  
- * The 'minFeatureOccurrence' parameter determines the minimum number of times a
- * path p_i must appear in the full data set for it to have a component in the 
- * returned vectors.
+ * Parameters:
+ *  minFeatureOccurrence - determines the minimum number of times a
+ *  path p_i must appear in the full data set for it to have a component in the 
+ *  returned vectors.
  * 
- * The 'useRelationTypes' parameter determines whether the dependency paths corresponding
- * to components in the returned vector should be typed.
+ *  useRelationTypes - determines whether the dependency paths corresponding
+ *  to components in the returned vector should be typed.
+ * 
+ *  sourceTokenExtractor - token span extractor used to extract the source token spans
+ * 
+ *  targetTokenExtractor - token span extractor used to extract the target token spans
  * 
  * @author Jesse Dodge, Bill McDowell
  *

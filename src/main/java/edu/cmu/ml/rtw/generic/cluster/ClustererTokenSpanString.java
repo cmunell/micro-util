@@ -5,6 +5,13 @@ import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 
+/**
+ * ClustererTokenSpanString clusters token spans
+ * by the strings that occur within the spans.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class ClustererTokenSpanString extends Clusterer<TokenSpan> {
 	private Clusterer<String> stringClusterer;
 	

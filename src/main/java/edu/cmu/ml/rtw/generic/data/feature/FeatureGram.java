@@ -17,8 +17,21 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 
 /**
+ * FeatureGram is an abstract representation of a feature type that
+ * computes a vector of weighted indicators of which
+ * elements of a vocabulary of strings ('grams') are associated with
+ * a datum.  
  * 
+ * Parameters:
+ * 	minFeatureOccurrence - minimum number of times a gram must occur across
+ *  the data set for it to have a component in the computed vectors
  * 
+ * 	cleanFn - string cleaning function that grams are passed through
+ * 
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ *	 
  * @author Bill McDowell
  * 
  * @param <D> datum type

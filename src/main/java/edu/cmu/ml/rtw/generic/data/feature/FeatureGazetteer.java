@@ -16,13 +16,42 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 /**
- * FeatureGazetteer computes gazetteer features.  For a datum d, 
- * the feature computes the maximum or
+ * FeatureGazetteer computes gazetteer features.  
+ * 
+ * For a datum d, a gazetteer feature type computes the maximum or
  * minimum of a function f_{S(d)}:G ->R where G is a gazetteer of names,
  * and f_{S(d)} is a function defined for string extractor S used on
- * datum d.  For examples, see
- * the feature types that extend this class under the edu.cmu.ml.rtw.generic.data.feature
+ * datum d.  More concretely, f assigns a real number value to each
+ * element of the gazetteer, and the gazetteer feature returns the
+ * extremum of this function.
+ * 
+ * If the 'includeIds' parameter is false, then the gazetteer feature
+ * always just gives the single scalar extremum value.  
+ * 
+ * If the 'includeIds' parameter is true, then the gazetteer feature
+ * returns a vector of indicators of whether each 'id' in the gazetteer
+ * occurs for the given string S(d).
+ * 
+ * For examples, see
+ * the feature types that extend this class under the 
+ * edu.cmu.ml.rtw.generic.data.feature
  * package.
+ * 
+ * Parameters:
+ *  gazetteer - the gazetteer G over which to compute the feature
+ * 
+ *  stringExtractor - the string extractor S to extract strings from data
+ *
+ *  includeIds - indicates whether the computed feature vector should contain
+ *  a separate component for each id in the gazetteer corresponding to the input
+ *  string
+ *
+ *  includeWeights - indicates whether the computed feature vector should 
+ *  multiply the id components of the returned vector by their weights in the
+ *  gazetteer G (assuming includeIds=true)
+ * 
+ *  weightThreshold - the minimum weight threshold necessary for a component
+ *  of the returned vector to be non-zero
  * 
  * @author Bill McDowell
  *

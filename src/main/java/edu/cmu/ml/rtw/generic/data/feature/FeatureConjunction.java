@@ -15,11 +15,18 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 /**
  * For a datum d, FeatureConjunction computes a vector whose elements are given by
- * a flattening of the tensor product of vectors computed for d by a set of referenced
+ * a flattening of the tensor product of vectors computed for d by referenced
  * features.  
  * 
- * The referenced features are given by a list of feature 'referenceNames'
- * used within a FeaturizedDataSet constructed from an experiment configuration file.
+ * Parameters:
+ *  minFeatureOccurrence - the minimum number of times a conjunction must occur to 
+ *  be included in the vector
+ *
+ *  referencedFeatures - referenced features given by a '/' separated list of 
+ *  feature 'referenceNames' used within the FeaturizedDataSet given to initialize
+ *  FeatureConjunction.
+ * 
+ * FIXME Change the '/' separated feature list to be an edu.cmu.ml.rtw.generic.parse.Obj.Array
  * 
  * @author Bill McDowell
  *

@@ -18,7 +18,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * 
  * <c(v_1\in D_p(T(d))), c(v_2 \in D_p(T(d))), ... , c(v_n \in D_p(T(d)))>
  * 
- * Where T is a token extractor, D_p(T(d)) computes n-grams related to tokens
+ * Where T is a token span extractor, D_p(T(d)) computes n-grams related to tokens
  * given by T(d) in the dependency parse trees containing elements of T(d) in
  * a source document.  The particular way in which the n-grams in D_p(T(d))
  * are related to tokens in T(d) in a dependency parse tree depends on parameters
@@ -28,9 +28,27 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * The resulting vector is given to methods in edu.cmu.ml.rtw.generic.data.feature.FeatureNGram to 
  * be normalized and scaled in some way.
  * 
- * The 'mode' parameter useRelationTypes determines whether different typed relations
- * in the dependency tree should have their own corresponding sets of components
- * in the returned vector.
+ * Parameters:
+ *  n - number of grams per n-gram 
+ *
+ * 	minFeatureOccurrence - minimum number of times an n-gram 
+ *  must occur across the data set for it to have a component 
+ *  in the computed vectors
+ * 
+ * 	cleanFn - string cleaning function that grams are passed through
+ * 
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ * 
+ *  clusterer - optional clusterer that maps grams to their clusters
+ *  before combining them into n-(clustered)grams 
+ * 
+ *  mode - determines whether parents, children, or parents and children
+ *  of the extracted token spans are taken from the dependency parses
+ *  
+ *  useRelationTypes - determines whether the dependency types are 
+ *  included with the n-grams.
  * 
  * @author Bill McDowell
  *

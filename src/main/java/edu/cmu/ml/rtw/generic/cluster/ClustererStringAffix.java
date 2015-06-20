@@ -5,6 +5,13 @@ import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 
+/**
+ * ClustererAffix clusters strings by their
+ * prefixes and suffixes.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class ClustererStringAffix extends ClustererString {
 	private String name;
 	private int maxAffixLength;

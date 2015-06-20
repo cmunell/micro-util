@@ -5,6 +5,13 @@ import java.util.List;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 
+/**
+ * ClustererTokenSpanPoSTag clusters token spans 
+ * by the PoS tag sequences assigned to their tokens.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class ClustererTokenSpanPoSTag extends Clusterer<TokenSpan> {
 	public ClustererTokenSpanPoSTag() {
 		
