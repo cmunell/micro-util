@@ -8,6 +8,21 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnNGramSentence computes all n-gram spans occurring
+ * in the same sentences as a given collection
+ * of token spans.
+ *
+ * Parameters:
+ *  n - the number of grams in each returned n-gram
+ *  
+ *  noSpan - indicates whether n-grams that overlap
+ *  with the input token spans should be excluded 
+ *  from the output.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnNGramSentence extends FnNGram {
 	private boolean noSpan = false;
 	

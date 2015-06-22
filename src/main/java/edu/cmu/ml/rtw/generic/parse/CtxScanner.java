@@ -6,6 +6,13 @@ import java.io.StringReader;
 
 import java_cup.runtime.*;
 
+/**
+ * CtxScanner is a scanner used when parsing
+ * ctx scripts using the CtxParser.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class CtxScanner implements Scanner {
 	private static final char[] SPECIAL_CHARACTERS = { ',', '=', ';', 'o', '[', ']', '{', '}', '(', ')', '$', '-', '>' };
 	private static final int[] SPECIAL_CHARACTER_SYMBOLS = { CtxSymbol.COMMA, CtxSymbol.EQUALS, CtxSymbol.SEMI,

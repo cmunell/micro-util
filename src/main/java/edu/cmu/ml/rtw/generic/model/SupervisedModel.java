@@ -21,24 +21,8 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 
 /**
  * SupervisedModel represents a supervised classification model
- * that can be trained and evaluated using 
- * edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSets.
- * 
- * Implementations of particular supervised models derive from the 
- * SupervisedModel class,
- * and the SupervisedModel class is primarily responsible for 
- * providing the
- * methods necessary for deserializing models from configuration files.
- * Models are defined in the configuration files by strings of
- * the form:
- * 
- * model_[modelReferenceName]=[genericModelName (e.g. SVM)]([hyper-parameter 1]=[hyper-parameter value 1],...)
- * {
- *    [extra info 1]=[extra info value 1]
- *    [...]
- * }
- * 
- * Where strings in square brackets are replaced by model specific info.
+ * that can be trained and evaluated using a 
+ * edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet.
  * 
  * @author Bill McDowell
  *

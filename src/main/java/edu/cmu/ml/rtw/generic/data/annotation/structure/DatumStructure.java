@@ -11,7 +11,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
 /**
  * DatumStructure represents a collection of datums (training/evaluation
  * examples from a data set) over which hard constraints can be imposed within
- * models.
+ * structure prediction models.
  * 
  * @author Bill McDowell
  *

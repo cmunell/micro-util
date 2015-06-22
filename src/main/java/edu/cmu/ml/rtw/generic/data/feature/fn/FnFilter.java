@@ -8,6 +8,24 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnFilter filters a collection of strings
+ * down to those that are equal to, suffixed,
+ * prefixed, or extensions of a given filter
+ * string.
+ * 
+ * Parameters:
+ *  filter - The string by which to filter the
+ *  input collection
+ *  
+ *  type - Determines how to use the filter
+ *  
+ *  filterTransform - Function by which to transform
+ *  the filter before applying it
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnFilter extends Fn<String, String> {
 	public enum Type {
 		SUFFIX,

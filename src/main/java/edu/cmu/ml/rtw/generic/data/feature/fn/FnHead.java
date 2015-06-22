@@ -7,6 +7,13 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnHead computes the head tokens of a collection
+ * of token spans
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnHead extends Fn<TokenSpan, TokenSpan> {
 	private String[] parameterNames = {};
 	

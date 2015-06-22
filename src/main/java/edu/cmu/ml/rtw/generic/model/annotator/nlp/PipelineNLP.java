@@ -10,6 +10,18 @@ import edu.cmu.ml.rtw.generic.model.annotator.Pipeline;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
+/**
+ * PipelineNLP represents a pipeline of NLP annotators through
+ * which a document can be passed.  A pipeline can be
+ * given to an
+ * edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP
+ * with some text upon construction, and the DocumentNLP
+ * will be filled with annotations of the text generated
+ * from annotators in the pipeline.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class PipelineNLP extends Pipeline {
 	protected DocumentNLP document;
 	

@@ -13,6 +13,16 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
+/**
+ * Document represents a JSON serializable bunch of text/data
+ * that typically comes from a file on disk, and can be annotated
+ * with annotations that are defined through instances of the
+ * edu.cmu.ml.rtw.generic.data.annotation.AnnotationType
+ * class.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class Document implements JSONSerializable {
 	protected DataTools dataTools;
 	protected String name;

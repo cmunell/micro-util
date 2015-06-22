@@ -17,6 +17,15 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.Annotator;
 import edu.stanford.nlp.util.CoreMap;
 
+/**
+ * JSONTokenizer is a tokenizer that can be placed in
+ * the StanfordCoreNLP pipeline to create tokenized documents
+ * from existing sentence split tokenizations stored in
+ * a JSON representation.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class JSONTokenizer implements Annotator {
 	
 	public JSONTokenizer() {

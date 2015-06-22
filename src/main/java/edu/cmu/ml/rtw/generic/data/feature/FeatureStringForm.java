@@ -13,6 +13,34 @@ import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
+/**
+ * FeatureStringForm computes a vector of indicators of
+ * whether a string extracted from a datum has some forms.
+ * A form is given by a sequence of the following 
+ * characters:
+ * 
+ * A - represents a sequence of capital letters
+ * a - represents a sequence of lower case letters
+ * D - represents a sequence of digits
+ * w - represents a sequence of whitespace characters
+ * S - represents a sequence of non-number/letter/whitespace symbols
+ *
+ * So, for example, the string "Text   SSString5. " has the form
+ * "AawAaDSw".
+ * 
+ * Parameters:
+ *  stringExtractor - extracts strings from a datum from which forms 
+ *  are computed
+ *  
+ *  minFeatureOccurrence - minimum number of times a form must occur
+ *  across the entire data set for it to have a component in the 
+ *  computed vectors
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureStringForm<D extends Datum<L>, L> extends Feature<D, L> {
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	protected Datum.Tools.StringExtractor<D, L> stringExtractor;

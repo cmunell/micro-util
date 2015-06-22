@@ -18,8 +18,62 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 
-// FIXME: This class will break featurized data set if non-contiguous vocabulary
-// but that's okay for now since it's not ever used with a featurized data set
+/**
+ * FeatureTokenSpanFnFilteredVocab computes a vector
+ * of indicators of whether elements of a vocabulary of
+ * strings are associated with a datum.  The vocabulary of
+ * strings is computed as a transformed subset of the vocabulary
+ * of a separate FeatureTokenSpanFnDataVocabTrie feature.
+ * 
+ * This feature is only currently used by 
+ * edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGramression
+ * to construct new features from its current feature set.  New 
+ * features are constructed as transformations on precomputed 
+ * FeatureTokenSpanFnDataVocabTrie vocabularies to save time.  This
+ * way of doing things makes it possible to quickly construct thousands
+ * of new features with small vocabularies from large precomputed
+ * vocabularies.
+ * 
+ * Parameters:
+ *  vocabFeature - the FeatureTokenSpanFnDataVocabTrie from which
+ *  to compute the vocabulary
+ *
+ *  vocabFilterInit - determines whether the full source vocabulary
+ *  will be given to vocabFilterFn, or only subsets of the source
+ *  vocabulary that are prefixed/suffixed by vocabFilterInitArg 
+ *  (this is done separately outside of vocabFilterFn to cleanly use
+ *  the tries in FeatureTokenSpanFnDataVocabTrie for the sake
+ *  of efficiency)
+ *  
+ *  vocabFilterInitArg - a string argument to use with vocabFilterInit
+ *  
+ *  vocabFilterFn - a function that transforms the strings from the
+ *  source vocabulary into strings of the target vocabulary 
+ *  
+ *  tokenExtractor - extracts token spans from input datums for 
+ *  fn to operate on
+ *  
+ *  fn - transforms token spans extracted by tokenExtractor into strings.
+ *  The output vector indicates which elements of the vocabulary are in the
+ *  collection of strings output by fn.
+ * 
+ * FIXME: This class will break featurized data set 
+ * if it has a non-contiguous vocabulary
+ * but that's okay for now since it's not ever used with a 
+ * featurized data set (non-contiguous vocabularies are
+ * constructed when several
+ * FeatureTokenSpanFnFilteredVocabs are merged.  The merging
+ * is done in order to improve efficiency when many (thousands)
+ * of new features with single element vocabularies are 
+ * constructed (without the merging, many separate hash set
+ * containment operations have to be performed for each individual
+ * feature vocabulary).
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feature<D, L> {
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	private boolean merged = false;

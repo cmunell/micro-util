@@ -4,6 +4,15 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+/**
+ * Assignment represents an assignment in a ctx script 
+ * parsed using the CtxParser.  An assignment
+ * gives a name to some object value (where an object is
+ * represented as an Obj object).
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class Assignment extends Serializable {
 	protected String name;
 	protected Obj value;

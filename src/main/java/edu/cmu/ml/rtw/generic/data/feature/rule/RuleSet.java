@@ -15,6 +15,20 @@ import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * RuleSet represents a set of rules for transforming
+ * objects (e.g. features, models, evaluations) from
+ * an edu.cmu.ml.rtw.generic.data.Context into new objects.
+ * 
+ * This is currently used by the 
+ * edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGramression
+ * feature grammar model to construct new features.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class RuleSet<D extends Datum<L>, L> extends CtxParsableFunction {
 	public static final String RULE_STR = "rule";
 	

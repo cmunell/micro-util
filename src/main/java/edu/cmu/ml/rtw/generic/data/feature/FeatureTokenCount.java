@@ -9,6 +9,22 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FeatureTokenCount computes an indicator of whether token
+ * spans extracted from a datum have greater length (in number
+ * of tokens) than a given count.
+ * 
+ * Parameters:
+ *  tokenExtractor - extractor for taking token spans from a datum
+ *  
+ *  maxCount - number of tokens in a token span above which the computed
+ *  indicator is is 1
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureTokenCount<D extends Datum<L>, L> extends Feature<D, L> {
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
 	protected int maxCount;

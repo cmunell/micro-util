@@ -25,7 +25,6 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramDep;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramSentence;
-import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramPoS;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureStringForm;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenCount;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocab;
@@ -64,7 +63,9 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 
 /**
  * Datum represents a (possibly) labeled datum (training/evaluation
- * example).
+ * example).  A domain specific project should extend this class with
+ * implementations of methods/tools that are particular to pieces of 
+ * data in their domain.  See 
  * 
  * @author Bill McDowell
  *
@@ -246,7 +247,6 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureNGramSentence<D, L>());
 			addGenericFeature(new FeatureNGramDep<D, L>());
 			addGenericFeature(new FeatureIdentity<D, L>());
-			addGenericFeature(new FeatureNGramPoS<D, L>());
 			addGenericFeature(new FeatureDependencyPath<D, L>());
 			addGenericFeature(new FeatureConstituencyPath<D, L>());
 			addGenericFeature(new FeatureConjunction<D, L>());

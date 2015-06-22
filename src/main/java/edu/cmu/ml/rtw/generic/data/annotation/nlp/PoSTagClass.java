@@ -1,5 +1,12 @@
 package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
+/**
+ * PoSTagClass represents sets of PoSTags that
+ * are commonly referred to.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class PoSTagClass {
 	public static final PoSTag[] JJ = { PoSTag.JJ, PoSTag.JJR };
 	public static final PoSTag[] VB = { PoSTag.VBD, PoSTag.VBZ, PoSTag.VBP, PoSTag.VBN, PoSTag.VBG, PoSTag.VB };

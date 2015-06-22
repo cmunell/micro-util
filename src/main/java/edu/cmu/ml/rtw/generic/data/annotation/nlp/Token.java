@@ -6,6 +6,13 @@ import org.json.JSONObject;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
+/**
+ * Token represents token a token from a tokenization
+ * of some natural language text.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class Token implements JSONSerializable {
 	private Document document;
 	private int charSpanStart;

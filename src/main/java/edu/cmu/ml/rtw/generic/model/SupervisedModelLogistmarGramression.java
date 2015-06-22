@@ -46,6 +46,50 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * 
+ * SupervisedModelLogistmarGramression implements the 'feature grammar'
+ * model described in 
+ * src/main/resources/docs/feature-grammar/FeatureGrammarNotes.pdf.
+ * 
+ * Parameters:
+ *  t - weight threshold hyper-parameter above which child features are
+ *  added to the vocabulary
+ *  
+ *  rules - set of rules for expanding the feature set
+ *  
+ *  weightedLabels - indicates whether weighted labels should be used (for EM... but from
+ *  the theory, it seems to me that logistic regression cannot be used as part
+ *  of an EM procedure in this way because it is not a generative model.  Should
+ *  use CEM with non-weighted labels instead).
+ *  
+ *  l2 - l2-regularization hyper-parameter
+ *  
+ *  convergenceEpsilon - training procedure terminates if the weight
+ *  change in an iteration is below this value 
+ *  
+ *  maxEvaluationConstantIterations - maximum number of training iterations during 
+ *  which the test evaluations can be constant without stopping the training procedure
+ *  (only works if computeTestEvaluations is true)
+ *  
+ *  maxTrainingExamples - maximum number of examples that are passed over by AdaGrad
+ *  
+ *  batchSize - number of examples in each AdaGrad mini-batch iteration
+ *  
+ *  evaluationIterations - Number of iterations after which evaluations are computed
+ *  
+ *  classificationThreshold - posterior threshold above which an example is labeled
+ *  as positive
+ *  
+ *  computeTestEvaluations - indicates whether test evaluations should be computed
+ *  after every evaluationIterations iterations.
+ * 
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class SupervisedModelLogistmarGramression<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private boolean weightedLabels = false;
 	private double l2 = .00001;

@@ -8,6 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Obj represents an object that can be
+ * assigned a name within a ctx script. The 
+ * CtxParse parses a ctx script into a list
+ * of assignments (stored 
+ * in an AssignmentList object) of names to 
+ * Objs.  This AssignmentList can be converted to
+ * an edu.cmu.ml.rtw.generic.data.Context object
+ * containing features, models, rule sets, etc.  
+ * The features,
+ * models, rule sets etc are constructed from Objs.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class Obj extends Serializable {
 	public enum Type {
 		FUNCTION,

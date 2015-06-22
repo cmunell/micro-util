@@ -7,6 +7,21 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnNGramInside computes all n-gram spans
+ * occurring inside a given collection of
+ * token spans. 
+ * 
+ * Parameters:
+ *  n - the number of grams in the returned n-grams
+ *  
+ *  noHead - indicates whether n-grams overlapping
+ *  with the heads of the given token spans should
+ *  be excluded from the output.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnNGramInside extends FnNGram {
 	private boolean noHead = false;
 	

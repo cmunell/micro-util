@@ -9,6 +9,19 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * FnGazetteer computes the gazetteer ids with weights above a
+ * given threshold on a collection of input strings.
+ * 
+ * Parameters:
+ *  gazetteer - the gazetteer by which to compute the ids
+ *  
+ *  weightThreshold - the weight threshold above which gazetteer
+ *  ids are included in the output.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnGazetteer extends Fn<String, String> {
 	private String[] parameterNames = { "gazetteer", "weightThreshold" };
 	private Gazetteer gazetteer;

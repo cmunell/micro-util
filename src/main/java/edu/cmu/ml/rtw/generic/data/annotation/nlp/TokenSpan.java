@@ -6,7 +6,8 @@ import org.json.JSONObject;
 import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
 
 /**
- * TokenSpan represents a contiguous span of tokens in a document.  
+ * TokenSpan represents a contiguous span of tokens in a 
+ * natural language text document.  
  * 
  * @author Bill
  */

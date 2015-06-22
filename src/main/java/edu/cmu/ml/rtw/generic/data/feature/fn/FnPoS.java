@@ -8,6 +8,14 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnPos takes a collection of token spans and computes
+ * their corresponding part-of-speech tag
+ * sequences.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnPoS extends Fn<TokenSpan, String> {
 	private ClustererTokenSpanPoSTag clusterer = new ClustererTokenSpanPoSTag();
 	private String[] parameterNames = {  };

@@ -17,11 +17,11 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * (http://en.wikipedia.org/wiki/Precision_and_recall)
  * for a supervised classification model on a data set.
  * 
- * The 'weighted' parameter indicates whether the measure for a particular
- * label should be weighted by the labels frequency within the data set.
+ * Parameters:
+ *  weighted - indicates whether the measure for a particular
+ *  label should be weighted by the labels frequency within the data set.
  * 
- * The 'filterLabel' parameter limits the precision calculation to a single 
- * label
+ *  filterLabel - limits the recall calculation to a single label
  * 
  * @author Bill McDowell
  *

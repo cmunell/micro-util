@@ -15,6 +15,10 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * SupervisedModelEvaluationAccuracy computes the micro-averaged accuracy
  * for a supervised classification model on a data set.
  * 
+ * Parameters:
+ *  computeBaseline - indicates whether the majority baseline accuracy
+ *  should be computed
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

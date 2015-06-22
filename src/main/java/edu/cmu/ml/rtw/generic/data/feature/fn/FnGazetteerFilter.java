@@ -9,6 +9,23 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * FnGazetteerFilter filters a collection of strings
+ * to those that have a certain id in a given gazetteer.
+ * 
+ * Parameters:
+ *  gazetteer - the gazetteer to use for filtering
+ *  
+ *  idFilter - the id that the strings must have within
+ *  the gazetteer
+ *  
+ *  weightThreshold - minimum weight that the string must
+ *  have in its assignment to an id within the gazetteer for
+ *  it not to be filtered out
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnGazetteerFilter extends Fn<String, String> {
 	private String[] parameterNames = { "gazetteer", "weightThreshold", "idFilter" };
 	private Gazetteer gazetteer;

@@ -35,6 +35,18 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
  * data set to a file that creg can handle, call the creg command, and read
  * in the files that creg outputs.
  * 
+ * Parameters:
+ *  cmdPath - path to the creg executable
+ *  
+ *  modelPath -  path at which to store the creg model file
+ *  
+ *  l1 - l1-regularization hyper-parameter
+ *  
+ *  l2 - l2-regularization hyper-paramter
+ *  
+ *  warmRestart - indicator of whether creg should use warm restarts
+ * 
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

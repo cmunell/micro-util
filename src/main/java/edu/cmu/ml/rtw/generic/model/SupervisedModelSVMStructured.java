@@ -30,6 +30,13 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * as a non-structured SVM, and the structure is only imposed at inference 
  * time using the datum label scores to optimize the structure.
  * 
+ * Parameters:
+ *  l2 - l2 regularization hyper-parameter
+ *  
+ *  epsilon - if the objective changes less than this value in
+ *  an iteration, then the training procedure terminates (although
+ *  this functionality may currently be commented out)
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

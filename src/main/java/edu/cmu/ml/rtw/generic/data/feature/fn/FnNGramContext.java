@@ -7,6 +7,21 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnNGramContext takes a collection of token spans
+ * and computes the n-gram spans that occur either immediately
+ * before or immediately after them.
+ * 
+ * Parameters:
+ *  n - the number of grams in the returned n-grams
+ *  
+ *  type - determines whether the returned n-grams come 
+ *  from immediately before or immediately after each 
+ *  token span
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnNGramContext extends FnNGram {
 	public enum Type {
 		BEFORE,

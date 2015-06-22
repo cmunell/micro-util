@@ -24,7 +24,7 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
 /**
- * DataSet represents a collection of labeled and/or unlabeled 'datums'
+ * FeaturizedDataSet represents a collection of labeled and/or unlabeled 'datums'
  * that have been featurized by a provided set of features to train and 
  * evaluate models.  
  * 
@@ -356,6 +356,29 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 		return dataSet;
 	}
 	
+	/**
+	 * Converts the data set into a 'learn' library 
+	 * data set for use in SupervisedModelAreg, SupervisedModelLogistmarGramression,
+	 * and other models that use Platanios 'learn' library internally.
+	 * 
+	 * @param weightedLabels indicates whether data instance labels should be 
+	 * weighted (this is for use in EM)
+	 * 
+	 * @param minPositiveSampleRate gives the minimum fraction of positive labels
+	 * in the returned data set.  If there are less than this fraction of positive
+	 * examples in the source data set, then only a subset of negative examples will
+	 * be in the returned data to match the minimum fraction.  This is useful when
+	 * training logistic regression classifiers on data where some labels occur
+	 * very infrequently 
+	 * 
+	 * @param onlyLabeled indicates whether only labeled data should be returned
+	 * 
+	 * @param infiniteVectorsWithBias indicates whether the returned vectors should
+	 * have infinite dimensions with a bias element (always 1) for the first dimension.
+	 * This is used by SupervisedModelLogistmarGramression.
+	 * 
+	 * @return a 'learn' library data set
+	 */
 	public DataSetInMemory<PredictedDataInstance<Vector, Double>> makePlataniosDataSet(boolean weightedLabels, double minPositiveSampleRate, boolean onlyLabeled, boolean infiniteVectorsWithBias) {
 		double pos = (this.labeledData.get(true) != null) ? this.labeledData.get(true).size() : 1.0;
 		double neg = (this.labeledData.get(false) != null) ? this.labeledData.get(false).size() : 0.0;

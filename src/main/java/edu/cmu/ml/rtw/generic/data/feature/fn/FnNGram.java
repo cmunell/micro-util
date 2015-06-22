@@ -7,6 +7,18 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnNGram is an abstract representation of a function
+ * that takes token spans and returns a collection of 
+ * n-grams that are related to those token spans in 
+ * some way. 
+ * 
+ * Parameters:
+ *  n - the number of grams in the returned n-grams
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class FnNGram extends Fn<TokenSpan, TokenSpan> {
 	protected String[] parameterNames = { "n" };
 	protected int n = 1;

@@ -15,6 +15,22 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
+/**
+ * 
+ * SupervisedModelCompositeBinary merges the indicators output 
+ * from a collection of binary classifiers into a single composite
+ * label for a given data instance.  So, if there
+ * is a separate binary classifier for each of many classes,
+ * then SupervisedModelCompositeBinary can combine the output
+ * from these classifiers into a single list of classes assigned
+ * to an instance.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <T>
+ * @param <D>
+ * @param <L>
+ */
 public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private List<SupervisedModel<T, Boolean>> binaryModels;
 	private List<LabelIndicator<L>> labelIndicators;

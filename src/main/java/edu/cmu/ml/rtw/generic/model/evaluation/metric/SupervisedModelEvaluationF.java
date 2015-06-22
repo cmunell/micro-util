@@ -17,6 +17,16 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * (http://en.wikipedia.org/wiki/F1_score)
  * for a supervised classification model on a data set.
  * 
+ * Parameters:
+ *  mode - Determines whether micro or macro averaged
+ *  F is computed
+ *  
+ *  Beta - constant parameter used to determine weight of 
+ *  precision relative to recall
+ *  
+ *  filterLabel - if this is non-null, then the measure is
+ *  only computed for this label
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

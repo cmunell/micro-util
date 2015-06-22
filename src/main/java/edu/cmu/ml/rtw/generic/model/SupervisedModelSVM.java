@@ -28,6 +28,13 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
  * gradient updates are theoretically sound when used with AdaGrad (haven't
  * taken the time to think about it), but it seems to work anyway.
  * 
+ * Parameters:
+ *  l2 - l2 regularization hyper-parameter
+ *  
+ *  epsilon - if the objective changes less than this value in
+ *  an iteration, then the training procedure terminates (although
+ *  this functionality may currently be commented out)
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

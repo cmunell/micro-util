@@ -11,7 +11,17 @@ import java.util.Map.Entry;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
 
-
+/**
+ * AssignmentList represents a list of assignments in 
+ * a ctx script parsed using the CtxParser. A ctx
+ * script is an assignment list at the highest level,
+ * but assignment lists are also used to give the
+ * parameter settings and internal assignments 
+ * for function Objs.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class AssignmentList extends Obj {
 	private List<Assignment> assignments;
 	private Map<String, Assignment> assignmentMap;

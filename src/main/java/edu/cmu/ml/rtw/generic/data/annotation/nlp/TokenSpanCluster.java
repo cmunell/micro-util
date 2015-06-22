@@ -8,6 +8,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
+/**
+ * TokenSpanCluster represents a cluster of token spans
+ * in a natural language text document---for example
+ * to represent co-reference resolution output.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class TokenSpanCluster implements JSONSerializable {
 	private DocumentNLP document;
 	private int id;

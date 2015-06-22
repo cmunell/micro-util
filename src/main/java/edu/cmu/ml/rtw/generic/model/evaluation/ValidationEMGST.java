@@ -18,6 +18,20 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.Timer;
 
+/**
+ * ValidationEMGST runs several successive ValidationGST
+ * validations, relabeling data using the models that 
+ * are trained by each validation, and retraining on
+ * that relabeled data in the next iteration (EM).
+ * 
+ * FIXME: Note that this code was refactored quite a bit,
+ * and the newest version has not been tested.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class ValidationEMGST<D extends Datum<L>, L> extends Validation<D, L> {
 	private int iterations;
 	private boolean firstIterationOnlyLabeled;

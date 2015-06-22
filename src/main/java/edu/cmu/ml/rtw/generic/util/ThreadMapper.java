@@ -9,6 +9,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * ThreadMapper maps a function onto a collection
+ * of objects on parallel threads.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <S>
+ * @param <T>
+ */
 public class ThreadMapper<S, T> {
 	public static interface Fn<S, T> {
 		T apply(S item);

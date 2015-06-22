@@ -6,6 +6,21 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnAffix computes a function from strings to
+ * suffixes or prefixes.
+ * 
+ * Parameters:
+ *  type - determines whether suffixes or prefixes
+ *  should be computed
+ *  
+ *  nMin - the minimum length of affixes to compute
+ *  
+ *  nMax - the maximum length of affixes to compute
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnAffix extends Fn<String, String> {
 	public enum Type {
 		SUFFIX,

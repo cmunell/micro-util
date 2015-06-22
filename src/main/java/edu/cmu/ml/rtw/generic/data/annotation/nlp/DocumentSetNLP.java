@@ -17,6 +17,15 @@ import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * DocumentSetNLP represents a set of NLP documents 
+ * (edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP)
+ * that can be loaded from somewhere (like the disk).
+ * 
+ * @author Bill McDowell
+ *
+ * @param Document type
+ */
 public class DocumentSetNLP<D extends DocumentNLP> extends DocumentSet<D> {
 	public DocumentSetNLP(String name) {
 		super(name);

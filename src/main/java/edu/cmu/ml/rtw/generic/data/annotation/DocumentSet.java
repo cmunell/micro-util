@@ -19,6 +19,9 @@ import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
 /**
+ * DocumentSet represents a set of documents 
+ * (edu.cmu.ml.rtw.generic.data.annotation.Document)
+ * that can be loaded from somewhere (like the disk)
  * 
  * @author Bill McDowell
  *

@@ -17,6 +17,21 @@ import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
+/**
+ * FeatureTokenSpanFnDataVocabTrie performs the same function as 
+ * FeatureTokenSpanFnDataVocab, except that it maintains internal 
+ * trie data structures for retrieving elements
+ * of the feature vocabulary that are suffixed or prefixed by a
+ * given string. This is useful in feature grammar models (like 
+ * edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGrammression)
+ * to construct new features that have existing features as
+ * prefixes/suffixes (this is done through FeatureTokenSpanFnFilteredVocab).
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends FeatureTokenSpanFnDataVocab<D, L> {
 	private Trie<String, Double> forwardTrie;
 	private Trie<String, Double> backwardTrie;

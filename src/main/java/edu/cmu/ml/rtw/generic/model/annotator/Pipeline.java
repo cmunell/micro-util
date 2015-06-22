@@ -8,6 +8,14 @@ import java.util.Map;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
 
+
+/**
+ * Pipeline represents a pipeline of annotators that a 
+ * document can be passed through
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class Pipeline {
 	protected Map<AnnotationType<?>, Annotator<?>> annotators;
 	protected List<AnnotationType<?>> annotationOrder;

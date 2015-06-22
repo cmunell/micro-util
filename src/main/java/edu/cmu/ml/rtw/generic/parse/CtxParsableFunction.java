@@ -5,6 +5,19 @@ import java.util.Map.Entry;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 
+/**
+ * 
+ * CtxParsableFunction represents an object that is 
+ * parsable through an Obj.Function object from a ctx
+ * scrpt using the CtxParser. For example,
+ * edu.cmu.ml.rtw.generic.data.feature.Feature 
+ * and edu.cmu.ml.rtw.generic.model.SupervisedModel
+ * are objects that can be parsed from or converted
+ * back into part of a ctx script through Obj.Function.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public abstract class CtxParsableFunction extends CtxParsable implements Parameterizable {	
 	@Override
 	public Obj toParse() {

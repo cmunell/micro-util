@@ -8,6 +8,18 @@ import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
+/**
+ * Validation represents an abstract validation for
+ * a supervised model.  A validation does something 
+ * with the model (typically involving training), and 
+ * then runs some evaluations, and generates some
+ * output results.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public abstract class Validation<D extends Datum<L>, L> {
 	protected String name;
 	protected Datum.Tools<D, L> datumTools;

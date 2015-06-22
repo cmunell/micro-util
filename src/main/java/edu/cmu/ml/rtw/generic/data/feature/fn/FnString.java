@@ -9,6 +9,23 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnString takes a collection of token spans
+ * and returns their corresponding strings.
+ * 
+ * Parameters:
+ *  cleanFn - a cleaning function to use on the strings
+ *  before returning them
+ *  
+ *  splitTokens - indicates whether the token span strings
+ *  should be split into tokens, cleaned by cleanFn, and then
+ *  pieced back together--or alternatively, the cleanFn
+ *  directly applied to the token span strings without any
+ *  splitting
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnString extends Fn<TokenSpan, String> {
 	private DataTools.StringTransform cleanFn;
 	private boolean splitTokens = true;

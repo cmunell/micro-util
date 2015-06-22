@@ -28,6 +28,80 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
+/**
+ * Context holds a set of named model, feature, 
+ * evaluation metric, function, and other objects that have 
+ * been deserialized from a script written in the
+ * language defined in edu.cmu.ml.rtw.generic.parse.  
+ * These objects can refer to named tools stored in 
+ * edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools
+ * and edu.cmu.ml.rtw.generic.data.DataTools.  The 
+ * deserialized contexts are generally used in validations
+ * in edu.cmu.ml.rtw.generic.model.evaluation.
+ * 
+ * The following gives an example of the sort of script
+ * that can be deserialized into a Context object.
+ * 
+ * value randomSeed="1";
+ * value maxThreads="33";
+ * value trainOnDev="false";
+ * array validLabels=("1", "2");
+ *
+ * evaluation accuracy=Accuracy();
+ * evaluation accuracyBase=Accuracy(computeBaseline="true");
+ * evaluation f.5=F(mode="MACRO_WEIGHTED", filterLabel="true", Beta="0.5");
+ * evaluation f1=F(mode="MACRO_WEIGHTED", filterLabel="true", Beta="1");
+ * evaluation prec=Precision(weighted="false", filterLabel="true");
+ * evaluation recall=Recall(weighted="false", filterLabel="true");
+ * 
+ * ts_fn head=Head();
+ * ts_fn ins1=NGramInside(n="1", noHead="true");
+ * ts_fn ins2=NGramInside(n="2", noHead="true");
+ * ts_fn ctxb1=NGramContext(n="1", type="BEFORE");
+ * ts_fn ctxa1=NGramContext(n="1", type="AFTER");
+ * ts_fn ctxb2=NGramContext(n="2", type="BEFORE");
+ * ts_fn ctxa2=NGramContext(n="2", type="AFTER");
+ * ts_fn sent1=NGramSentence(n="1", noSpan="true");
+ * ts_fn sent2=NGramSentence(n="2", noSpan="true");
+ * ts_fn doc1=NGramDocument(n="1", noSentence="true");
+ * ts_fn doc2=NGramDocument(n="2", noSentence="true");
+ * ts_str_fn pos=PoS();
+ * ts_str_fn str=String(splitTokens="false");
+ * str_fn pre=Affix(nMin="3", nMax="5", type="PREFIX"); 
+ * str_fn suf=Affix(nMin="3", nMax="5", type="SUFFIX"); 
+ * str_fn split1=Split(chunkSize="1");
+ * str_fn split2=Split(chunkSize="2");
+ * str_fn split3=Split(chunkSize="3");
+ * str_fn stem=Clean(cleanFn="CatStemCleanFn");
+ *
+ * feature fdep=NGramDep(scale="INDICATOR", mode="ParentsAndChildren", useRelationTypes="true", minFeatureOccurrence="2", n="1", cleanFn="CatStemCleanFn", tokenExtractor="AllTokenSpans");
+ * feature fner=Ner(useTypes="true", tokenExtractor="AllTokenSpans");
+ * feature ftcnt=TokenCount(maxCount="5", tokenExtractor="AllTokenSpans");
+ * feature fform=StringForm(stringExtractor="FirstTokenSpan", minFeatureOccurrence="2");
+ *
+ * feature fpos=TokenSpanFnDataVocab(scale="INDICATOR", minFeatureOccurrence="2", tokenExtractor="AllTokenSpans", fn=${pos});
+ * feature fphrh1=TokenSpanFnDataVocab(scale="INDICATOR", minFeatureOccurrence="2", tokenExtractor="AllTokenSpans", fn=(${strDef} o ${head}));
+ * feature fphr1=TokenSpanFnDataVocab(scale="INDICATOR", minFeatureOccurrence="2", tokenExtractor="AllTokenSpans", fn=(${strDef} o ${ins1}));
+ * feature fphr2=TokenSpanFnDataVocab(scale="INDICATOR", minFeatureOccurrence="2", tokenExtractor="AllTokenSpans", fn=(${strDef} o ${ins2}));
+ * feature fphr3=TokenSpanFnDataVocab(scale="INDICATOR", minFeatureOccurrence="2", tokenExtractor="AllTokenSpans", fn=(${strDef} o ${ins3}));
+ *
+ * model lr=Areg(l1="0", l2="0", convergenceEpsilon=".00001", maxTrainingExamples="520001", batchSize="100", evaluationIterations="200", maxEvaluationConstantIterations="500", weightedLabels="false", computeTestEvaluations="false")
+ * {
+ *  array validLabels=${validLabels};
+ * };
+ * 
+ * gs g=GridSearch() {
+ *  dimension l1=Dimension(name="l1", values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), trainingDimension="true");
+ *  dimension ct=Dimension(name="classificationThreshold", values=(.5,.6,.7,.8,.9), trainingDimension="false");
+ *  model model=${lr};
+ *  evaluation evaluation=${accuracy};
+ * };
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class Context<D extends Datum<L>, L> extends CtxParsable {
 	private enum ObjectType {
 		MODEL,

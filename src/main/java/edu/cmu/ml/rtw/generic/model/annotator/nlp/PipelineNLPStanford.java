@@ -46,6 +46,13 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.IntPair;
 
+/**
+ * PipelineNLPStanford is a PipelineNLP wrapper for the
+ * Stanford CoreNLP pipeline.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class PipelineNLPStanford extends PipelineNLP {
 	private StanfordCoreNLP nlpPipeline;
 	private Annotation annotatedText;

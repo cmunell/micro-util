@@ -7,6 +7,20 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnComposite computes the composition (f o g) of
+ * two functions f and g.
+ * 
+ * Parameters:
+ *  f - second function in composition
+ *  g - first function in composition
+ * 
+ * @author Bill McDowell
+ *
+ * @param <S>
+ * @param <T>
+ * @param <U>
+ */
 public abstract class FnComposite<S, T, U> extends Fn<S, T> {
 	public static class FnCompositeTokenSpan extends FnComposite<TokenSpan, TokenSpan, TokenSpan> {
 		public FnCompositeTokenSpan() {

@@ -19,6 +19,33 @@ import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
+/**
+ * FeatureTokenSpanFnDataVocab computes a vector of weighted 
+ * indicators of whether elements of a vocabulary of strings 
+ * are associated with a datum.  The vocabulary of strings is
+ * computed by running a function (constructed using the
+ * edu.cmu.ml.rtw.generic.data.feature.fn package) on 
+ * token spans extracted from the data in a given data set.
+ * 
+ * Parameters:
+ *  minFeatureOccurrence - minimum number of times a string must 
+ *  occur as the result of running fn on the data set for it 
+ *  to be included in the vocabulary
+ *  
+ *  tokenExtractor - extractor of token spans from datums
+ *  
+ *  scale - method by which to scale the value of each component
+ *  of vectors computed on data
+ *
+ *  fn - the function from token spans to strings that should
+ *  be run on each data point to give an element of the 
+ *  vocabulary
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<D, L> {
 	/**
 	 * 

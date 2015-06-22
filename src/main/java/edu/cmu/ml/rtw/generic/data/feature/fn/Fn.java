@@ -12,6 +12,29 @@ import java.util.Set;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.data.Context;
 
+/**
+ * Fn represents a function from a collection of 
+ * type S to a collection of type T.  
+ * 
+ * These functions are deserialized from a script
+ * through a edu.cmu.ml.rtw.generic.data.Context 
+ * objecs, and are currently used to construct
+ * features of types:
+ * 
+ * edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocab 
+ * and edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnFilteredVocab
+ * 
+ * This representation of functions was developed in
+ * order to allow for a lot of flexibility in defining rules
+ * for expanding features vocabularies using the 
+ * edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGrammression
+ * feature grammar model.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <S>
+ * @param <T>
+ */
 public abstract class Fn<S, T> extends CtxParsableFunction {
 	private int CACHE_SIZE = 20000; // FIXME Set this elsewhere
 	

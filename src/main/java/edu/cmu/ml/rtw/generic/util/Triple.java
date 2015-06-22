@@ -1,5 +1,15 @@
 package edu.cmu.ml.rtw.generic.util;
 
+/**
+ * Triple represents a tuple containing three
+ * objects.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <F>
+ * @param <S>
+ * @param <T>
+ */
 public class Triple<F, S, T> extends Pair<F, S> {
 	private T third;
 	

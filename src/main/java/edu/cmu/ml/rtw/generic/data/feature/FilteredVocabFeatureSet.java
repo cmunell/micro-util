@@ -12,6 +12,23 @@ import org.platanios.learn.math.matrix.Vector;
 
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 
+/**
+ * FilteredVocabFeatureSet represents a set of FeatureTokenSpanFnFilteredVocab
+ * features with interleaving vocabularies.  The vocabulary indices of features
+ * in the vocabulary interleave as a result of merging new feature objects with
+ * existing features in the vocabulary (see the addFeature method below).  This
+ * merging improves efficiency when thousands of new features with small (i.e. 
+ * single element) vocabularies are constructed, and they all need to be computed
+ * for many examples (e.g. in SupervisedModelLogistmarGramression).
+ * 
+ * (This is currently just used by SupervisedModelLogistmarGrammression. If you
+ * aren't working with that, then you can just ignore this class.)
+ * 
+ * @author Bill McDowell
+ *
+ * @param <D>
+ * @param <L>
+ */
 public class FilteredVocabFeatureSet<D extends Datum<L>, L> {
 	private List<FeatureTokenSpanFnFilteredVocab<D, L>> featureList;
 	private TreeMap<Integer, FeatureTokenSpanFnFilteredVocab<D, L>> features; // Map start indices to features

@@ -24,6 +24,26 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * vector is given to methods in edu.cmu.ml.rtw.generic.data.feature.FeatureNGram to be normalized
  * and scaled in some way.
  * 
+ * Parameters:
+ *  n - number of grams per n-gram 
+ *
+ * 	minFeatureOccurrence - minimum number of times an n-gram 
+ *  must occur across the data set for it to have a component 
+ *  in the computed vectors
+ * 
+ * 	cleanFn - string cleaning function that grams are passed through
+ * 
+ *  tokenExtractor - extractor for token spans from data
+ *	 
+ *  scale - scaling method for components of the vector
+ * 
+ *  clusterer - optional clusterer that maps grams to their clusters
+ *  before combining them into n-(clustered)grams 
+ *  
+ *  noTokenSpan - indicates whether the token spans extracted by 
+ *  tokenExtractor should be non-overlapping with the returned 
+ *  n-grams
+ * 
  * @author Bill McDowell
  *
  * @param <D> datum type

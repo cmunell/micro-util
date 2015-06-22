@@ -18,7 +18,7 @@ import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 
 /**
  * FeatureGram is an abstract representation of a feature type that
- * computes a vector of weighted indicators of which
+ * computes a vector of weighted indicators of whether
  * elements of a vocabulary of strings ('grams') are associated with
  * a datum.  
  * 

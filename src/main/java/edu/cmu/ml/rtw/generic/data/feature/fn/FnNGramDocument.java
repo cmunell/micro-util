@@ -8,6 +8,21 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnNGramDocument computes all n-gram spans within
+ * the same documents as a given collection of
+ * token spans.
+ * 
+ * Parameters:
+ *  n - the number of grams in each returned n-gram
+ *  
+ *  noSentence - indicates whether n-grams should
+ *  be extracted from the sentences containing the
+ *  input token spans
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnNGramDocument extends FnNGram {
 	private boolean noSentence = false;
 	

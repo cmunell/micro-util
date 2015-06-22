@@ -5,6 +5,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Timer keeps track of the amount of time passed
+ * between when a 'clock' is started and stopped.
+ * 
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class Timer {
 	private class Clock {
 		private boolean stopped;

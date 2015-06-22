@@ -6,6 +6,36 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnSplit takes a collection of strings and 
+ * splits them into smaller chunks around some
+ * splitting string.
+ * 
+ * Parameters:
+ *  splitter - the string around to split the 
+ *  input strings into chunks
+ *  
+ *  chunkSize - the number of successive chunks
+ *  to include in each output string.
+ *  
+ *  from - indicates whether the returned chunks
+ *  should be taken from the starts or the ends 
+ *  of the input strings
+ *  
+ *  limit - the maximum number of chunks to return
+ *  per input string
+ *  
+ * So for example, on input string "the_dog_barked_loudly"
+ * with splitter "_", chunkSize 2, from LAST, and limit 2,
+ * the output would be:
+ * 
+ * "barked_loudly"
+ * "dog_barked"
+ * 
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnSplit extends Fn<String, String> {
 	public enum From {
 		FIRST,

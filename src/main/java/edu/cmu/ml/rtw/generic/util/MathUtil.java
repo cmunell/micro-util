@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 
 /**
- * MathUtil contains various math related utility
+ * MathUtil contains various mathy sorts of utility
  * functions
  * 
  * @author Bill McDowell

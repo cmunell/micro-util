@@ -5,6 +5,18 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * CtxParsable represents an object that is parsable
+ * as part of ctx script using the CtxParser.  For example
+ * edu.cmu.ml.rtw.generic.data.Context,
+ * edu.cmu.ml.rtw.generic.data.feature.Feature,
+ * and edu.cmu.ml.rtw.generic.model.SupervisedModel
+ * are all objects that can be parsed from or converted
+ * back into part of a ctx script.
+ *  
+ * @author Bill McDowell
+ *
+ */
 public abstract class CtxParsable extends Serializable {
 	protected String referenceName;
 	protected List<String> modifiers;

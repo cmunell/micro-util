@@ -6,6 +6,14 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnIdentity take a collection and returns
+ * it.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <S>
+ */
 public class FnIdentity<S> extends Fn<S, S> {
 	private String[] parameterNames = {};
 	

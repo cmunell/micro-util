@@ -7,6 +7,17 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
+/**
+ * FnClean computes a list of cleaned strings from
+ * a list of strings.
+ * 
+ * Parameters:
+ *  cleanFn - the string transformation function to 
+ *  use for cleaning.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class FnClean extends Fn<String, String> {
 	private DataTools.StringTransform cleanFn;
 	private String[] parameterNames = { "cleanFn" };

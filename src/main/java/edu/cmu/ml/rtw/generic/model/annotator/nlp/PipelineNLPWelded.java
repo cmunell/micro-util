@@ -12,6 +12,20 @@ import edu.cmu.ml.rtw.generic.model.annotator.Annotator;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
+/**
+ * 
+ * PipelineNLPWelded represents two NLP pipelines that
+ * have been welded together (typically through the PipelineNLP
+ * weld method).  This is useful if you want to construct
+ * a DocumentNLP pipeline by running text through two consecutive
+ * pipelines.  For example,
+ * you might want to extend the Stanford CoreNLP (PipelineNLPStanford)
+ * pipeline with additional annotators from another pipeline,
+ * and use it to construct annotated text documents.
+ * 
+ * @author Bill McDowell
+ *
+ */
 public class PipelineNLPWelded extends PipelineNLP {
 	private PipelineNLP first;
 	private PipelineNLP second;

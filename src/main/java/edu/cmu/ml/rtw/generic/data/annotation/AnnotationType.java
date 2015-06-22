@@ -3,6 +3,18 @@ package edu.cmu.ml.rtw.generic.data.annotation;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
+/**
+ * AnnotationType represents a type of annotation that
+ * can be added to an
+ * edu.cmu.ml.rtw.generic.data.annotation.Document object
+ * using an 
+ * edu.cmu.ml.rtw.generic.model.annotator.Annotator.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <T>
+ * 
+ */
 public class AnnotationType<T> {
 	public enum SerializationType {
 		ENUM,      // deserialize to enum

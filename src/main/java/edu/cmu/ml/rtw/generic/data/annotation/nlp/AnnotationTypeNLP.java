@@ -9,6 +9,17 @@ import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
+/**
+ * AnnotationTypeNLP represents a type of annotation that
+ * can be added to an
+ * edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP object
+ * using an 
+ * edu.cmu.ml.rtw.generic.model.annotator.nlp.AnnotatorNLP.
+ * 
+ * @author Bill McDowell
+ *
+ * @param <T>
+ */
 public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public static final AnnotationTypeNLP<String> ORIGINAL_TEXT = new AnnotationTypeNLP<String>("text", String.class, Target.DOCUMENT);
 	public static final AnnotationTypeNLP<Language> LANGUAGE = new AnnotationTypeNLP<Language>("language", Language.class, Target.DOCUMENT);
