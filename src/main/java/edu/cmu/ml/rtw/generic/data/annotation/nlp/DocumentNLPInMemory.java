@@ -1155,12 +1155,14 @@ public class DocumentNLPInMemory extends DocumentNLP {
 			throw new RuntimeException("You really need to have the original text to output html...");
 		}
 		
+                htmlBuilder.append("<div class=\"document\" style=\"height:29%; overflow-y:scroll\">");
 		htmlBuilder.append("<div class=\"textLabel\"><h3>Document Text</h3></div>");
 		htmlBuilder.append("<div class=\"text\">");
 		htmlBuilder.append(AnnotationTypeNLP.ORIGINAL_TEXT.toHtml(originalText));
 		htmlBuilder.append("</div>");
+                htmlBuilder.append("</div>");
 
-		htmlBuilder.append("<div class=\"annotations\">");
+		htmlBuilder.append("<div class=\"annotations\" style=\"height:69%; overflow-y:scroll\">");
 		htmlBuilder.append("<h3>Annotations</h3>");
 		htmlBuilder.append("<ul>");
 		
