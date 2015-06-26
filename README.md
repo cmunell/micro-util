@@ -16,6 +16,9 @@ format (http://rtw.ml.cmu.edu/wiki/index.php/Annotation).
 data sets constructed from the NLP annotated documents given
 by 1.
 
+For the purpose of 2, micro-util offers a 'ctx' scripting
+language for defining features, models, and their evaluations.
+
 ## Setup and build ##
 
 You can get the source code for the project by running
@@ -112,4 +115,230 @@ specified.
 *	*edu.cmu.ml.rtw.generic.util* (1),(2) - for configuring projects,
  running external commands, dealing with files, dealing with Hadoop, etc.
 
+## Creating a project that uses micro-util ##
+
+Assuming you have Maven installed and configured according to 
+instructions at http://rtw.ml.cmu.edu/wiki/index.php?title=Maven,
+you can have your project depend on micro-util by adding the following
+to the dependencies element of your projects pom.xml:
+
+    <dependency>
+      <groupId>edu.cmu.ml.rtw</groupId>
+      <artifactId>micro-util</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+
+Assume in the following instructions that you're creating a project
+called 'micro-proj' that uses micro-util. Regardless of whether 
+micro-proj uses micro-util for (1) annotating documents
+or (2) training/evaluating models, it will probably need 
+to define some project specific infrastructure classes that extend 
+some of the infrastructure classes from micro-util. Namely,
+you'll want to create the following:
+
+* *ProjDataTools* extending *edu.cmu.ml.rtw.generic.data.DataTools*. 
+This is the class where you'll add any project specific gazetteers, string
+cleaning fucntions, annotation types, or other objects containing general 
+methods for manipulating data.  Classes like *ProjDataTools* that extend
+*DataTools* act as a project specific global tool box that most other objects 
+(e.g. models, features, evaluations, etc) in the system have access to.
+Each of the tools in this global tool box has a string name that other
+objects can refer to it by.  The main purpose of this tool box is that it
+allows the the ctx scripting language and other configuration files to
+specify that features, models, etc should be constructed to use certain tools
+(e.g. gazetteers, string cleaning functions) that have been added to the 
+system.  Also, the *ProjDataTools* class keeps a list of project-specific
+annotation types that define annotation serialization/deserialization 
+procedures used by *edu.cmu.ml.rtw.generic.data.annotation.Document* 
+objects.  See *edu.cmu.ml.rtw.micro.cat.data.CatDataTools* in 
+https://github.com/cmunell/micro-cat for an example of how to extend the
+*DataTools* class.
+
+* *ProjProperties* extending *edu.cmu.ml.rtw.generic.util.Properties*.
+The*edu.cmu.ml.rtw.generic.util.Properties* is an extended version of the 
+Java Properties class that allows for some extra functionality like having
+system environment variables in property settings.  Projects that 
+use micro-util usually have a class that extends 
+*edu.cmu.ml.rtw.generic.util.Properties*, and implements hard-coded methods
+for getting each project-specific property.  The motivation for the hard-coded
+methods is that it allows your IDE to auto-complete the available properties 
+when you're writing the code that access them, and it avoids distributing 
+hard-coded property name strings throughout your code outside your 
+*ProjProperties* class.  The configuration that 
+is read by your *ProjProperties*
+class should be in a file like *proj.properties* in your top-level directory
+or in *src/main/resources*. 
+ See *edu.cmu.ml.rtw.micro.cat.util.CatProperties*
+and *src/main/resources/cat.properties* 
+in https://github.com/cmunell/micro-cat
+for examples.
+
+To keep things organized, you might want 
+micro-proj's package structure to mirror
+micro-util.  Mainly, you would want to have a package like
+*edu.cmu.ml.rtw.micro.proj.data* in 
+which to place your *ProjDataTools* class 
+that extends *edu.cmu.ml.rtw.generic.data.DataTools*, and a 
+package like *edu.cmu.ml.rtw.micro.proj.util* in which to place your
+*ProjProperties* class that extends 
+*edu.cmu.ml.rtw.generic.util.Properties*.  
+Similarly, depending on how you're
+using micro-util, you might want to have a package like
+*edu.cmu.ml.rtw.micro.proj.data.annotation.nlp* that 
+contains project-specific
+NLP annotation objects or a package like 
+*edu.cmu.ml.rtw.micro.proj.data.feature* that 
+contains project-specific 
+feature implementations that extend 
+*edu.cmu.ml.rtw.generic.data.feature.Feature*.  See 
+https://github.com/cmunell/micro-cat for 
+an example of package structure
+that mirrors micro-util's package structure.
+
+### Running documents through annotation pipelines ###
+
+You can use annotation pipelines to annotate documents 
+using code like the following (which annotates some
+text using the Stanford CoreNLP pipeline):
+
+    PipelineNLPStanford pipelineStanford = new PipelineNLPStanford();
+    ProjDataTools dataTools = new ProjDataTools();
+    DocumentNLP document = new DocumentNLPInMemory(dataTools, 
+     "This is the name of the document.", 
+     "This is some text to annotate.",
+     Language.English, pipeline);
+    
+The *DocumentNLP* object will now contain the Stanford
+pipeline's annotations, and it contains several methods for
+serializing these annotations and storing them to disk.  For 
+example, *toMicroAnnotation* method in *DocumentNLP* will
+convert the annotations to the NELL micro-reading 
+annotation format.
+
+### Building document annotation types, annotators, and annotator pipelines ###
+
+You can create project-specific document annotation types as instances
+of the *edu.cmu.ml.rtw.generic.data.annotation.AnnotationType* class.
+If your annotation types provide information about text from natural
+language text documents, then you'll actually want to create instances
+of *edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP*.
+Creating such types, and then registering them with the system in your
+*edu.cmu.ml.rtw.micro.proj.data.ProjDataTools* class (see more information
+above) will allow them to be automatically serialized, deserialized, and
+manipulated through *edu.cmu.ml.rtw.generic.data.annotation.Document*
+objects.
+
+For examples of existing annotation type definitions, see the 
+first few lines of 
+*edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP*
+where token, part-of-speech, dependency parse, and other NLP annotation
+types are defined.  You can also look at 
+*edu.cmu.ml.rtw.micro.cat.data.annotation.nlp.AnnotationTypeNLPCat* in 
+https://github.com/cmunell/micro-cat for examples of micro-cat 
+project-specific annotation type definitions. One particular example,
+the co-reference resolution annotation type definition, is shown here:
+
+    public static final AnnotationTypeNLP<TokenSpanCluster> COREF 
+    = new AnnotationTypeNLP<TokenSpanCluster>("coref", 
+    TokenSpanCluster.class, Target.TOKEN_SPAN);
+
+The three arguments in this definition specify a string name of the 
+annotation type, the class in which it is stored, and the sort of thing it 
+annotates (token span, document, sentence, or token). You can also optionally 
+specify a class for deserializing/serializing 
+the annotation type as a fourth object, but this should 
+be unnecessary as long as your annotation type is 
+stored as one the following:
+
+* A String, Double, Integer, Boolean, or Enum type.
+
+* A class implementing the *edu.cmu.ml.rtw.generic.util.StringSerializable* 
+interface and containing a constructor with either a DocumentNLP argument or
+DocumentNLP and sentence-index arguments (see for example
+*edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse*)
+
+* A class implementing the *edu.cmu.ml.rtw.generic.util.JSONSerializable*
+interface constructor with either a DocumentNLP argument or
+DocumentNLP and sentence-index arguments (see for example
+*edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpanCluster*)
+
+Note that if the annotation objects have some structure, 
+then it's preferable that they are stored in classes implementing 
+either *StringSerializable* or *JSONSerializable* so that the 
+annotations are machine-readable without requiring some kind of
+other parsing code written elsewhere. 
+
+You can create a custom NLP annotator that produces your 
+custom NLP annotation type by implementing one of the
+following interfaces: 
+
+    edu.cmu.ml.rtw.generic.model.annotator.nlp.AnnotatorSentence (one document per annotation)
+    edu.cmu.ml.rtw.generic.model.annotator.nlp.AnnotatorDocument (one sentence per annotation)
+    edu.cmu.ml.rtw.generic.model.annotator.nlp.AnnotatorToken (one token per annotation)
+    edu.cmu.ml.rtw.generic.model.annotator.nlp.AnnotatorTokenSpan (one token span per annotation)
+
+For each of these interfaces, you have to implement a method that produces 
+your annotations, along with the following methods:
+
+    String getName(); (name of the annotator)
+    AnnotationType<T> produces(); (annotation type produced by the annotator)
+    AnnotationType<?>[] requires(); (array of annotation types required by the annotator)
+    boolean measuresConfidence(); (indicates whether the annotator gives confidence scores)
+
+Here is an example implementation of the *AnnotatorTokenSpan* interface:
  
+    public class AnnotatorExample implements AnnotatorTokenSpan<String>() {
+        public static final AnnotationTypeNLP<String> EXAMPLE_ANNOTATION_TYPE 
+         = new AnnotationTypeNLP<String>("example_type", String.class, Target.TOKEN_SPAN);
+        public String getName() { return "example"; }
+        public AnnotationType<String> produces() { return EXAMPLE_ANNOTATION_TYPE; };
+        public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN }; }
+        public boolean measuresConfidence() { return true; }
+        public List<Triple<TokenSpan, String, Double>> annotate(DocumentNLP document) {
+          	 [...]
+           	 document.getToken(i, j);
+            [Manipulate tokens retrieved from the document object]
+            return [annotations];
+        }
+    }
+
+After you've implemented your annotator, you can use it within an
+annotation pipeline to annotate documents.  For example, the
+following code will append a custom annotator to the end of the
+Stanford CoreNLP pipeline, and then annotate a document:
+
+    PipelineNLPStanford pipelineStanford = new PipelineNLPStanford();
+    PipelineNLPExtendable pipelineExtendable = new PipelineNLPExtendable();
+    pipelineExtendable.extend(new AnnotatorExample());
+    PipelineNLP pipeline = pipelineStanford.weld(pipelineExtendable);
+    ProjDataTools dataTools = new ProjDataTools();
+    DocumentNLP document = new DocumentNLPInMemory(dataTools, 
+     "This is the name of the document.", 
+     "This is some text to annotate.",
+     Language.English, pipeline);
+
+### Training and evaluating models ###
+
+FIXME
+
+- Create a datum class
+	- Datum tools
+	- Adding project specific features and models to the datum tools
+	
+- Create a program to load in your document set, 
+and construct a data set from it, and run some kind of validation using a 
+ctx script that defines models, features, etc.
+	- Need a place to output results.  Give this to an OutputWriter object.
+
+- Create a ctx script in resources 
+	- Example
+	
+- Explain what's going on in example (Context deserialization, Validation
+uses context to get models and features from Datum.Tools and DataTools)
+	
+## Features, models, and evaluations available in micro-util ##
+
+FIXME
+	
+	
+
