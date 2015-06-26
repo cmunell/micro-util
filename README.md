@@ -325,7 +325,7 @@ above, there are just a few steps to setting up a
 program that trains and evaluates supervised models on some 
 classification task:
 
-1. Create a class extending 
+* Create a class extending 
 *edu.cmu.ml.rtw.generic.data.annotation.Datum* 
 to represent your training examples.  This class will
 hold all the information that each training example consists
@@ -344,7 +344,7 @@ to *Datum*.  See
 in https://github.com/cmunell/micro-cat 
 for an example of how the *Datum* class should be extended.
 
-2. Create a ctx script that declares the models, features,
+* Create a ctx script that declares the models, features,
 and evaluations you would like to use.  Here is an example
 script that can be used by 
 *edu.cmu.ml.rtw.generic.model.evaluation.ValidationGSTBinary* to
@@ -381,11 +381,12 @@ multiclass classification:
      	model model=${lr};
      	evaluation evaluation=${accuracy};
     };
-``` You can find more examples of ctx scripts in
+```
+You can find more examples of ctx scripts in
 the *src/main/resources/contexts/* directory of 
 https://github.com/cmunell/micro-cat.
 
-3. Create a program that constructs a set of your data
+* Create a program that constructs a set of your data
 examples (extending *Datum*) from a set of documents,
 and then runs some kind of validation from 
 *edu.cmu.ml.rtw.generic.model.evaluation* using your
