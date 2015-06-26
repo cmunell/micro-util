@@ -319,26 +319,110 @@ Stanford CoreNLP pipeline, and then annotate a document:
 
 ### Training and evaluating models ###
 
-FIXME
+After you've set up your project with a class that
+extends *edu.cmu.ml.rtw.generic.data.DataTools* as described
+above, there are just a few steps to setting up a 
+program that trains and evaluates supervised models on some 
+classification task:
 
-- Create a datum class
-	- Datum tools
-	- Adding project specific features and models to the datum tools
-	
-- Create a program to load in your document set, 
-and construct a data set from it, and run some kind of validation using a 
-ctx script that defines models, features, etc.
-	- Need a place to output results.  Give this to an OutputWriter object.
+1. Create a class extending 
+*edu.cmu.ml.rtw.generic.data.annotation.Datum* 
+to represent your training examples.  This class will
+hold all the information that each training example consists
+of.  Within this class definition, there should
+also be a class that extends 
+*edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools*.
+Your extension of *Datum.Tools* is mainly for holding
+project-specific features, models, evaluations, and other
+objects that will be used on data sets containing training
+examples of your project-specific type.  This serves a
+similar purpose to the *edu.cmu.ml.rtw.generic.data.DataTools*
+class, except that *Datum.Tools* classes only hold things
+specific to particular kinds of data defined by an extension
+to *Datum*.  See 
+*edu.cmu.ml.rtw.micro.cat.data.annotation.nlp.TokenSpansDatum*
+in https://github.com/cmunell/micro-cat 
+for an example of how the *Datum* class should be extended.
 
-- Create a ctx script in resources 
-	- Example
-	
-- Explain what's going on in example (Context deserialization, Validation
-uses context to get models and features from Datum.Tools and DataTools)
-	
-## Features, models, and evaluations available in micro-util ##
+2. Create a ctx script that declares the models, features,
+and evaluations you would like to use.  Here is an example
+script that can be used by 
+*edu.cmu.ml.rtw.generic.model.evaluation.ValidationGSTBinary* to
+perform a grid-search procedure over several binary classifiation
+models whose outputs are combined to do 
+multiclass classification:
 
-FIXME
+    value randomSeed="1";
+    value maxThreads="33";
+    value trainOnDev="false";
+    value errorExampleExtractor="FirstTokenSpan";
+    array validLabels=("label1","label2","label3);
+
+    evaluation accuracy=Accuracy();
+    evaluation f1=F(mode="MACRO_WEIGHTED", filterLabel="true", Beta="1");
+    evaluation prec=Precision(weighted="false", filterLabel="true");
+    evaluation recall=Recall(weighted="false", filterLabel="true");
+
+    feature fdep=NGramDep(scale="INDICATOR", mode="ParentsAndChildren", useRelationTypes="true", minFeatureOccurrence="2", n="1", cleanFn="CatStemCleanFn", tokenExtractor="AllTokenSpans");
+    feature fner=Ner(useTypes="true", tokenExtractor="AllTokenSpans");
+    feature ftcnt=TokenCount(maxCount="5", tokenExtractor="AllTokenSpans");
+    feature fform=StringForm(stringExtractor="FirstTokenSpan", minFeatureOccurrence="2");
+
+
+    model lr=Areg(l1="0", l2="0", convergenceEpsilon=".00001", maxTrainingExamples="520001", batchSize="100", evaluationIterations="200", maxEvaluationConstantIterations="500", weightedLabels="false", computeTestEvaluations="false")
+    {
+	    array validLabels=${validLabels};
+    };
+
+    gs g=GridSearch() {
+	    dimension l1=Dimension(name="l1", values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), trainingDimension="true");
+     	dimension ct=Dimension(name="classificationThreshold", values=(.5,.6,.7,.8,.9), trainingDimension="false");
 	
+	    model model=${lr};
+	    evaluation evaluation=${accuracy};
+    };
+
+You can find more examples of ctx scripts in
+the *src/main/resources/contexts/* directory of 
+https://github.com/cmunell/micro-cat.
+
+3. Create a program that constructs a set of your data
+examples (extending *Datum*) from a set of documents,
+and then runs some kind of validation from 
+*edu.cmu.ml.rtw.generic.model.evaluation* using your
+ctx script to load in the desired models, features, etc.
+See *edu.cmu.ml.rtw.micro.cat.scratch.TrainGSTBinary*
+for an example.  Basically, the program needs to load
+in some document sets using 
+*edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentSetNLP*,
+construct some data sets from the documents using
+*edu.cmu.ml.rtw.generic.data.annotation.DataSet*,
+deserialize the ctx script through
+*edu.cmu.ml.rtw.generic.data.Context*, and then
+give the resulting *Context* and *DataSet* to some kind
+of *edu.cmu.ml.rtw.generic.model.evaluation.Validation*.
 	
+## Features, models, and evaluations ##
+
+The following is a summary of the features, models, and evaluation
+metrics that currently available in micro-util.
+
+### Features (in *edu.cmu.ml.rtw.generic.data.feature*) ###
+
+* Conjunction
+* ConstituencyPath
+
+
+### Models (in *edu.cmu.ml.rtw.generic.model* ###
+
+* Areg
+* Creg
+* LabelDistribution
+* SVM
+* SVMStructured (currently needs to be refactored)
+* LogistmarGramression
+* CompositeBinary
+
+### Evaluations (in *edu.cmu.ml.rtw.generic.model.evaluation.metric* ###
+
 
