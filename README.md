@@ -356,7 +356,30 @@ multiclass classification:
     value maxThreads="33";
     value trainOnDev="false";
     value errorExampleExtractor="FirstTokenSpan";
-    
+    array validLabels=("label1","label2","label3);
+    evaluation accuracy=Accuracy();
+    evaluation f1=F(mode="MACRO_WEIGHTED", filterLabel="true", Beta="1");
+    evaluation prec=Precision(weighted="false", filterLabel="true");
+    evaluation recall=Recall(weighted="false", filterLabel="true");
+    feature fner=Ner(useTypes="true", tokenExtractor="AllTokenSpans");
+    feature ftcnt=TokenCount(maxCount="5", tokenExtractor="AllTokenSpans");
+    feature fform=StringForm(stringExtractor="FirstTokenSpan", minFeatureOccurrence="2");
+    model lr=Areg(l1="0", l2="0", convergenceEpsilon=".00001", 
+    maxTrainingExamples="520001", batchSize="100", evaluationIterations="200",
+    maxEvaluationConstantIterations="500", weightedLabels="false", 
+    computeTestEvaluations="false")
+    {
+	    array validLabels=${validLabels};
+    };
+    gs g=GridSearch() {
+	    dimension l1=Dimension(name="l1", 
+	        values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), 
+	        trainingDimension="true");
+     	dimension ct=Dimension(name="classificationThreshold", 
+     	    values=(.5,.6,.7,.8,.9), trainingDimension="false");
+	    model model=${lr};
+	    evaluation evaluation=${accuracy};
+    };
 
 You can find more examples of ctx scripts in
 the *src/main/resources/contexts/* directory of 
