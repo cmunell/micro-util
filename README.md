@@ -350,7 +350,7 @@ script that can be used by
 *edu.cmu.ml.rtw.generic.model.evaluation.ValidationGSTBinary* to
 perform a grid-search procedure over several binary classifiation
 models whose outputs are combined to do 
-multiclass classification:
+multiclass classification: 
 ```
     value randomSeed="1";
     value maxThreads="33";
@@ -381,8 +381,7 @@ multiclass classification:
      	model model=${lr};
      	evaluation evaluation=${accuracy};
     };
-```
-You can find more examples of ctx scripts in
+``` You can find more examples of ctx scripts in
 the *src/main/resources/contexts/* directory of 
 https://github.com/cmunell/micro-cat.
 
