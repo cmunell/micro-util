@@ -345,12 +345,15 @@ in https://github.com/cmunell/micro-cat
 for an example of how the *Datum* class should be extended.
 
 * Create a ctx script that declares the models, features,
-and evaluations you would like to use.  Here is an example
+and evaluations you would like to use.  The following is an example
 script that can be used by 
 *edu.cmu.ml.rtw.generic.model.evaluation.ValidationGSTBinary* to
 perform a grid-search procedure over several binary classifiation
 models whose outputs are combined to do 
-multiclass classification: 
+multiclass classification. You can also find more examples of 
+ctx scripts in
+the *src/main/resources/contexts/* directory of 
+https://github.com/cmunell/micro-cat.
 ```
     value randomSeed="1";
     value maxThreads="33";
@@ -364,6 +367,7 @@ multiclass classification:
     feature fner=Ner(useTypes="true", tokenExtractor="AllTokenSpans");
     feature ftcnt=TokenCount(maxCount="5", tokenExtractor="AllTokenSpans");
     feature fform=StringForm(stringExtractor="FirstTokenSpan", minFeatureOccurrence="2");
+    
     model lr=Areg(l1="0", l2="0", convergenceEpsilon=".00001", 
     maxTrainingExamples="520001", batchSize="100", evaluationIterations="200",
     maxEvaluationConstantIterations="500", weightedLabels="false", 
@@ -371,6 +375,7 @@ multiclass classification:
     {
         array validLabels=${validLabels};
     };
+    
     gs g=GridSearch() {
         dimension l1=Dimension(name="l1",
             values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), 
@@ -382,9 +387,6 @@ multiclass classification:
      	evaluation evaluation=${accuracy};
     };
 ```
-You can find more examples of ctx scripts in
-the *src/main/resources/contexts/* directory of 
-https://github.com/cmunell/micro-cat.
 
 * Create a program that constructs a set of your data
 examples (extending *Datum*) from a set of documents,
