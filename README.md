@@ -352,6 +352,7 @@ perform a grid-search procedure over several binary classifiation
 models whose outputs are combined to do 
 multiclass classification:
 
+
     value randomSeed="1";
     value maxThreads="33";
     value trainOnDev="false";
@@ -369,16 +370,17 @@ multiclass classification:
     maxEvaluationConstantIterations="500", weightedLabels="false", 
     computeTestEvaluations="false")
     {
-	    array validLabels=${validLabels};
+        array validLabels=${validLabels};
     };
     gs g=GridSearch() {
-	    dimension l1=Dimension(name="l1", 
-	        values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), 
-	        trainingDimension="true");
+        dimension l1=Dimension(name="l1",
+            values=(.00000001,.0000001,.000001,.00001,.0001,.001,.01,.1,1,10), 
+            trainingDimension="true");
      	dimension ct=Dimension(name="classificationThreshold", 
-     	    values=(.5,.6,.7,.8,.9), trainingDimension="false");
-	    model model=${lr};
-	    evaluation evaluation=${accuracy};
+     	    values=(.5,.6,.7,.8,.9), 
+     	    trainingDimension="false");
+     	model model=${lr};
+     	evaluation evaluation=${accuracy};
     };
 
 You can find more examples of ctx scripts in
