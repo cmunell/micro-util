@@ -74,7 +74,7 @@ new features in a feature grammar model as described in
 implemented in 
 *edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGrammression*.
 
-*	*edu.cmu.ml.rtw.generic.data.feature.rule* (2) - for rules that 
+* *edu.cmu.ml.rtw.generic.data.feature.rule* (2) - for rules that 
 transform features, functions, and models into new features, functions, and 
 models.  This was mainly created to support rule-based construction of 
 new features in a feature grammar model as described in
@@ -82,37 +82,37 @@ new features in a feature grammar model as described in
 implemented in 
 *edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGrammression*.
 
-*	*edu.cmu.ml.rtw.generic.model* (2) - for various machine learning
+* *edu.cmu.ml.rtw.generic.model* (2) - for various machine learning
 models.
 
-*	*edu.cmu.ml.rtw.generic.model.annotator* (1) - for generic 
+* *edu.cmu.ml.rtw.generic.model.annotator* (1) - for generic 
 representations of document annotators and annotator pipelines.
 
-*	*edu.cmu.ml.rtw.generic.model.annotator.nlp* (1) - for representations
+* *edu.cmu.ml.rtw.generic.model.annotator.nlp* (1) - for representations
 of NLP document annotators and NLP pipelines.
 
-*	*edu.cmu.ml.rtw.generic.model.annotator.nlp.stanford* (1) - for
+* *edu.cmu.ml.rtw.generic.model.annotator.nlp.stanford* (1) - for
 Stanford CoreNLP pipeline 
 (http://nlp.stanford.edu/software/corenlp.shtml) custom annotator 
 implementations.
 
-*	*edu.cmu.ml.rtw.generic.model.constraint* (2) - for representing 
+* *edu.cmu.ml.rtw.generic.model.constraint* (2) - for representing 
 constraints on data sets.  These were only used by 
 *edu.cmu.ml.rtw.generic.model.SupervisedModelPartition* to determine which
 parts of the data should be used to train which models, but this currently
 needs to be refactored.
 
-*	*edu.cmu.ml.rtw.generic.model.evaluation* (2) - for carrying out
+* *edu.cmu.ml.rtw.generic.model.evaluation* (2) - for carrying out
 various evaluation procedures (grid search, cross-validation, etc)
 
-*	*edu.cmu.ml.rtw.generic.model.evaluation.metric* (2) - for 
+* *edu.cmu.ml.rtw.generic.model.evaluation.metric* (2) - for 
 various evaluation measures (accuracy, F1, etc)
 
-*	*edu.cmu.ml.rtw.generic.parse* (2) - for parsing the ctx scripting 
+* *edu.cmu.ml.rtw.generic.parse* (2) - for parsing the ctx scripting 
 language in which models, features, and evaluation procedures are
 specified.
 
-*	*edu.cmu.ml.rtw.generic.util* (1),(2) - for configuring projects,
+* *edu.cmu.ml.rtw.generic.util* (1),(2) - for configuring projects,
  running external commands, dealing with files, dealing with Hadoop, etc.
 
 ## Creating a project that uses micro-util ##
@@ -411,20 +411,38 @@ metrics that currently available in micro-util.
 
 ### Features (in *edu.cmu.ml.rtw.generic.data.feature*) ###
 
-* Conjunction
-* ConstituencyPath
+* Conjunction - conjunctions of other features
+* ConstituencyPath - constituency paths between spans
+* DependencyPath - dependency paths between spans
+* GazetteerContains - indicators of Gazetteer containment
+* GazetteerEditDistance - minimum edit distance to gazetteer element
+* GazetteerPrefixTokens - maximum number of prefix tokens shared with gazetteer elements
+* GramCluster - span clusters according to some clustering method
+* GramContextPattern - tokens surrounding span that match some PoS tag patterns
+* Identity - real values extracted directly from examples
+* Ner - named-entities
+* NGramContext - n-grams surrounding span in fixed-size window
+* NGramDep - n-gram dependencies of span
+* NGramSentence - n-grams in same sentence as span
+* StringForm - form of span string in terms of numbers, letters, and symbols
+* TokenCount - number of tokens in a span
+* TokenSpanFnDataVocab - function of span defined in terms of compositions of functions in  *edu.cmu.ml.rtw.generic.data.feature.fn*
+* TokenSpanFnFilteredVocab - same as *TokenSpanFnDataVocab* but with only subsets of the data set vocabulary
 
+### Models (in *edu.cmu.ml.rtw.generic.model*) ###
 
-### Models (in *edu.cmu.ml.rtw.generic.model* ###
+* Areg - wrapper around binary logistic regression from https://github.com/eaplatanios/org.platanios
+* Creg - wrapper around multinomial logistic regression from https://github.com/redpony/creg
+* LabelDistribution - model which uses majority label in training set for classification
+* SVM - multiclass support vector machine
+* SVMStructured - structured SVM (currently needs to be refactored)
+* LogistmarGramression - feature grammar logistic regression model described by
+ *src/main/resources/docs/feature-grammar/FeatureGrammarNotes.pdf*
+* CompositeBinary - combines outputs from binary classification models into multiclass output
 
-* Areg
-* Creg
-* LabelDistribution
-* SVM
-* SVMStructured (currently needs to be refactored)
-* LogistmarGramression
-* CompositeBinary
+### Evaluations (in *edu.cmu.ml.rtw.generic.model.evaluation.metric*) ###
 
-### Evaluations (in *edu.cmu.ml.rtw.generic.model.evaluation.metric* ###
-
-
+* Accuracy - https://en.wikipedia.org/wiki/Accuracy_and_precision#In_binary_classification
+* F_Beta - https://en.wikipedia.org/wiki/F1_score
+* Precision - https://en.wikipedia.org/wiki/Precision_and_recall#Precision 
+* Recall - https://en.wikipedia.org/wiki/Precision_and_recall#Recall
