@@ -411,38 +411,38 @@ metrics that currently available in micro-util.
 
 ### Features (in *edu.cmu.ml.rtw.generic.data.feature*) ###
 
-* Conjunction - conjunctions of other features
-* ConstituencyPath - constituency paths between spans
-* DependencyPath - dependency paths between spans
-* GazetteerContains - indicators of Gazetteer containment
-* GazetteerEditDistance - minimum edit distance to gazetteer element
-* GazetteerPrefixTokens - maximum number of prefix tokens shared with gazetteer elements
-* GramCluster - span clusters according to some clustering method
-* GramContextPattern - tokens surrounding span that match some PoS tag patterns
-* Identity - real values extracted directly from examples
-* Ner - named-entities
-* NGramContext - n-grams surrounding span in fixed-size window
-* NGramDep - n-gram dependencies of span
-* NGramSentence - n-grams in same sentence as span
-* StringForm - form of span string in terms of numbers, letters, and symbols
-* TokenCount - number of tokens in a span
-* TokenSpanFnDataVocab - function of span defined in terms of compositions of functions in  *edu.cmu.ml.rtw.generic.data.feature.fn*
-* TokenSpanFnFilteredVocab - same as *TokenSpanFnDataVocab* but with only subsets of the data set vocabulary
+* *Conjunction* - conjunctions of other features
+* *ConstituencyPath* - constituency paths between spans
+* *DependencyPath* - dependency paths between spans
+* *GazetteerContains* - indicators of Gazetteer containment
+* *GazetteerEditDistance* - minimum edit distance to gazetteer element
+* *GazetteerPrefixTokens* - maximum number of prefix tokens shared with gazetteer elements
+* *GramCluster* - span clusters according to some clustering method
+* *GramContextPattern* - tokens surrounding span that match some PoS tag patterns
+* *Identity* - real values extracted directly from examples
+* *Ner* - named-entities
+* *NGramContext* - n-grams surrounding span in fixed-size window
+* *NGramDep* - n-gram dependencies of span
+* *NGramSentence* - n-grams in same sentence as span
+* *StringForm* - form of span string in terms of numbers, letters, and symbols
+* *TokenCount* - number of tokens in a span
+* *TokenSpanFnDataVocab* - function of span defined in terms of compositions of functions in  *edu.cmu.ml.rtw.generic.data.feature.fn*
+* *TokenSpanFnFilteredVocab* - same as *TokenSpanFnDataVocab* but with only subsets of the data set vocabulary
 
 ### Models (in *edu.cmu.ml.rtw.generic.model*) ###
 
-* Areg - wrapper around binary logistic regression from https://github.com/eaplatanios/org.platanios
-* Creg - wrapper around multinomial logistic regression from https://github.com/redpony/creg
-* LabelDistribution - model which uses majority label in training set for classification
-* SVM - multiclass support vector machine
-* SVMStructured - structured SVM (currently needs to be refactored)
-* LogistmarGramression - feature grammar logistic regression model described by
+* *Areg* - wrapper around binary logistic regression from https://github.com/eaplatanios/org.platanios
+* *Creg* - wrapper around multinomial logistic regression from https://github.com/redpony/creg
+* *LabelDistribution* - model which uses majority label in training set for classification
+* *SVM* - multiclass support vector machine
+* *SVMStructured* - structured SVM (currently needs to be refactored)
+* *LogistmarGramression* - feature grammar logistic regression model described by
  *src/main/resources/docs/feature-grammar/FeatureGrammarNotes.pdf*
-* CompositeBinary - combines outputs from binary classification models into multiclass output
+* *CompositeBinary* - combines outputs from binary classification models into multiclass output
 
 ### Evaluations (in *edu.cmu.ml.rtw.generic.model.evaluation.metric*) ###
 
-* Accuracy - https://en.wikipedia.org/wiki/Accuracy_and_precision#In_binary_classification
-* F_Beta - https://en.wikipedia.org/wiki/F1_score
-* Precision - https://en.wikipedia.org/wiki/Precision_and_recall#Precision 
-* Recall - https://en.wikipedia.org/wiki/Precision_and_recall#Recall
+* *Accuracy* - https://en.wikipedia.org/wiki/Accuracy_and_precision#In_binary_classification
+* *F_Beta* - https://en.wikipedia.org/wiki/F1_score
+* *Precision* - https://en.wikipedia.org/wiki/Precision_and_recall#Precision 
+* *Recall* - https://en.wikipedia.org/wiki/Precision_and_recall#Recall
