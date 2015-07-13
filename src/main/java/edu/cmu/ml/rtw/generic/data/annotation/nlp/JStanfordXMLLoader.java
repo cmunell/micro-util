@@ -198,39 +198,15 @@ public class JStanfordXMLLoader {
         protected OurDocumentNLP(DataTools dataTools) {
             super(dataTools);
         }
+
+        protected void setName(String name) {
+            this.name = name;
+        }
     }
 
     // bkdb: prune these
-    protected static String patt = "<REPLACEME>(.*?)<\\/REPLACEME>";
     protected static String greedyPatt = "<REPLACEME>(.*)<\\/REPLACEME>";
-    protected static String pattWithID = "<REPLACEME id=\"(\\d+)\">(.*?)<\\/REPLACEME>";
-    protected static String pattWithIDX = "<REPLACEME idx=\"(\\d+)\">(.*?)<\\/REPLACEME>";
-    protected static String pattWithType = "<REPLACEME type=\"([^\"]+)\">(.*?)<\\/REPLACEME>";
-    protected static String pattWithRep = "<REPLACEME representative=\"([^\"]+)\">(.*?)<\\/REPLACEME>";
-    protected static Pattern sentPatt = Pattern.compile(pattWithID.replace("REPLACEME", "sentence"));
-    protected static Pattern tokPatt = Pattern.compile(pattWithID.replace("REPLACEME", "token"));
-    protected static Pattern wordPatt = Pattern.compile(patt.replace("REPLACEME", "word"));
-    protected static Pattern lemmaPatt = Pattern.compile(patt.replace("REPLACEME", "lemma"));
-    protected static Pattern charBegPatt = Pattern.compile(patt.replace("REPLACEME", "CharacterOffsetBegin"));
-    protected static Pattern charEndPatt = Pattern.compile(patt.replace("REPLACEME", "CharacterOffsetEnd"));
-    protected static Pattern posPatt = Pattern.compile(patt.replace("REPLACEME", "POS"));
-    protected static Pattern nerPatt = Pattern.compile(patt.replace("REPLACEME", "NER"));
-    protected static Pattern timexPatt = Pattern.compile(patt.replace("REPLACEME", "Timex"));
-    protected static Pattern parsePatt = Pattern.compile(patt.replace("REPLACEME", "parse"));
-    protected static Pattern basicDepPatt = Pattern.compile(patt.replace("REPLACEME", "basic-dependencies"));
-    protected static Pattern depPatt = Pattern.compile(pattWithType.replace("REPLACEME", "dep"));
-    protected static Pattern govPatt = Pattern.compile(pattWithIDX.replace("REPLACEME", "governor"));
-    protected static Pattern dependentPatt = Pattern.compile(pattWithIDX.replace("REPLACEME", "dependent"));
-    protected static Pattern collDepPatt = Pattern.compile(patt.replace("REPLACEME", "collapsed-dependencies"));
-    protected static Pattern collCcProcDepPatt = Pattern.compile(patt.replace("REPLACEME", "collapsed-ccprocessed-dependencies"));
     protected static Pattern greedyCorefPatt = Pattern.compile(greedyPatt.replace("REPLACEME", "coreference"));
-    protected static Pattern corefPatt = Pattern.compile(patt.replace("REPLACEME", "coreference"));
-    protected static Pattern menRepPatt = Pattern.compile(pattWithRep.replace("REPLACEME", "mention"));
-    protected static Pattern menPatt = Pattern.compile(patt.replace("REPLACEME", "mention"));
-    protected static Pattern sentNoIDPatt = Pattern.compile(patt.replace("REPLACEME", "sentence"));
-    protected static Pattern startPatt = Pattern.compile(patt.replace("REPLACEME", "start"));
-    protected static Pattern endPatt = Pattern.compile(patt.replace("REPLACEME", "end"));
-    protected static Pattern headPatt = Pattern.compile(patt.replace("REPLACEME", "head"));
 
     protected static XMLPattern sentPatt2 = new XMLPattern("sentence", "id");
     protected static XMLPattern tokPatt2 = new XMLPattern("token", "id");
@@ -255,6 +231,7 @@ public class JStanfordXMLLoader {
     protected static XMLPattern startPatt2 = new XMLPattern("start");
     protected static XMLPattern endPatt2 = new XMLPattern("end");
     protected static XMLPattern headPatt2 = new XMLPattern("head");
+    protected static XMLPattern docIdPatt2 = new XMLPattern("docId");
 
     protected static String getXmlVal(String src, XMLPattern patt, boolean wantAttribute) {
         XMLPattern.Matcher m = patt.matcher(src);
@@ -304,7 +281,8 @@ public class JStanfordXMLLoader {
      * encouraged to refer to the original as well, since it seemed to be bug-free up until 2015
      * when we stopped using it.
      */
-    public static DocumentNLP fromSingleXML(String docStr, DataTools dataTools) {
+    @SuppressWarnings("unchecked")
+    public static DocumentNLPInMemory fromSingleXML(String docStr, DataTools dataTools) {
         try {
             OurDocumentNLP ret = new OurDocumentNLP(dataTools);
 
@@ -314,10 +292,14 @@ public class JStanfordXMLLoader {
             ArrayList<ArrayList<Token>> ourTokens = new ArrayList<ArrayList<Token>>();
             ArrayList<ArrayList<PoSTag>> ourPOSTags = new ArrayList<ArrayList<PoSTag>>();
             ArrayList<ArrayList<String>> ourNERTags = new ArrayList<ArrayList<String>>();
+            ArrayList<ArrayList<String>> ourLemmas = new ArrayList<ArrayList<String>>();
             ArrayList<ConstituencyParse> ourConstituencyParses = new ArrayList<ConstituencyParse>();
             ArrayList<DependencyParse> ourDependencyParses = new ArrayList<DependencyParse>();
             Map<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>> ourCoref =
                     new HashMap<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>>();
+
+            String docID = getXmlVal(docStr, docIdPatt2, false);
+            if (docID != null) ret.setName(docID);
 
             XMLPattern.Matcher m = sentPatt2.matcher(docStr);
             while (m.find()) {
@@ -340,11 +322,6 @@ public class JStanfordXMLLoader {
                         while (tokens.size() <= tokId) tokens.add(null);
                         tokens.set(tokId, new Token(ret, word, tStart-1, tEnd-1));
                     
-                        String lemmaStr = getXmlVal(tokStr, lemmaPatt2, false);
-                        if (lemmaStr != null) {
-                            // bkdb TODO add lemma support
-                        }
-
                         String posStr = getXmlVal(tokStr, posPatt2, false);
                         if (posStr != null) {
                             while (ourPOSTags.size() <= sentenceId) ourPOSTags.add(null);
@@ -370,6 +347,18 @@ public class JStanfordXMLLoader {
                             }
                             while (tags.size() <= tokId) tags.add(null);
                             tags.set(tokId, nerStr);
+                        }
+
+                        String lemmaStr = getXmlVal(tokStr, lemmaPatt2, false);
+                        if (lemmaStr != null) {
+                            while (ourLemmas.size() <= sentenceId) ourLemmas.add(null);
+                            ArrayList<String> tags = ourLemmas.get(sentenceId);
+                            if (tags == null) {
+                                tags = new ArrayList<String>();
+                                ourLemmas.set(sentenceId, tags);
+                            }
+                            while (tags.size() <= tokId) tags.add(null);
+                            tags.set(tokId, lemmaStr);
                         }
 
                         /* TODO: do we need TIMEX?
@@ -517,6 +506,19 @@ public class JStanfordXMLLoader {
                     ret.ner.put(sentenceId, tripleList);
                 }
             }
+            if (!ourLemmas.isEmpty()) {
+                Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[ourLemmas.size()][];
+                for (int i = 0; i < ourLemmas.size(); i++) {
+                    List<String> ourLemmaList = ourLemmas.get(i);
+                    lemmas[i] = (Pair<String, Double>[])new Pair[ourLemmaList.size()];
+                    for (int j = 0; j < ourLemmaList.size(); j++) {
+                        lemmas[i][j] = new Pair<String, Double>(ourLemmaList.get(j), null);
+                    }
+                }
+                if (ret.otherTokenAnnotations == null)
+                    ret.otherTokenAnnotations = new HashMap<AnnotationTypeNLP<?>, Pair<?, Double>[][]>();
+                ret.otherTokenAnnotations.put(AnnotationTypeNLP.LEMMA, lemmas);
+            }
             if (!ourConstituencyParses.isEmpty()) {
                 ret.constituencyParses = ourConstituencyParses.toArray(new ConstituencyParse[0]);
             }
@@ -526,8 +528,6 @@ public class JStanfordXMLLoader {
             if (!ourCoref.isEmpty()) {
                 ret.coref = ourCoref;
             }
-                
-            // TODO: fill in the blanks like original text, language, etc.
 
             return ret;
         } catch (Exception e) {
