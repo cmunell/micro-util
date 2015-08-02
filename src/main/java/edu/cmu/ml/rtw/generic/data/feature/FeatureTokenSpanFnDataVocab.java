@@ -3,9 +3,12 @@ package edu.cmu.ml.rtw.generic.data.feature;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -40,6 +43,9 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  *  fn - the function from token spans to strings that should
  *  be run on each data point to give an element of the 
  *  vocabulary
+ *  
+ *  initMode - determines whether idf and minFeatureOccurrence 
+ *  filter are computed wiht respect to datums or documents
  * 
  * @author Bill McDowell
  *
@@ -65,6 +71,11 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 		NORMALIZED_TFIDF
 	}
 	
+	public enum InitMode {
+		BY_DATUM,
+		BY_DOCUMENT
+	}
+	
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	protected Map<Integer, Double> idfs; // maps vocabulary term indices to idf values to use in tfidf scale function
 	
@@ -72,7 +83,8 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
 	protected Scale scale;
 	protected Fn<TokenSpan, String> fn;
-	protected String[] parameterNames = {"minFeatureOccurrence", "tokenExtractor", "scale", "fn"};
+	protected InitMode initMode;
+	protected String[] parameterNames = {"minFeatureOccurrence", "tokenExtractor", "scale", "fn", "initMode"};
 	
 	public FeatureTokenSpanFnDataVocab() {
 		
@@ -82,22 +94,45 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		this.idfs = new HashMap<Integer, Double>();
 		this.scale = Scale.INDICATOR;
+		this.initMode = InitMode.BY_DATUM;
 		this.context = context;
 	}
 	
 	@Override
 	public boolean init(FeaturizedDataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
-		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
-			@Override
-			public Boolean apply(D datum) {
-				Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
-				for (String gram : gramsForDatum.keySet()) {
-					counter.incrementCount(gram);
+		
+		if (FeatureTokenSpanFnDataVocab.this.initMode == InitMode.BY_DATUM) { 
+			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
+				@Override
+				public Boolean apply(D datum) {
+					Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
+					for (String gram : gramsForDatum.keySet()) {
+						counter.incrementCount(gram);
+					}
+					return true;
 				}
-				return true;
+			});
+		} else {
+			final Map<String, Set<String>> gramsToDocuments = new ConcurrentHashMap<String, Set<String>>();
+			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
+				@Override
+				public Boolean apply(D datum) {
+					Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
+					String documentName = FeatureTokenSpanFnDataVocab.this.tokenExtractor.extract(datum)[0].getDocument().getName();
+					for (String gram : gramsForDatum.keySet()) {
+						if (!gramsToDocuments.containsKey(gram));
+							gramsToDocuments.put(gram, new HashSet<String>());
+						gramsToDocuments.get(gram).add(documentName);
+					}
+					return true;
+				}
+			});
+			
+			for (Entry<String, Set<String>> entry : gramsToDocuments.entrySet()) {
+				counter.incrementCount(entry.getKey(), entry.getValue().size());
 			}
-		});
+		}
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		
@@ -214,6 +249,8 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 			return Obj.stringValue((this.tokenExtractor == null) ? "" : this.tokenExtractor.toString());
 		else if (parameter.equals("scale"))
 			return Obj.stringValue(this.scale.toString());
+		else if (parameter.equals("initMode"))
+			return Obj.stringValue(this.initMode.toString());
 		return null;
 	}
 
@@ -227,6 +264,8 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 			this.tokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("scale"))
 			this.scale = Scale.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("initMode"))
+			this.initMode = InitMode.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;

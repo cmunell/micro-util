@@ -7,7 +7,7 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
 /**
- * FnIdentity take a collection and returns
+ * FnIdentity takes a collection and returns
  * it.
  * 
  * @author Bill McDowell

@@ -3,6 +3,7 @@ package edu.cmu.ml.rtw.generic.data.feature;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 
 import org.ardverk.collection.PatriciaTrie;
@@ -50,16 +51,37 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 	@Override
 	public boolean init(FeaturizedDataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
-		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
-			@Override
-			public Boolean apply(D datum) {
-				Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
-				for (String gram : gramsForDatum.keySet()) {
-					counter.incrementCount(gram);
+		if (FeatureTokenSpanFnDataVocabTrie.this.initMode == InitMode.BY_DATUM) { 
+			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
+				@Override
+				public Boolean apply(D datum) {
+					Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
+					for (String gram : gramsForDatum.keySet()) {
+						counter.incrementCount(gram);
+					}
+					return true;
 				}
-				return true;
+			});
+		} else {
+			final Map<String, Set<String>> gramsToDocuments = new ConcurrentHashMap<String, Set<String>>();
+			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
+				@Override
+				public Boolean apply(D datum) {
+					Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
+					String documentName = FeatureTokenSpanFnDataVocabTrie.this.tokenExtractor.extract(datum)[0].getDocument().getName();
+					for (String gram : gramsForDatum.keySet()) {
+						if (!gramsToDocuments.containsKey(gram));
+							gramsToDocuments.put(gram, new HashSet<String>());
+						gramsToDocuments.get(gram).add(documentName);
+					}
+					return true;
+				}
+			});
+			
+			for (Entry<String, Set<String>> entry : gramsToDocuments.entrySet()) {
+				counter.incrementCount(entry.getKey(), entry.getValue().size());
 			}
-		});
+		}
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		

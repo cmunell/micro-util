@@ -25,11 +25,15 @@ public class CounterTable<T>{
 		this.counts= new HashMap<T,Integer>();
 	}
 	
-	public synchronized void incrementCount(T w){
+	public synchronized void incrementCount(T w) {
+		incrementCount(w, 1);
+	}
+	
+	public synchronized void incrementCount(T w, int inc) {
 		if(this.counts.containsKey(w)){
-			this.counts.put(w, this.counts.get(w) + 1);
+			this.counts.put(w, this.counts.get(w) + inc);
 		} else {
-			this.counts.put(w, 1);
+			this.counts.put(w, inc);
 		}
 	}
 	

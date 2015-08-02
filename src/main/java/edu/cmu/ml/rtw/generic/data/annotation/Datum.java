@@ -34,6 +34,8 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCoref;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
@@ -44,6 +46,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
@@ -238,7 +241,6 @@ public abstract class Datum<L> {
 				}
 			});
 			
-			
 			addGenericFeature(new FeatureGazetteerContains<D, L>());
 			addGenericFeature(new FeatureGazetteerEditDistance<D, L>());
 			addGenericFeature(new FeatureGazetteerInitialism<D, L>());
@@ -272,19 +274,24 @@ public abstract class Datum<L> {
 			addGenericEvaluation(new SupervisedModelEvaluationF<D, L>());
 			
 			addGenericTokenSpanFn(new FnComposite.FnCompositeTokenSpan());
+			addGenericTokenSpanFn(new FnCompositeAppend.FnCompositeAppendTokenSpan());
 			addGenericTokenSpanFn(new FnHead());
 			addGenericTokenSpanFn(new FnNGramContext());
 			addGenericTokenSpanFn(new FnNGramDocument());
 			addGenericTokenSpanFn(new FnNGramInside());
 			addGenericTokenSpanFn(new FnNGramSentence());
 			addGenericTokenSpanFn(new FnIdentity<TokenSpan>());
+			addGenericTokenSpanFn(new FnCoref());
 			
 			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
+			addGenericTokenSpanStrFn(new FnRelationStr.FnRelationStrTokenSpan());
 			addGenericTokenSpanStrFn(new FnPoS());
 			addGenericTokenSpanStrFn(new FnString());
 
 			addGenericStrFn(new FnComposite.FnCompositeStr());
+			addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
+			addGenericStrFn(new FnRelationStr.FnRelationStrStr());
 			addGenericStrFn(new FnAffix());
 			addGenericStrFn(new FnFilter());
 			addGenericStrFn(new FnGazetteerFilter());
