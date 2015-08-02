@@ -78,7 +78,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 	protected Map<Integer, List<Triple<TokenSpan, TokenSpanCluster, Double>>> coref;
 	
 	protected Map<AnnotationTypeNLP<?>, Pair<?, Double>> otherDocumentAnnotations;
-	protected Map<AnnotationTypeNLP<?>, Map<Integer, ?>> otherSentenceAnnotations;
+        protected Map<AnnotationTypeNLP<?>, Map<Integer, ?>> otherSentenceAnnotations;  // Should actually be  Map<AnnotationTypeNLP<?>, Map<Integer, Pair<?, Double>>> but this fails to type check for some reason
 	protected Map<AnnotationTypeNLP<?>, Map<Integer, List<Triple<TokenSpan, ?, Double>>>> otherTokenSpanAnnotations;
 	protected Map<AnnotationTypeNLP<?>, Pair<?, Double>[][]> otherTokenAnnotations;
 	
@@ -1250,6 +1250,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 					htmlBuilder.append(" spanEnd=\"" + sentenceEnd + "\"");
 					htmlBuilder.append(">\n");
 					htmlBuilder.append("Type: " + entry.getKey().toString());
+                                        htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Score: " + String.format("%.04f", pair.getSecond()));
 					htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(pair.getFirst()));
 					htmlBuilder.append("</div>\n");
 				}
@@ -1273,6 +1274,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						htmlBuilder.append(" spanEnd=\"" + spanEnd + "\"");
 						htmlBuilder.append(">\n");
 						htmlBuilder.append("Type: " + entry.getKey().toString());
+                                                htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Score: " + String.format("%.04f", span.getThird()));
 						htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(span.getSecond()));
 						htmlBuilder.append("</div>\n");
 					}
@@ -1296,6 +1298,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 						htmlBuilder.append(" spanEnd=\"" + spanEnd + "\"");
 						htmlBuilder.append(">\n");
 						htmlBuilder.append("Type: " + entry.getKey().toString());
+                                                htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Score: " + String.format("%.04f", anno[i][j].getSecond()));
 						htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + entry.getKey().toHtml(anno[i][j].getFirst()));
 						htmlBuilder.append("</div>\n");
 					}
