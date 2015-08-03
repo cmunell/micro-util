@@ -210,44 +210,64 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 		for (int i = 0; i < assignmentList.size(); i++) {
 			Assignment.AssignmentTyped assignment = (Assignment.AssignmentTyped)assignmentList.get(i);
 			if (assignment.getType().equals(MODEL_STR)) {
-				if (constructFromParseModel(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseModel(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.MODEL, assignment.getName()));
 			} else if (assignment.getType().equals(FEATURE_STR)) {
-				if (constructFromParseFeature(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseFeature(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.FEATURE, assignment.getName()));
 			} else if (assignment.getType().equals(GRID_SEARCH_STR)) {
-				if (constructFromParseGridSearch(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseGridSearch(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.GRID_SEARCH, assignment.getName()));
 			} else if (assignment.getType().equals(EVALUATION_STR)) {
-				if (constructFromParseEvaluation(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseEvaluation(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.EVALUATION, assignment.getName()));
 			} else if (assignment.getType().equals(RULE_SET_STR)) {
-				if (constructFromParseRuleSet(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseRuleSet(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.RULE_SET, assignment.getName()));
 			} else if (assignment.getType().equals(TOKEN_SPAN_FN_STR)) {
-				if (constructFromParseTokenSpanFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
-					return false;				
+				if (constructFromParseTokenSpanFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
+					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.TOKEN_SPAN_FN, assignment.getName()));
 			} else if (assignment.getType().equals(STR_FN_STR)) {
-				if (constructFromParseStrFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseStrFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null){
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.STR_FN, assignment.getName()));
 			} else if (assignment.getType().equals(TOKEN_SPAN_STR_FN_STR)) {
-				if (constructFromParseTokenSpanStrFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null)
+				if (constructFromParseTokenSpanStrFn(assignment.getName(), assignment.getValue(), assignment.getModifiers()) == null) {
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.TOKEN_SPAN_STR_FN, assignment.getName()));
 			} else if (assignment.getType().equals(ARRAY_STR)) {
-				if (constructFromParseArray(assignment.getName(), assignment.getValue()) == null)
+				if (constructFromParseArray(assignment.getName(), assignment.getValue()) == null) {
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.ARRAY, assignment.getName()));
 			} else if (assignment.getType().equals(VALUE_STR)) {
-				if (constructFromParseValue(assignment.getName(), assignment.getValue()) == null)
+				if (constructFromParseValue(assignment.getName(), assignment.getValue()) == null) {
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to construct '" + assignment.getName() + "' from context parse."); 
 					return false;
+				}
 				this.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.VALUE, assignment.getName()));
 			} else {
 				this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Invalid object type in context '" + assignment.getType() + "'.");
