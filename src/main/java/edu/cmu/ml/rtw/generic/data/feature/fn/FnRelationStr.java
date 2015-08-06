@@ -52,8 +52,9 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 		}
 	}
 
-	private String[] parameterNames = { "f", "relationSymbol" };
-	protected Fn<S, String> f;
+	private String[] parameterNames = { "f1", "f2", "relationSymbol" };
+	protected Fn<S, String> f1;
+	protected Fn<S, String> f2;
 	protected String relationSymbol;
 	protected Context<?, ?> context;
 	
@@ -73,14 +74,17 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 		StringBuilder outputStr = new StringBuilder();
 		for (S s : input) {
 			singletonInput.add(s);
-			List<String> tempOutputStrs = this.f.compute(input, new ArrayList<String>());
+			List<String> tempOutputF1Strs = this.f1.compute(input, new ArrayList<String>());
+			List<String> tempOutputF2Strs = this.f2.compute(input, new ArrayList<String>());
 			
-			for (String tempOutputStr : tempOutputStrs) {
-				outputStr.setLength(0);
-				outputStr.append(input);
-				outputStr.append(this.relationSymbol);
-				outputStr.append(tempOutputStr);
-				output.add(outputStr.toString());
+			for (String tempOutputF1Str : tempOutputF1Strs) {
+				for (String tempOutputF2Str : tempOutputF2Strs) {
+					outputStr.setLength(0);
+					outputStr.append(tempOutputF1Str);
+					outputStr.append(this.relationSymbol);
+					outputStr.append(tempOutputF2Str);
+					output.add(outputStr.toString());
+				}
 			}
 			
 			singletonInput.clear();
@@ -101,8 +105,10 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("f"))
-			return this.f.toParse();
+		if (parameter.equals("f1"))
+			return this.f1.toParse();
+		else if (parameter.equals("f2"))
+			return this.f2.toParse();
 		else if (parameter.equals("relationSymbol"))
 			return Obj.stringValue(this.relationSymbol);
 		else 
@@ -111,9 +117,13 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 	
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("f")) {
-			this.f = constructParameterF(parameterValue);
-			if (this.f == null)
+		if (parameter.equals("f1")) {
+			this.f1 = constructParameterF(parameterValue);
+			if (this.f1 == null)
+				return false;
+		} else if (parameter.equals("f2")) {
+			this.f2 = constructParameterF(parameterValue);
+			if (this.f2 == null)
 				return false;
 		} else if (parameter.equals("relationSymbol")) {
 			this.relationSymbol = this.context.getMatchValue(parameterValue);
