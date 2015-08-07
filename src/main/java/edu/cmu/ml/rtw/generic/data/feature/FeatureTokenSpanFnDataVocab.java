@@ -121,9 +121,11 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 					Map<String, Integer> gramsForDatum = applyFnToDatum(datum);
 					String documentName = FeatureTokenSpanFnDataVocab.this.tokenExtractor.extract(datum)[0].getDocument().getName();
 					for (String gram : gramsForDatum.keySet()) {
-						if (!gramsToDocuments.containsKey(gram));
-							gramsToDocuments.put(gram, new HashSet<String>());
-						gramsToDocuments.get(gram).add(documentName);
+						synchronized (this) {
+							if (!gramsToDocuments.containsKey(gram));
+								gramsToDocuments.put(gram, new HashSet<String>());
+							gramsToDocuments.get(gram).add(documentName);
+						}
 					}
 					return true;
 				}
