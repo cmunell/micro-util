@@ -8,6 +8,7 @@ package edu.cmu.ml.rtw.generic.parse;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /** CUP v0.11b 20150226 (SVN rev 63) generated parser.
   */
 @SuppressWarnings({"rawtypes"})
@@ -566,7 +567,7 @@ class CUP$CtxParser$actions {
 		int fleft = ((java_cup.runtime.Symbol)CUP$CtxParser$stack.peek()).left;
 		int fright = ((java_cup.runtime.Symbol)CUP$CtxParser$stack.peek()).right;
 		Obj.Function f = (Obj.Function)((java_cup.runtime.Symbol) CUP$CtxParser$stack.peek()).value;
-		 RESULT = Obj.functionComposition(f, v); 
+		 RESULT = Obj.functionComposition(v, f); 
               CUP$CtxParser$result = parser.getSymbolFactory().newSymbol("function",10, ((java_cup.runtime.Symbol)CUP$CtxParser$stack.elementAt(CUP$CtxParser$top-2)), ((java_cup.runtime.Symbol)CUP$CtxParser$stack.peek()), RESULT);
             }
           return CUP$CtxParser$result;
@@ -626,7 +627,7 @@ class CUP$CtxParser$actions {
 		int fleft = ((java_cup.runtime.Symbol)CUP$CtxParser$stack.elementAt(CUP$CtxParser$top-1)).left;
 		int fright = ((java_cup.runtime.Symbol)CUP$CtxParser$stack.elementAt(CUP$CtxParser$top-1)).right;
 		Obj.Function f = (Obj.Function)((java_cup.runtime.Symbol) CUP$CtxParser$stack.elementAt(CUP$CtxParser$top-1)).value;
-		 RESULT = Obj.functionComposition(f, v); 
+		 RESULT = Obj.functionComposition(v, f); 
               CUP$CtxParser$result = parser.getSymbolFactory().newSymbol("function",10, ((java_cup.runtime.Symbol)CUP$CtxParser$stack.elementAt(CUP$CtxParser$top-4)), ((java_cup.runtime.Symbol)CUP$CtxParser$stack.peek()), RESULT);
             }
           return CUP$CtxParser$result;

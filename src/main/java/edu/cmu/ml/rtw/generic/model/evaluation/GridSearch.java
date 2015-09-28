@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -24,6 +19,7 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 /**
  * GridSearch performs a grid-search for hyper-parameter values
@@ -312,34 +308,23 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		this.gridEvaluation = new ArrayList<EvaluatedGridPosition>();
 		List<GridPosition> grid = constructGrid();
 		
-		try {
-	 		if (maxThreads > 1) {
-	 			ExecutorService threadPool = Executors.newFixedThreadPool(maxThreads);
-	 			List<PositionThread> tasks = new ArrayList<PositionThread>();
-	 	 		for (GridPosition position : grid) {
-	 				tasks.add(new PositionThread(position));
-	 			}
-	 	 		
-				
-				List<Future<List<EvaluatedGridPosition>>> results = threadPool.invokeAll(tasks);
-				threadPool.shutdown();
-				threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-				for (Future<List<EvaluatedGridPosition>> futureResult : results) {
-					List<EvaluatedGridPosition> result = futureResult.get();
-					if (result == null)
-						return null;
-					this.gridEvaluation.addAll(result);
-				}
-	 		} else {
-	 			for (GridPosition position : grid)
-	 				this.gridEvaluation.addAll((new PositionThread(position)).call());
+		if (maxThreads > 1) {
+ 			ThreadMapper<GridPosition, Boolean> threadMapper = new ThreadMapper<GridPosition, Boolean>(new PositionThread());
+ 			List<Boolean> threadResults = threadMapper.run(grid, maxThreads);
+	 		for (Boolean threadResult : threadResults) 
+	 			if (!threadResult)
+	 				return null;
+	 	} else { 
+	 		// NOTE: This case is done separately outside of thread mapper for 
+	 		// debugging purposes
+	 		for (GridPosition position : grid) {
+	 			PositionThread thread = new PositionThread();
+	 			if (!thread.apply(position))
+	 				return null;
 	 		}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-		
-		return this.gridEvaluation;
+	 	}
+ 		
+ 		return this.gridEvaluation;
 	}
 	
 	public EvaluatedGridPosition getBestPosition() {
@@ -397,47 +382,24 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		return positions;
 	}
 	
-	private class PositionThread implements Callable<List<EvaluatedGridPosition>> {
-		private GridPosition position;
-		private SupervisedModel<D, L> positionModel;
-		private SupervisedModelEvaluation<D, L> positionEvaluation;
+	private class PositionThread implements ThreadMapper.Fn<GridPosition, Boolean> {
 		private Context<D, L> context;
 		
-		public PositionThread(GridPosition position) {
-			this.position = position;
+		public PositionThread() {
 			this.context = GridSearch.this.context.clone(false);
-			
-			for (Entry<String, Obj> entry : this.position.getCoordinates().entrySet())
-				this.context.addValue(entry.getKey(), this.context.getMatchValue(entry.getValue()));
-			
-			this.positionModel = this.context.getMatchModel(GridSearch.this.modelObj);
-			this.positionEvaluation = this.context.getMatchEvaluation(GridSearch.this.evaluationObj);
 		}
 		
-		@Override
-		public List<EvaluatedGridPosition> call() throws Exception {
-			List<GridPosition> positions = constructGrid(this.position, false); // Positions for non-training dimensions
-			List<EvaluatedGridPosition> evaluatedPositions = new ArrayList<EvaluatedGridPosition>();
-			boolean skipTraining = false;
-			for (GridPosition position : positions) {
-				evaluatedPositions.add(evaluatePosition(position, skipTraining));
-				skipTraining = true;
-			}
-			
-			return evaluatedPositions;
-		}
-		
-		private EvaluatedGridPosition evaluatePosition(GridPosition position, boolean skipTraining) {
+		private EvaluatedGridPosition evaluatePosition(GridPosition position, boolean skipTraining, SupervisedModel<D, L> positionModel, SupervisedModelEvaluation<D, L> positionEvaluation) {
 			OutputWriter output = trainData.getDatumTools().getDataTools().getOutputWriter();
 			
 			output.debugWriteln("Grid search evaluating " + GridSearch.this.evaluationObj.toString() + " of model (" + GridSearch.this.referenceName + " " + position.toString() + ")");
 			
-			this.positionModel.setParameterValues(position.getCoordinates());
+			positionModel.setParameterValues(position.getCoordinates());
 			
 			List<SupervisedModelEvaluation<D, L>> evaluations = new ArrayList<SupervisedModelEvaluation<D, L>>(1);
-			evaluations.add(this.positionEvaluation);
+			evaluations.add(positionEvaluation);
 			
-			ValidationTrainTest<D, L> validation = new ValidationTrainTest<D, L>(GridSearch.this.referenceName + " " + position.toString(), 1, this.positionModel, trainData, testData, evaluations, null);
+			ValidationTrainTest<D, L> validation = new ValidationTrainTest<D, L>(GridSearch.this.referenceName + " " + position.toString(), 1, positionModel, trainData, testData, evaluations, null);
 			double computedEvaluation = validation.run(skipTraining).get(0);
 			if (computedEvaluation  < 0) {
 				output.debugWriteln("Error: Grid search evaluation failed at position " + position.toString());
@@ -447,6 +409,45 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			output.debugWriteln("Finished grid search evaluating model with hyper parameters (" + GridSearch.this.referenceName + " " + position.toString() + ")");
 			
 			return new EvaluatedGridPosition(this.context, position, computedEvaluation, validation);
+		}
+
+		@Override
+		public Boolean apply(GridSearch<D, L>.GridPosition position) {
+			for (Entry<String, Obj> entry : position.getCoordinates().entrySet())
+				this.context.addValue(entry.getKey(), this.context.getMatchValue(entry.getValue()));
+			
+			SupervisedModel<D, L> positionModel = this.context.getMatchModel(GridSearch.this.modelObj);
+			SupervisedModelEvaluation<D, L> positionEvaluation = this.context.getMatchEvaluation(GridSearch.this.evaluationObj);
+			
+			List<GridPosition> positions = constructGrid(position, false); // Positions for non-training dimensions
+			List<EvaluatedGridPosition> evaluatedPositions = new ArrayList<EvaluatedGridPosition>();
+			boolean skipTraining = false;
+			for (GridPosition p : positions) {
+				evaluatedPositions.add(evaluatePosition(p, skipTraining, positionModel, positionEvaluation));
+				skipTraining = true;
+			}
+			
+			List<EvaluatedGridPosition> gridEvaluation = GridSearch.this.gridEvaluation;
+			synchronized (gridEvaluation) {
+				gridEvaluation.addAll(evaluatedPositions);
+				
+				double highestValue = Double.NEGATIVE_INFINITY;
+				for (EvaluatedGridPosition evaluatedPosition : gridEvaluation) {
+					if (Double.compare(highestValue, evaluatedPosition.getPositionValue()) < 0) {
+						highestValue = evaluatedPosition.getPositionValue();	
+					}
+				}
+				
+				for (EvaluatedGridPosition evaluatedPosition : gridEvaluation) {
+					if (evaluatedPosition.validation != null && Double.compare(highestValue, evaluatedPosition.getPositionValue()) != 0) {
+						evaluatedPosition.validation = null;
+						// FIXME: This can go back in if toString method of evaluatedPosition doesn't refer to context evaluatedPosition.context = null;
+					}
+				}
+			}
+			
+			this.context = null;
+			return true;
 		}
 	}
 
