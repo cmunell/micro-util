@@ -6,7 +6,6 @@ import java.util.List;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpanCluster;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter.Type;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -15,6 +14,11 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * FnCoref takes a collection of token spans
  * and returns token spans that are coreferent
  * with them.
+ * 
+ *  Parameters:
+ *  spanMinLength - minimum output token span length
+ *  
+ *  spanMaxLength - maximum output token span length
  * 
  * @author Bill McDowell
  * 

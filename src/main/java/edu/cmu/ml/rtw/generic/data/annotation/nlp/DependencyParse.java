@@ -242,6 +242,8 @@ public class DependencyParse implements StringSerializable {
 	
 	public Dependency getDependency(int sourceTokenIndex, int targetTokenIndex) {
 		Node source = getNode(sourceTokenIndex);
+		if (source == null)
+			return null;
 		for (int i = 0; i < source.getDependents().length; i++)
 			if (source.getDependents()[i].getDependentTokenIndex() == targetTokenIndex)
 				return source.getDependents()[i];
