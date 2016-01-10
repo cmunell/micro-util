@@ -1174,7 +1174,7 @@ public class DocumentNLPInMemory extends DocumentNLP {
 		
 		if (this.otherDocumentAnnotations != null) {
 			for (Entry<AnnotationTypeNLP<?>, Pair<?, Double>> entry : this.otherDocumentAnnotations.entrySet()) {
-				if (!annotationTypes.contains(entry.getKey())) 
+				if (annotationTypes != null && !annotationTypes.contains(entry.getKey())) 
 					continue;
 				htmlBuilder.append("<div class=\"annotation\">\n");
 				htmlBuilder.append(entry.getKey().toHtml(entry.getValue().getFirst()));
