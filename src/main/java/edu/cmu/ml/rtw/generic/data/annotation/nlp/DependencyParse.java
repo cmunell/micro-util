@@ -221,11 +221,15 @@ public class DependencyParse implements StringSerializable {
 	}
 	
 	private Node getNode(int tokenIndex) {
+            try {
 		if (tokenIndex >= this.tokenNodes.length)
 			return null;
 		if (tokenIndex < 0 || this.tokenNodes.length == 0)
 			return this.root;
 		return this.tokenNodes[tokenIndex];
+            } catch (Exception e) {
+                throw new RuntimeException("getNode(" + tokenIndex + ") with tokenNodes=" + this.tokenNodes, e);
+            }
 	}
 	
 	public DocumentNLP getDocument() {
@@ -242,6 +246,8 @@ public class DependencyParse implements StringSerializable {
 	
 	public Dependency getDependency(int sourceTokenIndex, int targetTokenIndex) {
 		Node source = getNode(sourceTokenIndex);
+		if (source == null)
+			return null;
 		for (int i = 0; i < source.getDependents().length; i++)
 			if (source.getDependents()[i].getDependentTokenIndex() == targetTokenIndex)
 				return source.getDependents()[i];
@@ -395,5 +401,18 @@ public class DependencyParse implements StringSerializable {
 	
 	public DependencyParse clone(DocumentNLP document) {
 		return new DependencyParse(document, this.sentenceIndex, this.root, this.tokenNodes);
+	}
+
+        public Node newNode(int tokenIndex, Dependency[] governors, Dependency[] dependents) {
+                return new Node(tokenIndex, governors, dependents);
+        }
+
+        public Dependency newDependency(int governingTokenIndex, int dependentTokenIndex, String type) {
+                return new Dependency(governingTokenIndex, dependentTokenIndex, type);
+        }
+
+        public void setNodes(Node root, Node[] tokenNodes) {
+		this.root = (root != null) ? root : new Node(-1, new Dependency[0], new Dependency[0]);
+		this.tokenNodes = tokenNodes; 
 	}
 }

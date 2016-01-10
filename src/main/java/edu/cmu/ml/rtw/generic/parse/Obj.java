@@ -42,6 +42,7 @@ public abstract class Obj extends Serializable {
 	public static Function functionComposition(Function function1, Function function2) { return new Function(function1, function2, Function.Type.COMPOSITION); }
 	public static Function functionComposition(Value value1, Value value2) { return new Function(value1, value2, Function.Type.COMPOSITION); }
 	public static Function functionComposition(Function function, Value value) { return new Function(function, value, Function.Type.COMPOSITION); }
+	public static Function functionComposition(Value value, Function function) { return new Function(value, function, Function.Type.COMPOSITION); }
 	public static class Function extends Obj {
 		public enum Type {
 			COMPOSITION
@@ -63,6 +64,13 @@ public abstract class Obj extends Serializable {
 			this.parameters = new AssignmentList();
 			this.parameters.add(Assignment.assignmentUntyped(function));
 			this.parameters.add(Assignment.assignmentUntyped(value));
+		}
+		
+		public Function(Value value, Function function, Type type) {
+			this.name = "Composite";
+			this.parameters = new AssignmentList();
+			this.parameters.add(Assignment.assignmentUntyped(value));
+			this.parameters.add(Assignment.assignmentUntyped(function));
 		}
 		
 		public Function(Value value1, Value value2, Type type) {

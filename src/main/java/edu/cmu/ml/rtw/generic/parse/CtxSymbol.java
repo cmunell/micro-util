@@ -5,8 +5,8 @@
 
 package edu.cmu.ml.rtw.generic.parse;
 
-/** CUP generated interface containing symbol constants. */
-public interface CtxSymbol {
+/** CUP generated class containing symbol constants. */
+public class CtxSymbol {
   /* terminals */
   public static final int LSQUARE_BRACKET = 10;
   public static final int RSQUARE_BRACKET = 11;

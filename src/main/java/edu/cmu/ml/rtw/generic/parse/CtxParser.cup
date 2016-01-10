@@ -76,11 +76,11 @@ function ::= STRING:n LPAREN assignmentUntypedList:al RPAREN                    
            | STRING:n LPAREN assignmentUntypedList:aul RPAREN LCURLY_BRACE assignmentTypedList:atl RCURLY_BRACE {: RESULT = Obj.function(n,aul,atl); :}
            | function:f1 COMP function:f2                                                                       {: RESULT = Obj.functionComposition(f1, f2); :}
            | function:f COMP curlyBracedValue:v                                                                 {: RESULT = Obj.functionComposition(f, v); :}
-           | curlyBracedValue:v COMP function:f                                                                 {: RESULT = Obj.functionComposition(f, v); :}
+           | curlyBracedValue:v COMP function:f                                                                 {: RESULT = Obj.functionComposition(v, f); :}
            | curlyBracedValue:v1 COMP curlyBracedValue:v2                                                       {: RESULT = Obj.functionComposition(v1, v2); :}
            | LPAREN function:f1 COMP function:f2 RPAREN                                                         {: RESULT = Obj.functionComposition(f1, f2); :}
            | LPAREN function:f COMP curlyBracedValue:v RPAREN                                                   {: RESULT = Obj.functionComposition(f, v); :}
-           | LPAREN curlyBracedValue:v COMP function:f RPAREN                                                   {: RESULT = Obj.functionComposition(f, v); :}
+           | LPAREN curlyBracedValue:v COMP function:f RPAREN                                                   {: RESULT = Obj.functionComposition(v, f); :}
            | LPAREN curlyBracedValue:v1 COMP curlyBracedValue:v2 RPAREN                                         {: RESULT = Obj.functionComposition(v1,v2); :}
            ;
 

@@ -36,6 +36,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCoref;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnDependencyRelation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
@@ -49,9 +50,11 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelCreg;
+import edu.cmu.ml.rtw.generic.model.SupervisedModelLGApproximation;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLabelDistribution;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGramression;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelPartition;
@@ -267,6 +270,7 @@ public abstract class Datum<L> {
 			addGenericModel(new SupervisedModelPartition<D, L>());
 			addGenericModel(new SupervisedModelAreg<D, L>());
 			addGenericModel(new SupervisedModelLogistmarGramression<D, L>());
+			addGenericModel(new SupervisedModelLGApproximation<D, L>());
 			
 			addGenericEvaluation(new SupervisedModelEvaluationAccuracy<D, L>());
 			addGenericEvaluation(new SupervisedModelEvaluationPrecision<D, L>());
@@ -282,12 +286,14 @@ public abstract class Datum<L> {
 			addGenericTokenSpanFn(new FnNGramSentence());
 			addGenericTokenSpanFn(new FnIdentity<TokenSpan>());
 			addGenericTokenSpanFn(new FnCoref());
+			addGenericTokenSpanFn(new FnDependencyRelation());
 			
 			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
 			addGenericTokenSpanStrFn(new FnRelationStr.FnRelationStrTokenSpan());
 			addGenericTokenSpanStrFn(new FnPoS());
 			addGenericTokenSpanStrFn(new FnString());
+			addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
 
 			addGenericStrFn(new FnComposite.FnCompositeStr());
 			addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());

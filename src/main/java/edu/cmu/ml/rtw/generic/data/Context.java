@@ -820,10 +820,10 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 		return binaryContext;
 	}
 	
-	public Context<D, L> clone(boolean cloneFeatureAndFnInternal) {
+	public Context<D, L> clone(boolean cloneFeatureInternal) {
 		Context<D, L> clone = new Context<D, L>(this.datumTools);
 		
-		if (cloneFeatureAndFnInternal) {
+		if (cloneFeatureInternal) {
 			if (!clone.fromParse(getModifiers(), getReferenceName(), toParse()))
 				return null;
 		} else {
@@ -835,9 +835,11 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 				clone.objNameOrdering.add(new Pair<ObjectType, String>(ObjectType.FEATURE, entry.getKey()));
 			}
 		
-			clone.tokenSpanFns = this.tokenSpanFns;
+			/*clone.tokenSpanFns = this.tokenSpanFns;
 			clone.tokenSpanStrFns = this.tokenSpanStrFns;
-			clone.strFns = this.strFns;
+			clone.strFns = this.strFns; Not sure why I was inclined to do this initially 
+			FIXME this was done before so that fn results could be cached internally across several model threads.
+			But may slow things down because of thread contention when constructing features... */
 		}
 		
 		

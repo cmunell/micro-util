@@ -392,8 +392,9 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 	}
 	
 	public boolean merge(FeatureTokenSpanFnFilteredVocab<D, L> feature, int offset) {
-		if (offset < this.indexRangeEnds.last())
+		if (offset < this.indexRangeEnds.last()) {
 			throw new IllegalArgumentException();
+		}
 		
 		if (!this.getReferenceName().equals(feature.getReferenceName())
 				|| !this.fn.equals(feature.fn))
