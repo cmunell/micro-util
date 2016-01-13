@@ -820,7 +820,7 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 		return binaryContext;
 	}
 	
-	public Context<D, L> clone(boolean cloneFeatureInternal) {
+	public synchronized Context<D, L> clone(boolean cloneFeatureInternal) {
 		Context<D, L> clone = new Context<D, L>(this.datumTools);
 		
 		if (cloneFeatureInternal) {

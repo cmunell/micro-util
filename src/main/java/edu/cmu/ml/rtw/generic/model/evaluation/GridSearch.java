@@ -382,14 +382,12 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		return positions;
 	}
 	
-	private class PositionThread implements ThreadMapper.Fn<GridPosition, Boolean> {
-		private Context<D, L> context;
-		
+	private class PositionThread implements ThreadMapper.Fn<GridPosition, Boolean> {		
 		public PositionThread() {
-			this.context = GridSearch.this.context.clone(false);
+			
 		}
 		
-		private EvaluatedGridPosition evaluatePosition(GridPosition position, boolean skipTraining, SupervisedModel<D, L> positionModel, SupervisedModelEvaluation<D, L> positionEvaluation) {
+		private EvaluatedGridPosition evaluatePosition(Context<D, L> context, GridPosition position, boolean skipTraining, SupervisedModel<D, L> positionModel, SupervisedModelEvaluation<D, L> positionEvaluation) {
 			OutputWriter output = trainData.getDatumTools().getDataTools().getOutputWriter();
 			
 			output.debugWriteln("Grid search evaluating " + GridSearch.this.evaluationObj.toString() + " of model (" + GridSearch.this.referenceName + " " + position.toString() + ")");
@@ -408,22 +406,23 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			
 			output.debugWriteln("Finished grid search evaluating model with hyper parameters (" + GridSearch.this.referenceName + " " + position.toString() + ")");
 			
-			return new EvaluatedGridPosition(this.context, position, computedEvaluation, validation);
+			return new EvaluatedGridPosition(context, position, computedEvaluation, validation);
 		}
 
 		@Override
 		public Boolean apply(GridSearch<D, L>.GridPosition position) {
+			Context<D, L> context = GridSearch.this.context.clone(false);
 			for (Entry<String, Obj> entry : position.getCoordinates().entrySet())
-				this.context.addValue(entry.getKey(), this.context.getMatchValue(entry.getValue()));
+				context.addValue(entry.getKey(), context.getMatchValue(entry.getValue()));
 			
-			SupervisedModel<D, L> positionModel = this.context.getMatchModel(GridSearch.this.modelObj);
-			SupervisedModelEvaluation<D, L> positionEvaluation = this.context.getMatchEvaluation(GridSearch.this.evaluationObj);
+			SupervisedModel<D, L> positionModel = context.getMatchModel(GridSearch.this.modelObj);
+			SupervisedModelEvaluation<D, L> positionEvaluation = context.getMatchEvaluation(GridSearch.this.evaluationObj);
 			
 			List<GridPosition> positions = constructGrid(position, false); // Positions for non-training dimensions
 			List<EvaluatedGridPosition> evaluatedPositions = new ArrayList<EvaluatedGridPosition>();
 			boolean skipTraining = false;
 			for (GridPosition p : positions) {
-				evaluatedPositions.add(evaluatePosition(p, skipTraining, positionModel, positionEvaluation));
+				evaluatedPositions.add(evaluatePosition(context, p, skipTraining, positionModel, positionEvaluation));
 				skipTraining = true;
 			}
 			
@@ -445,8 +444,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 					}
 				}
 			}
-			
-			this.context = null;
+
 			return true;
 		}
 	}
