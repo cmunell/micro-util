@@ -289,4 +289,26 @@ public class DataTools {
 		this.globalRandom.setSeed(this.randomSeed);
 		return true;
 	}
+	
+	public DataTools makeInstance(OutputWriter outputWriter) {
+		DataTools instance = makeInstance();
+		instance.outputWriter = outputWriter;
+		instance.setRandomSeed(getGlobalRandom().nextLong());
+		return instance;
+	}
+	
+	public DataTools makeInstance(OutputWriter outputWriter, long randomSeed) {
+		DataTools clone = makeInstance();
+		clone.outputWriter = outputWriter;
+		clone.setRandomSeed(randomSeed);
+		return clone;
+	}
+	
+	/**
+	 * @return a new DataTools instance object.  Classes that extend DataTools
+	 * should override this method to make a new instance of their type.
+	 */
+	public DataTools makeInstance() {
+		return new DataTools();
+	}
 }
