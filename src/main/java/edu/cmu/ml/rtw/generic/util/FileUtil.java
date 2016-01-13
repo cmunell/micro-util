@@ -7,6 +7,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +43,37 @@ public class FileUtil {
 		}
 	
 		return str.toString();
+	}
+	
+	public static List<Map<String, String>> readSVFile(String path, String separator) {
+		List<Map<String, String>> maps = new ArrayList<Map<String, String>>();
+		BufferedReader r = getFileReader(path);
+		if (r == null)
+			return null;
+		try {
+			String keysLine = r.readLine();
+			if (keysLine == null)
+				return null;
+			String[] keys = keysLine.split(separator);
+			String line = null;
+			while ((line = r.readLine()) != null) {
+				String[] values = line.split(separator);
+				if (keys.length != values.length)
+					return null;
+				
+				Map<String, String> map = new HashMap<String, String>();
+				for (int i = 0; i < keys.length; i++) {
+					map.put(keys[i], values[i]);
+				}
+				maps.add(map);
+			}
+			
+			r.close();
+		} catch (IOException e) {
+			return null;
+		}
+		
+		return maps;
 	}
 	
 	public static JSONObject readJSONFile(String path) {

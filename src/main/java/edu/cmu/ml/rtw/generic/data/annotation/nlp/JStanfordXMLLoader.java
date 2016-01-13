@@ -149,7 +149,7 @@ public class JStanfordXMLLoader {
                             // Arguably shouldn't happen, but we'll preserve original behavior by
                             // considering this to be a nonmatch after all and looping back up
                             if (true) throw new RuntimeException("bkdb: this really shouldn't happen");
-                            continue;
+                            //continue;
                         }
                         //System.out.println("bkdb: attb=" + attb + ", attbStrLen=" + attbStrLen + ", atte=" + atte);
                         curAttributeBegin = attb + attbStrLen;

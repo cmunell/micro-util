@@ -1,8 +1,6 @@
 package edu.cmu.ml.rtw.generic.data.feature.fn;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
