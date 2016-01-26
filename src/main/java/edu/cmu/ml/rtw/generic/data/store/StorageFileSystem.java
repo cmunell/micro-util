@@ -69,7 +69,7 @@ public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<
 				if (line.length() == 0)
 					continue;
 				Document document = Document.parse(line.trim());
-				if (document.getString("collection").equals("name")) {
+				if (document.getString("collection").equals(name)) {
 					r.close();
 					return (Serializer<I, S>)this.serializers.get(document.getString("serializer"));
 				}
