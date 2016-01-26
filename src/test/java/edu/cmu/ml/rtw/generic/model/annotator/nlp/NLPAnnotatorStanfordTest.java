@@ -4,9 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPInMemory;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.Language;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPMutable;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.stanford.JSONTokenizer;
 
@@ -16,7 +15,7 @@ public class NLPAnnotatorStanfordTest {
 		PipelineNLPStanford pipeline = new PipelineNLPStanford();
 		pipeline.initialize(null, new JSONTokenizer());
 		
-		DocumentNLP document = new DocumentNLPInMemory(new DataTools(), 
+		DocumentNLPMutable document = new DocumentNLPInMemory(new DataTools(), 
 													   "document", 
 													   "{\"sentences\" : [ { \"tokens\": [ { \"str\" : \"the\", \"s\" : 0, \"e\" : 3 }, " +
 																 "{ \"str\" : \"dog\", \"s\" : 4, \"e\" : 7 }, " +
@@ -29,10 +28,10 @@ public class NLPAnnotatorStanfordTest {
 																 "{ \"str\" : \"stings\", \"s\" : 24, \"e\" : 30 }," +		 
 																 "{ \"str\" : \".\", \"s\" : 31, \"e\" : 32 }" +	
 													   "] } ]" +
-													   "}",
-													   Language.English,
-													   pipeline);
+													   "}");
 				
+		pipeline.run(document);
+		
 		Assert.assertEquals("the", document.getTokenStr(0, 0));
 		Assert.assertEquals("dog", document.getTokenStr(0, 1));
 		Assert.assertEquals("barks", document.getTokenStr(0, 2));

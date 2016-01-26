@@ -9,8 +9,10 @@ import java.util.TreeSet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
+import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPInMemory;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPMutable;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -27,6 +29,7 @@ import edu.stanford.nlp.util.CoreMap;
  *
  */
 public class JSONTokenizer implements Annotator {
+	private DataTools dataTools = new DataTools();
 	
 	public JSONTokenizer() {
 		
@@ -39,7 +42,9 @@ public class JSONTokenizer implements Annotator {
 	@Override
 	public void annotate(Annotation annotation) {
 		try {
-			DocumentNLP document = new DocumentNLPInMemory(null, new JSONObject(annotation.toString()));
+			DocumentNLPMutable document = new DocumentNLPInMemory(this.dataTools);
+			SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
+			document = serializer.deserialize(new JSONObject(annotation.toString()));
 			List<CoreMap> sentences = new ArrayList<CoreMap>();
 			int tokenOffset = 0;
 			List<CoreLabel> allTokens = new ArrayList<CoreLabel>();

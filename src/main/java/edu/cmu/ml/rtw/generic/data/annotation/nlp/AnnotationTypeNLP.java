@@ -73,7 +73,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		
 		abstract T deserialize(Document document, int sentenceIndex, Object serializedObj);
 		abstract Object serialize(T obj);
-		abstract String toHtml(T obj);
+		abstract String toHTML(T obj);
 	}
 	
 	protected Serializer<T> enumSerializer = new Serializer<T>() {
@@ -89,7 +89,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		}
 
 		@Override
-		String toHtml(T obj) {
+		String toHTML(T obj) {
 		  return obj.toString();
 		}
 	};
@@ -106,7 +106,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		}
 
 		@Override
-		String toHtml(T obj) {
+		String toHTML(T obj) {
 		  return obj.toString();
 		}
 	};
@@ -130,7 +130,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		}
 
 	    @Override
-	    String toHtml(T obj) {
+	    String toHTML(T obj) {
 	      return ((JSONSerializable)obj).toJSON().toString();
 	    }
 	};
@@ -154,7 +154,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		}
 
 	    @Override
-	    String toHtml(T obj) {
+	    String toHTML(T obj) {
 	      return ((StringSerializable)obj).toString();
 	    }
 	};
@@ -207,12 +207,12 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	}
 	
 	// FIXME This should really take a T (not an Object), but for now this allows for easy serialization
-	// in DocumentNLPInMemory of annotation types where T is a wild card
+	// in DocumentNLPSerializers of annotation types where T is a wild card
 	public Object serialize(Object obj) {
 		return this.serializer.serialize(this.annotationClass.cast(obj));
 	}
 
-    public String toHtml(Object obj) {
-    	return this.serializer.toHtml(this.annotationClass.cast(obj));
+    public String toHTML(Object obj) {
+    	return this.serializer.toHTML(this.annotationClass.cast(obj));
     }
 }

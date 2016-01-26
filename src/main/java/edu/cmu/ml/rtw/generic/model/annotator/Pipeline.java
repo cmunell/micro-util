@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.model.annotator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Document;
  * @author Bill McDowell
  *
  */
-public abstract class Pipeline {
+public abstract class Pipeline<D extends Document> {
 	protected Map<AnnotationType<?>, Annotator<?>> annotators;
 	protected List<AnnotationType<?>> annotationOrder;
 	
@@ -63,4 +64,10 @@ public abstract class Pipeline {
 		this.annotators.clear();
 		this.annotationOrder.clear();
 	}
+	
+	public D run(D document) {
+		return run (document, new ArrayList<AnnotationType<?>>());
+	}
+	
+	public abstract D run(D document, Collection<AnnotationType<?>> skipAnnotators);
 }

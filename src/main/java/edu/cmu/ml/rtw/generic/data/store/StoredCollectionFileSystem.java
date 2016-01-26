@@ -1,0 +1,176 @@
+package edu.cmu.ml.rtw.generic.data.store;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.io.Files;
+
+import edu.cmu.ml.rtw.generic.data.Serializer;
+import edu.cmu.ml.rtw.generic.util.FileUtil;
+
+public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
+	private File directory;
+	private StorageFileSystem<S> storage;
+	
+	private Serializer<I, S> serializer;
+	
+	public StoredCollectionFileSystem(String name, File directory, StorageFileSystem<S> storage) {
+		super(name);
+		this.directory = directory;
+		this.storage = storage;
+	}
+
+	public StoredCollectionFileSystem(String name, File directory, Serializer<I,S> serializer) {
+		super(name);
+		this.directory = directory;
+		this.serializer = serializer;
+	}
+	
+	@Override
+	public Iterator<I> iterator() {
+		return Files.fileTreeTraverser()
+				.preOrderTraversal(this.directory)
+				.filter(new Predicate<File>() { public boolean apply(File file) { return file.isFile(); }})
+				.transform(
+					new Function<File, I>() {
+						@Override
+						public I apply(File file) {
+							return getSerializer().deserializeFromString(FileUtil.readFile(file));
+						}
+					}
+				).iterator();
+	}
+
+	@Override
+	public Serializer<I, S> getSerializer() {
+		if (this.serializer == null)
+			this.serializer = this.storage.getCollectionSerializer(this.name);
+		return this.serializer;
+	}
+
+	@Override
+	public Set<String> getIndex(String indexField) {
+		int indexNum = getIndexNumber(indexField);
+		
+		if (indexNum < 0)
+			return null;
+		
+		return getIndex(this.directory, 0, indexNum, new HashSet<String>());
+	}
+	
+	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values) {
+		if (curIndexNum == targetIndexNum) {
+			values.addAll(Arrays.asList(curIndexDir.list()));
+		} else {
+			for (File file : curIndexDir.listFiles()) {
+				if (file.isDirectory())
+					getIndex(file, curIndexNum + 1, targetIndexNum, values);
+			}
+		}
+
+		return values;
+	}
+
+	@Override
+	public List<I> getItemsByIndex(String indexField, Object indexValue) {
+		List<String> indexFields = new ArrayList<String>();
+		List<Object> indexValues = new ArrayList<Object>();
+		indexFields.add(indexField);
+		indexValues.add(indexValue);
+		return getItemsByIndices(indexFields, indexValues);
+	}
+
+	@Override
+	public List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues) {
+		if (indexFields.size() != indexValues.size())
+			return null;
+		
+		TreeMap<Integer, String> constrainedIndices = new TreeMap<Integer, String>();
+		for (int i = 0; i < indexFields.size(); i++) {
+			constrainedIndices.put(getIndexNumber(indexFields.get(i)), transformIndexValue(indexValues.get(i)));
+		}
+	
+		return getItemsByIndices(this.directory, 0, constrainedIndices, new ArrayList<I>());
+	}
+	
+	private List<I> getItemsByIndices(File curIndexDir, int curIndexNum, TreeMap<Integer, String> constrainedIndices, List<I> items) {
+		File[] constrainedIndex = null;
+		if (constrainedIndices.containsKey(curIndexNum)) {
+			File constrainedIndexFile = new File(curIndexDir.getAbsolutePath(), constrainedIndices.get(curIndexNum));
+			if (!constrainedIndexFile.exists())
+				return items;
+			else 
+				constrainedIndex = new File[] { constrainedIndexFile };
+		} else {
+			constrainedIndex = curIndexDir.listFiles();
+		}
+		
+		Serializer<I, S> serializer = getSerializer(); 
+		for (File file : constrainedIndex) {
+			if (file.isDirectory()) {
+				getItemsByIndices(file, curIndexNum + 1, constrainedIndices, items);
+			} else if (file.isFile() && (constrainedIndices.size() == 0 || curIndexNum >= constrainedIndices.lastKey())) {
+				items.add(serializer.deserializeFromString(FileUtil.readFile(file)));
+			}
+		}
+		
+		return items;
+	}
+
+	@Override
+	public boolean addItem(I item) {
+		Serializer<I, S> serializer = getSerializer();
+		List<Serializer.Index<I>> indices = serializer.getIndices();
+		
+		StringBuilder path = new StringBuilder();
+		for (Serializer.Index<I> index : indices) {
+			path.append(transformIndexValue(index.getValue(item))).append("/");
+		}
+		
+		File file = new File(this.directory.getAbsolutePath(), path.toString());
+		
+		try {
+			BufferedWriter w = new BufferedWriter(new FileWriter(file));
+			w.write(serializer.serializeToString(item));
+			w.close();
+		} catch (IOException e) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	@Override
+	public boolean addItems(List<I> items) {
+		for (I item : items) {
+			if (!addItem(item))
+				return false;
+		}
+		
+		return true;
+	}
+	
+	private String transformIndexValue(Object indexValue) {
+		return indexValue.toString().replace("/", "_");
+	}
+	
+	private int getIndexNumber(String indexField) {
+		List<Serializer.Index<I>> indices = getSerializer().getIndices();
+		int indexNum = -1;
+		for (int i = 0; i < indices.size(); i++)
+			if (indices.get(i).getField().equals(indexField))
+				indexNum = i;
+		return indexNum;
+	}
+}

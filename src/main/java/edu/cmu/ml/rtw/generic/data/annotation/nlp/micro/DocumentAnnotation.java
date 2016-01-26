@@ -72,6 +72,23 @@ public class DocumentAnnotation {
     }
     return docAnnotations;
   }
+  
+  public static List<DocumentAnnotation> fromString(String str) {
+    Multimap<String, Annotation> documentAnnotations = HashMultimap.create();
+	String[] annotationStrs = str.split("\n");    
+    for (String annotationStr : annotationStrs) {
+      Annotation a = Annotation.fromJsonString(annotationStr);
+      documentAnnotations.put(a.getDocumentId(), a);
+    }
+
+    List<DocumentAnnotation> docAnnotations = Lists.newArrayList();
+    for (String key : documentAnnotations.keySet()) {
+      DocumentAnnotation docAnnotation = new DocumentAnnotation(key,
+      Lists.newArrayList(documentAnnotations.get(key)));
+      docAnnotations.add(docAnnotation);
+    }
+    return docAnnotations;
+  }
 
   /**
    * Gets the id of the annotated document.

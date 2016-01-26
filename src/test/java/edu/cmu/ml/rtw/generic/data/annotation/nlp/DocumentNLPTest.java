@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.Annotation;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
@@ -15,54 +16,60 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
 public class DocumentNLPTest {	
 	@Test
-	public void testNLPAnnotationAndMicroSerialization() {
-		/*testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.POS);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.CONSTITUENCY_PARSE);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);*/
-		testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.NER);
-		/*testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP.COREF);
-		testNLPAnnotationAndMicroSerializationDisabledFrom(null);*/
+	public void testNLPAnnotationAndSerialization() {
+		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.POS);
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.CONSTITUENCY_PARSE);
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);*/
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "");
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "He died of cancer in August 2014.");
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.");
+		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.COREF);
+		testNLPAnnotationAndSerializationDisabledFrom(null);*/
 	}
 	
-	private void testNLPAnnotationAndMicroSerializationDisabledFrom(AnnotationTypeNLP<?> disabledFrom) {
+	private void testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP<?> disabledFrom, String text) {
 		PipelineNLPStanford stanfordPipe = new PipelineNLPStanford();//7);
 		stanfordPipe = new PipelineNLPStanford(stanfordPipe);
 		Assert.assertTrue(stanfordPipe.initialize(disabledFrom));
 		DataTools dataTools = new DataTools(new OutputWriter());
 		
-		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
+		DocumentNLPMutable document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"",//"He died of cancer in August 2014.", //"I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.",
-				Language.English, 
-				stanfordPipe);
+				text);
 		
-		DocumentAnnotation documentAnnotation = document.toMicroAnnotation();
-		List<Annotation> annotations = documentAnnotation.getAllAnnotations();
+		stanfordPipe.run(document);
 		
-		Assert.assertNotEquals(annotations.size(), 0);
+		SerializerDocumentNLPMicro microSerial = new SerializerDocumentNLPMicro(document);
+		SerializerDocumentNLPJSONLegacy jsonSerial = new SerializerDocumentNLPJSONLegacy(document);
+		SerializerDocumentNLPBSON bsonSerial = new SerializerDocumentNLPBSON(document);
+		SerializerDocumentNLPHTML htmlSerial = new SerializerDocumentNLPHTML(document);
 		
-		document = new DocumentNLPInMemory(dataTools, documentAnnotation);
-		DocumentAnnotation documentAnnotationCopy = document.toMicroAnnotation();
-		List<Annotation> annotationsCopy = documentAnnotationCopy.getAllAnnotations();
+		DocumentAnnotation micro = microSerial.serialize(document);
+		List<Annotation> microAnno = micro.getAllAnnotations();
 		
-		document = new DocumentNLPInMemory(dataTools, documentAnnotationCopy);
-		DocumentAnnotation documentAnnotationCopyCopy = document.toMicroAnnotation();
-		List<Annotation> annotationsCopyCopy = documentAnnotationCopyCopy.getAllAnnotations();
+		DocumentAnnotation micro2 = 
+				microSerial.serialize(
+					bsonSerial.deserialize(bsonSerial.serialize(
+						jsonSerial.deserialize(jsonSerial.serialize(
+								microSerial.deserialize(micro))))));
+		List<Annotation> microAnno2 = micro2.getAllAnnotations();
 		
-		Assert.assertEquals(annotations.size(), annotationsCopy.size());
-		Assert.assertEquals(annotations.size(), annotationsCopyCopy.size());
+		Assert.assertNotEquals(microAnno.size(), 0);
+		Assert.assertEquals(microAnno.size(), microAnno2.size());
 		
-		for (int i = 0; i < annotations.size(); i++) {
-			JSONObject jsonCopy = annotationsCopy.get(i).toJson();
-			JSONObject jsonCopyCopy = annotationsCopyCopy.get(i).toJson();
-			System.out.println(jsonCopyCopy);
+		for (int i = 0; i < microAnno.size(); i++) {
+			JSONObject json = microAnno.get(i).toJson();
+			JSONObject json2 = microAnno2.get(i).toJson();
+			
 			
 			try {
-				jsonCopy.put("annotationTime", "");
-				jsonCopyCopy.put("annotationTime", "");
+				json.put("annotationTime", "");
+				json2.put("annotationTime", "");
 			} catch (JSONException e) {}
 
-			Assert.assertEquals(jsonCopy.toString(), jsonCopyCopy.toString());
+			Assert.assertEquals(json.toString(), json2.toString());
 		}
+		
+		System.out.println(htmlSerial.serializeToString(microSerial.deserialize(micro2)));
 	}
 }

@@ -15,6 +15,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPMutable;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.Token;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
@@ -74,7 +75,6 @@ public class PipelineNLPStanford extends PipelineNLP {
 	public PipelineNLPStanford(PipelineNLPStanford pipeline) {
 		super();
 		
-		this.document = pipeline.document;
 		this.nlpPipeline = pipeline.nlpPipeline;
 		this.annotatedText = pipeline.annotatedText;
 		this.maxSentenceLength = pipeline.maxSentenceLength;
@@ -538,14 +538,11 @@ public class PipelineNLPStanford extends PipelineNLP {
 		
 		return false;
 	}
-	
-	public boolean setDocument(DocumentNLP document) {
-		if (!super.setDocument(document))
-			return false;
-		
+
+	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
 		if (this.nlpPipeline == null)
 			if (!initialize())
-				return false;
+				return null;
 		
 		this.annotatedText = new Annotation(document.getOriginalText());
 		
@@ -571,7 +568,6 @@ public class PipelineNLPStanford extends PipelineNLP {
 			}
 		}
 		
-		
-		return true;
+		return super.run(document, skipAnnotators);
 	}
 }

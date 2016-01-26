@@ -1,27 +1,16 @@
 package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
-import edu.cmu.ml.rtw.generic.model.annotator.nlp.PipelineNLP;
-import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 /**
  * 
- * DocumentNLP represents a JSON-serializable text document with 
+ * DocumentNLP represents a text document with 
  * various NLP annotations (e.g. PoS tags, parses, etc).  
  * The methods
  * for getting the NLP annotations are kept abstract so 
@@ -41,39 +30,6 @@ import edu.cmu.ml.rtw.generic.util.Triple;
 public abstract class DocumentNLP extends Document {
 	public DocumentNLP(DataTools dataTools) {
 		super(dataTools);
-	}
-	
-	public DocumentNLP(DataTools dataTools, JSONObject json) {
-		this(dataTools);
-		fromJSON(json);
-	}
-	
-	public DocumentNLP(DataTools dataTools, DocumentAnnotation documentAnnotation) {
-		this(dataTools);
-		fromMicroAnnotation(documentAnnotation);
-	}
-	
-	public DocumentNLP(DataTools dataTools, String jsonPath) {
-		this(dataTools);
-		BufferedReader r = FileUtil.getFileReader(jsonPath);
-		String line = null;
-		StringBuffer lines = new StringBuffer();
-		try {
-			while ((line = r.readLine()) != null) {
-				lines.append(line).append("\n");
-			}
-			
-			r.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			if (!fromJSON(new JSONObject(lines.toString())))
-				throw new IllegalArgumentException();
-		} catch (JSONException e) {
-			throw new IllegalArgumentException();
-		}
 	}
 	
 	public List<String> getSentenceTokenStrs(int sentenceIndex) {
@@ -299,31 +255,6 @@ public abstract class DocumentNLP extends Document {
 		}
 	}
 	
-	public DocumentAnnotation toMicroAnnotation() {
-		return toMicroAnnotation(this.dataTools.getAnnotationTypesNLP());
-	}
-	
-	public String toHtmlString() {
-		return toHtmlString(null);
-	}
-	
-	public boolean saveToHtmlFile(String path) {
-		return saveToHtmlFile(path, new ArrayList<AnnotationTypeNLP<?>>());
-	}
-	
-	public boolean saveToHtmlFile(String path, Collection<AnnotationTypeNLP<?>> annotationTypes) {
-		try {
-			BufferedWriter w = new BufferedWriter(new FileWriter(path));
-			w.write(toHtmlString(annotationTypes));
-			w.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
-		return true;
-	}
-	
 	public abstract String getOriginalText();
 	public abstract Language getLanguage();
 	public abstract int getSentenceCount();
@@ -345,13 +276,5 @@ public abstract class DocumentNLP extends Document {
 	public abstract Double getConstituencyParseConfidence(int sentenceIndex);
 	public abstract Double getDependencyParseConfidence(int sentenceIndex);
 	public abstract List<Triple<TokenSpan, String, Double>> getNerWithConfidence(TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations);
-	public abstract List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence(TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations);
-	
-	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation);
-	public abstract boolean fromMicroAnnotation(DocumentAnnotation documentAnnotation, String originalText);
-	public abstract Document makeInstanceFromMicroAnnotation(DocumentAnnotation documentAnnotation, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators);
-	public abstract DocumentAnnotation toMicroAnnotation(Collection<AnnotationTypeNLP<?>> annotationTypes);
-	public abstract String toHtmlString(Collection<AnnotationTypeNLP<?>> annotationTypes);
-
-	public abstract Document makeInstanceFromText(String name, String text, Language language, PipelineNLP pipeline, Collection<AnnotationTypeNLP<?>> skipAnnotators, boolean keepOriginalText);
+	public abstract List<Triple<TokenSpan, TokenSpanCluster, Double>> getCorefWithConfidence(TokenSpan tokenSpan, TokenSpan.Relation[] relationsToAnnotations);	
 }

@@ -141,9 +141,10 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 			try {
 				int id = json.getInt("id");
 				L label = (json.has("label")) ? labelFromString(json.getString("label")) : null;
-				DocumentNLP document = new DocumentNLPInMemory(this.dataTools, json.getJSONObject("document"));
+				DocumentNLPMutable document = new DocumentNLPInMemory(this.dataTools);
+				SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
 				
-				return new DocumentNLPDatum<L>(id, document, label);
+				return new DocumentNLPDatum<L>(id, serializer.deserialize(json.getJSONObject("document")), label);
 			} catch (JSONException e) {
 				e.printStackTrace();
 				return null;
@@ -158,7 +159,9 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 				json.put("id", datum.id);
 				if (datum.label != null)
 					json.put("label", datum.label.toString());
-				json.put("document", datum.document.toJSON());
+				DocumentNLPInMemory document = new DocumentNLPInMemory(datum.document);
+				SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
+				json.put("document", serializer.serialize(document));
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}

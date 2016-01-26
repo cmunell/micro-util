@@ -59,11 +59,11 @@ public class TokenSpanCluster implements JSONSerializable {
 			json.put("id", this.id);
 			
 			if (this.representative != null)
-				json.put("rep", this.representative.toJSON(true));
+				json.put("rep", this.representative.toJSON(true, false));
 			
 			JSONArray tokenSpansJson = new JSONArray();
 			for (TokenSpan tokenSpan : this.tokenSpans)
-				tokenSpansJson.put(tokenSpan.toJSON(true));
+				tokenSpansJson.put(tokenSpan.toJSON(true, false));
 			
 			json.put("spans", tokenSpansJson);
 		} catch (JSONException e) {

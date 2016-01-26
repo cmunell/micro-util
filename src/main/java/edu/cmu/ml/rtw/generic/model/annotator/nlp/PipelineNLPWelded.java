@@ -1,12 +1,13 @@
 package edu.cmu.ml.rtw.generic.model.annotator.nlp;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPMutable;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.model.annotator.Annotator;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -89,35 +90,40 @@ public class PipelineNLPWelded extends PipelineNLP {
 		throw new UnsupportedOperationException();
 	}
 	
-	public boolean setDocument(DocumentNLP document) {
-		return this.first.setDocument(document) && this.second.setDocument(document);
+	@Override
+	public <T> Pair<T, Double> annotateDocument(AnnotationTypeNLP<T> annotationType, DocumentNLPMutable document) {
+		if (this.first.hasAnnotator(annotationType))
+			return this.first.annotateDocument(annotationType, document);
+		else
+			return this.second.annotateDocument(annotationType, document);
 	}
 	
-	public <T> Pair<T, Double> annotateDocument(AnnotationTypeNLP<T> annotationType) {
+	@Override
+	public <T> Map<Integer, Pair<T, Double>> annotateSentences(AnnotationTypeNLP<T> annotationType, DocumentNLPMutable document) {
 		if (this.first.hasAnnotator(annotationType))
-			return this.first.annotateDocument(annotationType);
+			return this.first.annotateSentences(annotationType, document);
 		else
-			return this.second.annotateDocument(annotationType);
+			return this.second.annotateSentences(annotationType, document);
 	}
 	
-	public <T> Map<Integer, Pair<T, Double>> annotateSentences(AnnotationTypeNLP<T> annotationType) {
+	@Override
+	public <T> List<Triple<TokenSpan, T, Double>> annotateTokenSpans(AnnotationTypeNLP<T> annotationType, DocumentNLPMutable document) {
 		if (this.first.hasAnnotator(annotationType))
-			return this.first.annotateSentences(annotationType);
+			return this.first.annotateTokenSpans(annotationType, document);
 		else
-			return this.second.annotateSentences(annotationType);
+			return this.second.annotateTokenSpans(annotationType, document);
 	}
 	
-	public <T> List<Triple<TokenSpan, T, Double>> annotateTokenSpans(AnnotationTypeNLP<T> annotationType) {
+	@Override
+	public <T> Pair<T, Double>[][] annotateTokens(AnnotationTypeNLP<T> annotationType, DocumentNLPMutable document) {
 		if (this.first.hasAnnotator(annotationType))
-			return this.first.annotateTokenSpans(annotationType);
+			return this.first.annotateTokens(annotationType, document);
 		else
-			return this.second.annotateTokenSpans(annotationType);
+			return this.second.annotateTokens(annotationType, document);
 	}
 	
-	public <T> Pair<T, Double>[][] annotateTokens(AnnotationTypeNLP<T> annotationType) {
-		if (this.first.hasAnnotator(annotationType))
-			return this.first.annotateTokens(annotationType);
-		else
-			return this.second.annotateTokens(annotationType);
+	@Override
+	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
+		return this.second.run(this.first.run(document, skipAnnotators), skipAnnotators);
 	}
 }

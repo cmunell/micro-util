@@ -1,9 +1,11 @@
 package edu.cmu.ml.rtw.generic.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +16,8 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import edu.cmu.ml.rtw.generic.data.Serializer;
 
 /**
  * 
@@ -88,6 +92,15 @@ public class FileUtil {
 	public static JSONObject readJSONFile(File file) {
 		return readJSONFile(file.getAbsolutePath());
 	}
+
+	public static <I, S> I readSerializedFile(Serializer<I, S> serializer, String path) {
+		String str = readFile(path);
+		return serializer.deserializeFromString(str);
+	}
+	
+	public static <I, S> I readSerializedFile(Serializer<I, S> serializer, File file) {
+		return readSerializedFile(serializer, file.getAbsolutePath());
+	}
 	
 	public static BufferedReader getFileReader(String path) {
 		try { 
@@ -103,6 +116,7 @@ public class FileUtil {
 			
 			System.err.println("WARNING: FileUtil failed to read file at " + path); // Do something better later
 		} catch (Exception e) { System.err.println("WARNING: FileUtil failed to read file at " + path); e.printStackTrace(); }
+		
 		return HadoopUtil.getFileReader(path);
 	}
 	
@@ -129,5 +143,36 @@ public class FileUtil {
 				return r;
 		}
 		return null;
+	}
+	
+	public static <I, S> boolean writeSerializedFile(Serializer<I, S> serializer, String path, I item) {		
+		return writeFile(path, serializer.serializeToString(item));
+	}
+	
+	public static <I, S> boolean writeSerializedFile(Serializer<I, S> serializer, File file, I item) {
+		return writeSerializedFile(serializer, file.getAbsolutePath(), item);
+	}
+	
+	public static boolean writeFile(String path, String str) {	
+		try {
+			BufferedWriter w = new BufferedWriter(new FileWriter(path));
+			w.write(str);
+			w.close();
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public static boolean writeFile(File path, String str) {
+		return writeFile(path.getAbsolutePath(), str);
+	}
+	
+	public static BufferedWriter getFileWriter(String path) {
+		try {
+			return new BufferedWriter(new FileWriter(path));
+		} catch (IOException e) {
+			return null;
+		}
 	}
 }

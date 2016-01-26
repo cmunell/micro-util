@@ -17,11 +17,10 @@ public class DependencyParseTest {
 		stanfordPipe.initialize(AnnotationTypeNLP.NER);
 		
 		DataTools dataTools = new DataTools(new OutputWriter());
-		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
+		DocumentNLPMutable document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"Jim learned to read at school. It was horrible, but he had to do it anyway.",
-				Language.English, 
-				stanfordPipe);
+				"Jim learned to read at school. It was horrible, but he had to do it anyway.");
+		stanfordPipe.run(document);
 		
 		DependencyParse parse = document.getDependencyParse(0);
 
@@ -37,11 +36,11 @@ public class DependencyParseTest {
 		stanfordPipe.initialize(AnnotationTypeNLP.NER);
 		
 		DataTools dataTools = new DataTools(new OutputWriter());
-		DocumentNLP document = new DocumentNLPInMemory(dataTools, 
+		DocumentNLPMutable document = new DocumentNLPInMemory(dataTools, 
 				"theDocument", 
-				"Jim learned to read at school. It was horrible, but he had to do it anyway.",
-				Language.English, 
-				stanfordPipe);
+				"Jim learned to read at school. It was horrible, but he had to do it anyway.");
+		
+		stanfordPipe.run(document);
 		
 		DependencyParse parse = document.getDependencyParse(0);
 		//System.out.println(parse);

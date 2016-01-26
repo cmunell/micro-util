@@ -537,15 +537,15 @@ public class JStanfordXMLLoader {
 
     public static void main(String[] args) { 
         try { 
-            JStanfordXMLLoader me = new JStanfordXMLLoader(); 
             DataTools dataTools = new DataTools();
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             
             String line;
             while ((line = br.readLine()) != null) { 
                 System.out.println("---");
-                DocumentNLP doc = fromSingleXML(line, dataTools);
-                List<Annotation> annotations = doc.toMicroAnnotation().getAllAnnotations(); 
+                DocumentNLPMutable doc = fromSingleXML(line, dataTools);
+                SerializerDocumentNLPMicro serializer = new SerializerDocumentNLPMicro(doc);
+                List<Annotation> annotations = serializer.serialize(doc).getAllAnnotations(); 
                 for (Annotation annotation : annotations) 
                     System.out.println(annotation.toJsonString()); 
             } 

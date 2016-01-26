@@ -14,20 +14,20 @@ import edu.cmu.ml.rtw.generic.util.JSONSerializable;
  *
  */
 public class Token implements JSONSerializable {
-	private Document document;
+	private DocumentNLP document;
 	private int charSpanStart;
 	private int charSpanEnd;
 	private String str;
 	
-	public Token(Document document) {
+	public Token(DocumentNLP document) {
 		this(document, "", -1, -1);
 	}
 	
-	public Token(Document document, String str) {
+	public Token(DocumentNLP document, String str) {
 		this(document, str, -1, -1);
 	}
 	
-	public Token(Document document, String str, int charSpanStart, int charSpanEnd) {
+	public Token(DocumentNLP document, String str, int charSpanStart, int charSpanEnd) {
 		this.document = document;
 		this.str = str;
 		this.charSpanStart = charSpanStart;

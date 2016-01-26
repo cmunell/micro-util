@@ -12,7 +12,14 @@ import edu.cmu.ml.rtw.generic.cluster.Clusterer;
 import edu.cmu.ml.rtw.generic.cluster.ClustererString;
 import edu.cmu.ml.rtw.generic.cluster.ClustererTokenSpanPoSTag;
 import edu.cmu.ml.rtw.generic.data.Gazetteer;
+import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
+import edu.cmu.ml.rtw.generic.data.annotation.Document;
+import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPBSON;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPMicro;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 
 /**
@@ -106,6 +113,7 @@ public class DataTools {
 	protected Map<String, Path> paths;
 
 	protected Map<String, AnnotationTypeNLP<?>> annotationTypesNLP;
+	protected Map<String, SerializerDocument<?, ?>> documentSerializers;
 	
 	protected long randomSeed;
 	protected Random globalRandom;
@@ -124,6 +132,7 @@ public class DataTools {
 		this.tokenSpanClusterers = new HashMap<String, Clusterer<TokenSpan>>();
 		this.paths = new HashMap<String, Path>();
 		this.annotationTypesNLP = new HashMap<String, AnnotationTypeNLP<?>>();
+		this.documentSerializers = new HashMap<String, SerializerDocument<?, ?>>();
 		
 		this.outputWriter = outputWriter;
 		
@@ -165,6 +174,11 @@ public class DataTools {
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.COREF);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.DEPENDENCY_PARSE);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.CONSTITUENCY_PARSE);
+		
+		this.addDocumentSerializer(new SerializerDocumentNLPBSON(this));
+		this.addDocumentSerializer(new SerializerDocumentNLPHTML(this));
+		this.addDocumentSerializer(new SerializerDocumentNLPJSONLegacy(this));
+		this.addDocumentSerializer(new SerializerDocumentNLPMicro(this));
 	}
 	
 	public Gazetteer getGazetteer(String name) {
@@ -199,6 +213,18 @@ public class DataTools {
 		return this.annotationTypesNLP.values();
 	}
 	
+	@SuppressWarnings("unchecked")
+	public <D extends Document> SerializerDocument<D, ?> getDocumentSerializer(String name, D genericDocument, Collection<AnnotationType<?>> annotationTypes) {
+		return ((SerializerDocument<D, ?>)this.documentSerializers.get(name)).makeInstance(genericDocument, annotationTypes);
+	}
+	
+	public <D extends Document> Map<String, Serializer<?, ?>> getDocumentSerializers(D genericDocument, Collection<AnnotationType<?>> annotationTypes) {
+		Map<String, Serializer<?, ?>> map = new HashMap<String, Serializer<?, ?>>();
+		for (String key : this.documentSerializers.keySet())
+			map.put(key, getDocumentSerializer(key, genericDocument, annotationTypes));
+		return map;
+	}
+
 	public OutputWriter getOutputWriter() {
 		return this.outputWriter;
 	}
@@ -281,6 +307,11 @@ public class DataTools {
 
 	public boolean addAnnotationTypeNLP(AnnotationTypeNLP<?> type) {
 		this.annotationTypesNLP.put(type.getType(), type);
+		return true;
+	}
+	
+	public boolean addDocumentSerializer(SerializerDocument<?,?> documentSerializer) {
+		this.documentSerializers.put(documentSerializer.getName(), documentSerializer);
 		return true;
 	}
 	
