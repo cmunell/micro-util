@@ -6,10 +6,13 @@ import java.util.Map;
 import org.bson.Document;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoNamespace;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 
 import edu.cmu.ml.rtw.generic.data.Serializer;
 import edu.cmu.ml.rtw.generic.data.Serializer.Index;
@@ -80,5 +83,31 @@ public class StorageMongo implements Storage<StoredCollectionMongo<?>, Document>
 		}
 		
 		return null;
+	}
+
+	@Override
+	public boolean renameCollection(String oldName, String newName) {
+		if (!hasCollection(oldName) || hasCollection(newName) || oldName.equals(newName))
+			return false;
+		
+		this.database.getCollection(oldName).renameCollection(new MongoNamespace(this.database.getName(), newName));
+		
+		UpdateResult result = this.database.getCollection(META_COLLECTION)
+								.updateOne(new Document("collection", oldName),
+										new Document("$set", new Document("collection", newName)));
+		
+		return result.getModifiedCount() == 1;
+	}
+
+	@Override
+	public boolean deleteCollection(String name) {
+		if (!hasCollection(name))
+			return false;
+		
+		this.database.getCollection(name).drop();
+		
+		DeleteResult result = this.database.getCollection(META_COLLECTION).deleteOne(new Document("collection", name));
+		
+		return result.getDeletedCount() == 1;
 	}
 }
