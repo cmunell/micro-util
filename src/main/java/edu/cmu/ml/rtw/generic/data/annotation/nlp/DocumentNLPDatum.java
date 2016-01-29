@@ -199,11 +199,7 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 				);
 			DataTools dataTools = this.dataTools.makeInstance(output);
 			Datum.Tools<T, Boolean> binaryTools = (Datum.Tools<T, Boolean>)DocumentNLPDatum.getBooleanTools(dataTools);
-			// FIXME Need to add all the rest of the objects
-			/*for (String modelName : this.getGenericModelNames())
-				if (!binaryTools.getGenericModelNames().contains(modelName))
-					binaryTools.addGenericModel(this.makeModelInstance(modelName, null).makeBinary(null, labelIndicator));
-				*/	
+			
 			return binaryTools;
 			
 		}
