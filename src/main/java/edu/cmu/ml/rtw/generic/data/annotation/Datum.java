@@ -472,10 +472,6 @@ public abstract class Datum<L> {
 			return makeBinaryDatum(datum, this.getLabelIndicator(labelIndicator));
 		}
 		
-		public Collection<String> getGenericModelNames() {
-			return this.genericModels.keySet();
-		}
-		
 		public abstract L labelFromString(String str);
 		public abstract JSONObject datumToJSON(D datum);
 		public abstract D datumFromJSON(JSONObject json);

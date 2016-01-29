@@ -130,23 +130,23 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		int datumCount = data.size();
 		int labelCount = labelMap.size();
 		float[] X = new float[datumCount*datumFeatureCount];
-		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
+		float[] Y = new float[datumCount*labelCount];
 		int i = 0;
 		for (D datum : data) {
-			int labelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
-			
 			Vector datumFeatures = data.getFeatureVocabularyValues(datum);
 			for (VectorElement feature : datumFeatures)
 				X[i*datumFeatureCount + feature.index()] = (float)feature.value();
 			
-			if (!onlyX)
+			if (!onlyX) {
+				int labelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
 				Y[i*labelCount + labelIndex] = 1f;
+			}
 			
 			i++;
 		}
 		
 		return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
-										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
+										new FMatrix(labelCount, datumCount, Y)); 
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -165,9 +165,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
+		Matrix Y = dataMatrices.getSecond();
 		L[] labels = (L[])this.validLabels.toArray();
 		
 		this.model.clamp_("x0", X);
+		this.model.clamp_("y0", Y);
 		this.model.eval();
 		float[] outputY = this.model.getOutput("f2").data();
 		
@@ -197,9 +199,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
+		Matrix Y = dataMatrices.getSecond();
 		L[] labels = (L[])this.validLabels.toArray();
 		
 		this.model.clamp_("x0", X);
+		this.model.clamp_("y0", Y);
 		this.model.eval();
 		float[] outputY = this.model.getOutput("f2").data();
 		
