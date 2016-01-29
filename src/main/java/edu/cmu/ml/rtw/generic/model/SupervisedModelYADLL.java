@@ -178,12 +178,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		for (D datum : data) {
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
-			for (int j = 0; j < outputY.length; j++) {
+			for (int j = 0; j < labels.length; j++) {
 				p.put(labels[j], new Double(outputY[i*labels.length + j]));
 				norm += outputY[i*labels.length + j];
 			}
 			
-			for (int j = 0; j < outputY.length; j++) {
+			for (int j = 0; j < labels.length; j++) {
 				p.put(labels[j], p.get(labels[j])/norm);
 			}
 			
@@ -212,7 +212,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		for (D datum : data) {
 			double maxValue = 0.0;
 			int maxIndex = 0;
-			for (int j = 0; j < outputY.length; j++) {
+			for (int j = 0; j < labels.length; j++) {
 				if (Double.compare(outputY[i*labels.length + j], maxValue) >= 0) {
 					maxIndex = j;
 					maxValue = outputY[i*labels.length + j];
