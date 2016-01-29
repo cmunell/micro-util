@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.data.annotation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -467,6 +468,10 @@ public abstract class Datum<L> {
 		
 		public <T extends Datum<Boolean>> T makeBinaryDatum(D datum, String labelIndicator) {
 			return makeBinaryDatum(datum, this.getLabelIndicator(labelIndicator));
+		}
+		
+		public Collection<String> getGenericModelNames() {
+			return this.genericModels.keySet();
 		}
 		
 		public abstract L labelFromString(String str);
