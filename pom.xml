@@ -110,6 +110,52 @@
 		<artifactId>mongo-java-driver</artifactId>
 		<version>3.2.1</version>
 	</dependency>
+	<!--  YADLL Deps -->
+	<dependency>
+         <groupId>yadll</groupId>
+         <artifactId>yadll</artifactId>
+         <version>1v4_skinny</version>
+    </dependency>
+    <dependency>
+         <groupId>scala-parser-combinators_2.11</groupId>
+         <artifactId>scala-parser-combinators_2.11</artifactId>
+         <version>1.0.2</version>
+	</dependency>
+	<dependency>
+         <groupId>scalacheck_2.11</groupId>
+         <artifactId>scalacheck_2.11</artifactId>
+         <version>1.11.6</version>
+    </dependency>
+    <dependency>
+         <groupId>scalatest_2.11</groupId>
+         <artifactId>scalatest_2.11</artifactId>
+         <version>2.2.1</version>
+    </dependency>
+    <dependency>
+         <groupId>org.joda</groupId>
+         <artifactId>joda-convert</artifactId>
+         <version>1.6</version>
+    </dependency>
+    <dependency>
+         <groupId>jline</groupId>
+         <artifactId>jline</artifactId>
+         <version>2.11</version>
+    </dependency>
+    <dependency>
+         <groupId>jcuda</groupId>
+         <artifactId>jcuda</artifactId>
+         <version>0.6.5</version>
+    </dependency>
+    <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>2.11.7</version>
+    </dependency>
+    <dependency>
+         <groupId>BIDMat</groupId>
+         <artifactId>BIDMat</artifactId>
+         <version>BIDMat</version>
+    </dependency>
   </dependencies>
   <repositories>      
   	<repository>
