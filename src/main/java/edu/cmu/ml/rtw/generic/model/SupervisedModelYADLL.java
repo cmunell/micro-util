@@ -171,7 +171,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this.model.clamp_("x0", X);
 		this.model.eval();
 		
-		float[] outputY = this.model.getOutput("f2").data();
+		float[] outputY = this.model.getOutput("f2").getData();
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		int i = 0;
@@ -205,7 +205,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this.model.clamp_("x0", X);
 		this.model.eval();
 		
-		float[] outputY = this.model.getOutput("f2").data();
+		float[] outputY = this.model.getOutput("f2").getData();
 		
 		Map<D, L> classifications = new HashMap<D, L>();
 		int i = 0;
