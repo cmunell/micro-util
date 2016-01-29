@@ -117,7 +117,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		//this.nonZeroFeatureNames = data.getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
-		
+
 		output.debugWriteln("YADLL finished training"); 
 		
 		return true;
@@ -130,7 +130,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		int datumCount = data.size();
 		int labelCount = labelMap.size();
 		float[] X = new float[datumCount*datumFeatureCount];
-		float[] Y = new float[datumCount*labelCount];
+		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		for (D datum : data) {
 			Vector datumFeatures = data.getFeatureVocabularyValues(datum);
@@ -146,7 +146,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
-										new FMatrix(labelCount, datumCount, Y)); 
+										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -165,12 +165,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		Matrix Y = dataMatrices.getSecond();
 		L[] labels = (L[])this.validLabels.toArray();
 		
+		this.model.flush_stats(false);
 		this.model.clamp_("x0", X);
-		this.model.clamp_("y0", Y);
 		this.model.eval();
+		
 		float[] outputY = this.model.getOutput("f2").data();
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
@@ -199,12 +199,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		Matrix Y = dataMatrices.getSecond();
 		L[] labels = (L[])this.validLabels.toArray();
 		
+		this.model.flush_stats(false);
 		this.model.clamp_("x0", X);
-		this.model.clamp_("y0", Y);
 		this.model.eval();
+		
 		float[] outputY = this.model.getOutput("f2").data();
 		
 		Map<D, L> classifications = new HashMap<D, L>();
