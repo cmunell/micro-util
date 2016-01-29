@@ -67,8 +67,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		//Compose a 2 hidden-layer rectifier MLP with softmax outputs
 		Variable x_0 = new Variable("x0", data.getFeatureVocabularySize());
 		Variable y_0 = new Variable("y0", this.validLabels.size());
-		Function f_0 = new Function("f0",5,"relu(W0 * x0 + b0)");
-		Function f_1 = new Function("f1",4,"relu(W1 * f0 + b1)");
+		Function f_0 = new Function("f0", data.getFeatureVocabularySize(),"relu(W0 * x0 + b0)");
+		Function f_1 = new Function("f1",data.getFeatureVocabularySize()/2,"relu(W1 * f0 + b1)");
 		Function f_2 = new Function("f2", this.validLabels.size(), "softmax(U0 * f1 + d0)");
 		Function L_0 = new Function("L0",1,"neg_log_loss(f2, y0)");//loss function
 		    
@@ -112,6 +112,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			//Perform a step of batch gradient descent     
 			optimizer.update_graph();
 			this.model.flush_stats(false);
+			
+			output.debugWriteln(this.toParse(false) + 
+					" Epoch: " + epoch + " " + 
+					evaluations.get(0).getReferenceName() + ": " + 
+						evaluations.get(0).evaluate(this, testData, classify(testData)));
+			
 			
 			epoch = epoch + 1;
 		}
