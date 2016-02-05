@@ -179,7 +179,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			StringBuilder str = new StringBuilder();
 			str.append("(");
 			for (Entry<String, Obj> entry : this.coordinates.entrySet()) {
-				str.append(entry.getKey()).append("=").append(this.context.getMatchValue(entry.getValue())).append(",");
+				str.append(entry.getKey()).append("=").append(entry.getValue().toString()).append(",");
 			}
 			str.delete(str.length() - 1, str.length());
 			str.append(")");
@@ -189,7 +189,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		public String toValueString(String separator) {
 			StringBuilder str = new StringBuilder();
 			for (Entry<String, Obj> entry : this.coordinates.entrySet()) {
-				str.append(this.context.getMatchValue(entry.getValue())).append(separator);
+				str.append(entry.getValue().toString()).append(separator);
 			}
 			str.delete(str.length() - 1, str.length());
 			return str.toString();
@@ -210,7 +210,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			for (Entry<String, Obj> entry : this.coordinates.entrySet()) {
 				str.append(entry.getKey())
 				   .append(keyValueGlue)
-				   .append(this.context.getMatchValue(entry.getValue()))
+				   .append(entry.getValue().toString())
 				   .append(separator);
 			}
 			
@@ -452,9 +452,10 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		@Override
 		public Boolean apply(GridSearch<D, L>.GridPosition position) {
 			Context<D, L> context = GridSearch.this.context.clone(false);
-			for (Entry<String, Obj> entry : position.getCoordinates().entrySet())
-				context.addValue(entry.getKey(), context.getMatchValue(entry.getValue()));
 			
+			/* Why is this here? FIXME Remove it for (Entry<String, Obj> entry : position.getCoordinates().entrySet())
+				context.addValue(entry.getKey(), context.getMatchValue(entry.getValue()));
+			*/
 			SupervisedModel<D, L> positionModel = context.getMatchModel(GridSearch.this.modelObj);
 			SupervisedModelEvaluation<D, L> positionEvaluation = context.getMatchEvaluation(GridSearch.this.evaluationObj);
 			

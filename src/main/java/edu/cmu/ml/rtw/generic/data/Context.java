@@ -604,7 +604,7 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 				if (this.arrays.containsKey(vObj.getStr())) {
 					return this.arrays.get(vObj.getStr());
 				} else {
-					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to resolve reference variable '" + vObj.getStr() + "'.");
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to resolve reference variable '" + vObj.getStr() + "' to array.");
 					return null;
 				}
 			}
@@ -648,7 +648,7 @@ public class Context<D extends Datum<L>, L> extends CtxParsable {
 				if (this.values.containsKey(vObj.getStr())) {
 					return this.values.get(vObj.getStr());
 				} else {
-					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to resolve reference variable '" + vObj.getStr() + "'.");
+					this.datumTools.getDataTools().getOutputWriter().debugWriteln("ERROR: Failed to resolve reference variable '" + vObj.getStr() + "' to value.");
 					return null;
 				}
 			} else if (vObj.getType() == Obj.Value.Type.STRING) {

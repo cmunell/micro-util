@@ -327,9 +327,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	private YADLLTrainingEstimator trainingEstimator = YADLLTrainingEstimator.BACK_PROPAGATION;
 	private List<String> fnNodes; // Values point to possibleFnNodes
 	private List<String> fnParameters;
+	private String outputFnNode;
 	private Map<String, Obj> additionalParameters;
 	
-	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters" };
+	
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "outputFnNode" };
 	
 	private FunctionGraph model;
 	private Map<String, Obj.Function> possibleFnNodes;
@@ -534,7 +536,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this.model.clamp_("x", X);
 		this.model.eval();
 		
-		float[] outputY = this.model.getOutput("f2").getData();
+		float[] outputY = this.model.getOutput(this.outputFnNode).getData();
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		int i = 0;
@@ -573,7 +575,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this.model.clamp_("x", X);
 		this.model.eval();
 		
-		float[] outputY = this.model.getOutput("f2").getData();
+		float[] outputY = this.model.getOutput(this.outputFnNode).getData();
 		
 		Map<D, L> classifications = new HashMap<D, L>();
 		int i = 0;
@@ -614,6 +616,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			return Obj.array(this.fnNodes); 
 		else if (parameter.equals("fnParameters"))
 			return Obj.array(this.fnParameters);
+		else if (parameter.equals("outputFnNode"))
+			return Obj.stringValue(this.outputFnNode);
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
 		return null;
@@ -631,6 +635,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.fnNodes = this.context.getMatchArray(parameterValue);
 		else if (parameter.equals("fnParameters"))
 			this.fnParameters = this.context.getMatchArray(parameterValue);
+		else if (parameter.equals("outputFnNode"))
+			this.outputFnNode = this.context.getMatchValue(parameterValue);
 		else if (getParameterNameList().contains(parameter)) {
 			this.additionalParameters.put(parameter, parameterValue);
 		} else
