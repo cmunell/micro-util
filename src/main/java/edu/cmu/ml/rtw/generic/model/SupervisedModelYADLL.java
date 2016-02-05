@@ -345,6 +345,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this.context = context;
 		this.fnNodes = new ArrayList<String>();
 		this.fnParameters = new ArrayList<String>();
+		this.outputFnNode = "";
 		this.additionalParameters = new HashMap<String, Obj>();
 		this.possibleFnNodes = new HashMap<String, Obj.Function>();
 		this.possibleFnParameters = new HashMap<String, Obj.Function>();
