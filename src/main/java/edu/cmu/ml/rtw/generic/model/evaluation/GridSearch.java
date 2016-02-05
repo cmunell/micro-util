@@ -398,7 +398,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		else
 			positions.add(new GridPosition(this.context));
 		
-		for (GridDimension dimension : this.dimensions) {
+		for (GridDimension dimension : dimensions) {
 			if (dimension.isTrainingDimension() != training)
 				continue;
 			
@@ -412,7 +412,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 					if (subDimensions == null)
 						newPositions.add(newPosition);
 					else 
-						newPositions.addAll(constructGrid(newPosition, dimension.getSubDimensions(i), training));
+						newPositions.addAll(constructGrid(newPosition, subDimensions, training));
 				}
 			}
 			
