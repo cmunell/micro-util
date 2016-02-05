@@ -616,7 +616,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			return Obj.array(this.fnNodes); 
 		else if (parameter.equals("fnParameters"))
 			return Obj.array(this.fnParameters);
-		else if (parameter.equals("outputFnNode"))
+		else if (parameter.equals("targetFnNode"))
 			return Obj.stringValue(this.targetFnNode);
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
@@ -635,7 +635,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.fnNodes = this.context.getMatchArray(parameterValue);
 		else if (parameter.equals("fnParameters"))
 			this.fnParameters = this.context.getMatchArray(parameterValue);
-		else if (parameter.equals("outputFnNode"))
+		else if (parameter.equals("targetFnNode"))
 			this.targetFnNode = this.context.getMatchValue(parameterValue);
 		else if (getParameterNameList().contains(parameter)) {
 			this.additionalParameters.put(parameter, parameterValue);
