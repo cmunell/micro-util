@@ -27,8 +27,11 @@ public abstract class CtxParsableFunction extends CtxParsable implements Paramet
 	public Obj toParse(boolean includeInternal) {
 		String[] parameters = getParameterNames();
 		AssignmentList parameterList = new AssignmentList();
-		for (String parameterName : parameters)
-			parameterList.add(Assignment.assignmentUntyped(parameterName, getParameterValue(parameterName)));
+		for (String parameterName : parameters) {
+			Obj parameterValue = getParameterValue(parameterName);
+			if (parameterValue != null)
+				parameterList.add(Assignment.assignmentUntyped(parameterName, parameterValue));
+		}
 		
 		AssignmentList internal = null;
 		if (includeInternal) {
@@ -45,7 +48,7 @@ public abstract class CtxParsableFunction extends CtxParsable implements Paramet
 	@Override
 	protected boolean fromParseHelper(Obj obj) {
 		Obj.Function function = (Obj.Function)obj;
-		
+
 		AssignmentList parameterList = function.getParameters();
 		if (parameterList.size() > 0) {
 			if (parameterList.get(0).getName() != null) {

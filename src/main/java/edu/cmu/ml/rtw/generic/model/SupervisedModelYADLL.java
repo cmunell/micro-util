@@ -1,14 +1,16 @@
 package edu.cmu.ml.rtw.generic.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.platanios.learn.math.matrix.Vector;
-import org.platanios.learn.math.matrix.Vector.VectorElement;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import YADLL.Data.FMatrix;
 import YADLL.Data.Matrix;
+import YADLL.Data.SMatrix;
 import YADLL.Estimators.BP;
 import YADLL.Estimators.Estimator;
 import YADLL.FunctionGraphs.FunctionGraph;
@@ -21,95 +23,362 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedModel<D, L> {
-	/*private double l1;
-	private double l2;
-	private double convergenceEpsilon = -1.0;
-	private int maxEvaluationConstantIterations = 100000;
-	private double maxTrainingExamples = 10000;
-	private int batchSize = 100;
-	private int evaluationIterations = 500;
-	private boolean weightedLabels = false;
-	private double classificationThreshold = 0.5;
-	private boolean computeTestEvaluations = true;*/
-	private int numEpochs;
+	public static enum YADLLTrainingEstimator {
+		BACK_PROPAGATION
+	}
 	
-	private String[] hyperParameterNames = { "numEpochs"/*"l1", "l2", "convergenceEpsilon", "maxEvaluationConstantIterations", "maxTrainingExamples", "batchSize", "evaluationIterations", "weightedLabels", "classificationThreshold", "computeTestEvaluations" */};
+	public static enum YADLLFunctionType {
+		LOSS,
+		ACTIVATION,
+		PARAMETER_INITIALIZATION
+	}
+	
+	public static enum YADLLFunctionPrototype {
+		GAUSSIAN("Gaussian", "gaussian", YADLLFunctionType.PARAMETER_INITIALIZATION, new String[] { "mean", "variance"}),
+		FAN_IN("FanIn", "fan_in", YADLLFunctionType.PARAMETER_INITIALIZATION, new String[0]),
+		ZEROS("Zeros", "zeros", YADLLFunctionType.PARAMETER_INITIALIZATION, new String[0]),
+		ONES("Ones", "ones", YADLLFunctionType.PARAMETER_INITIALIZATION, new String[0]),
+		NEGATIVE_LOG_LOSS("NegativeLogLoss", "neg_log_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
+		CROSS_ENTROPY_LOSS("CrossEntropyLoss", "cross_entropy_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
+		QUADRATIC_LOSS("QuadraticLoss", "quadratic_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
+		RELU("Relu", "relu", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
+		SIGMOID("Sigmoid", "sigmoid", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
+		SOFTMAX("Softmax", "softmax", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
+		SOFTSIGN("Softsign", "softsign", YADLLFunctionType.ACTIVATION, new String[] { "input" });
+	
+		private String name;
+		private String yadllName;
+		private YADLLFunctionType type;
+		private String[] argNames;
+		
+		YADLLFunctionPrototype(String name, String yadllName, YADLLFunctionType type, String[] argNames) {
+			this.name = name;
+			this.yadllName = yadllName;
+			this.type = type;
+			this.argNames = argNames;
+		}
+		
+		public String getName() {
+			return this.name;
+		}
+		
+		public String getYADLLName() {
+			return this.yadllName;
+		}
+		
+		public YADLLFunctionType getType() {
+			return this.type;
+		}
+		
+		public String[] getArgNames() {
+			return this.argNames;
+		}
+		
+		@Override
+		public String toString() {
+			return this.name;
+		}
+		
+		public Obj.Function makeGenericParse() {
+			AssignmentList parameters = new AssignmentList();
+			for (String argName : this.argNames)
+				parameters.add(Assignment.assignmentUntyped(argName, Obj.curlyBracedValue(argName)));
+			return Obj.function(this.name, parameters);
+		}
+	}
+	
+	private static class YADLLFunction extends CtxParsableFunction {
+		private YADLLFunctionPrototype fnType;
+		private Map<String, String> parameterValues;
+		
+		private Context<?, ?> context;
+		
+		public YADLLFunction(Context<?, ?> context) {
+			this.parameterValues = new HashMap<String, String>();
+			this.context = context;
+		}
+		
+		@Override
+		protected boolean fromParseHelper(Obj obj) {
+			Obj.Function fnObj = (Obj.Function)obj;
+			this.fnType = YADLLFunctionPrototype.valueOf(fnObj.getName());
+			
+			if (!super.fromParseHelper(obj))
+				return false;
+			
+			return true;
+		}
+		
+		@Override
+		public String[] getParameterNames() {
+			return this.fnType.getArgNames();
+		}
+
+		@Override
+		public Obj getParameterValue(String parameter) {
+			return Obj.stringValue(this.parameterValues.get(parameter));
+		}
+
+		@Override
+		public boolean setParameterValue(String parameter, Obj parameterValue) {
+			boolean hasParameter = false;
+			for (String argName : this.fnType.argNames)
+				if (argName.equals(parameter)) {
+					hasParameter = true;
+					break;
+				}
+			if (!hasParameter)
+				return false;
+			
+			this.parameterValues.put(parameter, this.context.getMatchValue(parameterValue));
+			return true;
+		}
+
+		@Override
+		protected boolean fromParseInternal(AssignmentList internalAssignments) {
+			return true;
+		}
+
+		@Override
+		protected AssignmentList toParseInternal() {
+			return null;
+		}
+
+		@Override
+		public String getGenericName() {
+			return this.fnType.toString();
+		}
+		
+		public boolean replaceParameterValues(String findStr, String replacementStr) {
+			for (Entry<String, String> entry : this.parameterValues.entrySet()) {
+				entry.setValue(entry.getValue().replace(findStr, replacementStr));
+			}
+			return true;
+		}
+		
+		public String getYADLLFunctionString() {
+			StringBuilder str = new StringBuilder();
+			
+			str.append(this.fnType.getYADLLName());
+			str.append("(");
+			for (String paramName : this.fnType.getArgNames())
+				str.append(this.parameterValues.get(paramName)).append(",");
+			str.delete(str.length() - 1, str.length());
+			str.append(")");
+			
+			return str.toString();
+		}
+	}
+	
+	private static class YADLLFunctionNode extends CtxParsableFunction {
+		private int size;
+		private YADLLFunction fn;
+		
+		private String[] parameterNames = { "size", "fn" };
+		
+		private Context<?, ?> context;
+		
+		public YADLLFunctionNode(Context<?,?> context) {
+			this.context = context;
+		}
+		
+		@Override
+		public String[] getParameterNames() {
+			return this.parameterNames;
+		}
+
+		@Override
+		public Obj getParameterValue(String parameter) {
+			if (parameter.equals("size"))
+				return Obj.stringValue(String.valueOf(this.size));
+			else if (parameter.equals("fn"))
+				return this.fn.toParse();
+			return null;
+		}
+
+		@Override
+		public boolean setParameterValue(String parameter, Obj parameterValue) {
+			if (parameter.equals("size")) {
+				this.size = Integer.valueOf(this.context.getMatchValue(parameterValue));
+			} else if (parameter.equals("fn")) {
+				this.fn = new YADLLFunction(this.context);
+				if (!this.fn.fromParse(parameterValue))
+					return false;
+			} else {
+				return false;
+			}
+			
+			return true;
+		}
+
+		@Override
+		protected boolean fromParseInternal(AssignmentList internalAssignments) {
+			return true;
+		}
+
+		@Override
+		protected AssignmentList toParseInternal() {
+			return null;
+		}
+
+		@Override
+		public String getGenericName() {
+			return "FunctionNode";
+		}
+		
+		public boolean replaceFnParameterValues(String findStr, String replacementStr) {
+			return this.fn.replaceParameterValues(findStr, replacementStr);
+		}
+		
+		public Function getYADLLModelFunctionObject(String name) {
+			return new Function(name, this.size, this.fn.getYADLLFunctionString());
+		}
+		
+		public static Obj.Function makeGenericParse(YADLLFunctionPrototype initFunctionType) {
+			if (initFunctionType.getType() == YADLLFunctionType.PARAMETER_INITIALIZATION)
+				return null;
+			
+			AssignmentList parameters = new AssignmentList();
+			parameters.add(Assignment.assignmentUntyped("size", Obj.curlyBracedValue("size")));
+			parameters.add(Assignment.assignmentUntyped("fn", initFunctionType.makeGenericParse()));
+			return Obj.function("FunctionNode", parameters);
+		}
+	}
+	
+	private static class YADLLParameter extends CtxParsableFunction {
+		private YADLLFunction initFn;
+		
+		private String[] parameterNames = { "initFn" };
+		
+		private Context<?, ?> context;
+		
+		public YADLLParameter(Context<?,?> context) {
+			this.context = context;
+		}
+		
+		@Override
+		public String[] getParameterNames() {
+			return this.parameterNames;
+		}
+
+		@Override
+		public Obj getParameterValue(String parameter) {
+			if (parameter.equals("initFn"))
+				return this.initFn.toParse();
+			return null;
+		}
+
+		@Override
+		public boolean setParameterValue(String parameter, Obj parameterValue) {
+			if (parameter.equals("initFn")) {
+				this.initFn = new YADLLFunction(this.context);
+				if (!this.initFn.fromParse(parameterValue))
+					return false;
+			} else {
+				return false;
+			}
+			
+			return true;
+		}
+
+		@Override
+		protected boolean fromParseInternal(AssignmentList internalAssignments) {
+			return true;
+		}
+
+		@Override
+		protected AssignmentList toParseInternal() {
+			return null;
+		}
+
+		@Override
+		public String getGenericName() {
+			return "Parameter";
+		}
+		
+		public boolean replaceInitFnParameterValues(String findStr, String replacementStr) {
+			return this.initFn.replaceParameterValues(findStr, replacementStr);
+		}
+		
+		public String getYADLLInitFnString() {
+			return this.initFn.getYADLLFunctionString();
+		}
+		
+		public static Obj.Function makeGenericParse(YADLLFunctionPrototype initFunctionType) {
+			if (initFunctionType.getType() != YADLLFunctionType.PARAMETER_INITIALIZATION)
+				return null;
+			
+			AssignmentList parameters = new AssignmentList();
+			parameters.add(Assignment.assignmentUntyped("initFn", initFunctionType.makeGenericParse()));
+			return Obj.function("Parameter", parameters);
+		}
+	}
+	
+	private int numEpochs = 1;
+	private float stepSize = .1f;
+	private YADLLTrainingEstimator trainingEstimator = YADLLTrainingEstimator.BACK_PROPAGATION;
+	private List<String> fnNodes; // Values point to possibleFnNodes
+	private List<String> fnParameters;
+	private Map<String, Obj> additionalParameters;
+	
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters" };
 	
 	private FunctionGraph model;
-	/*private LogisticRegressionAdaGrad classifier;
-	private Vector classifierWeights;
-	
-	private Map<Integer, String> nonZeroFeatureNames;*/
+	private Map<String, Obj.Function> possibleFnNodes;
+	private Map<String, Obj.Function> possibleFnParameters;
 	
 	public SupervisedModelYADLL() {
-		
+		this(null);
 	}
 	
 	public SupervisedModelYADLL(Context<D, L> context) {
 		this.context = context;
+		this.fnNodes = new ArrayList<String>();
+		this.fnParameters = new ArrayList<String>();
+		this.additionalParameters = new HashMap<String, Obj>();
+		this.possibleFnNodes = new HashMap<String, Obj.Function>();
+		this.possibleFnParameters = new HashMap<String, Obj.Function>();
+		
+		for (YADLLFunctionPrototype type : YADLLFunctionPrototype.values()) {
+			if (type.getType() == YADLLFunctionType.PARAMETER_INITIALIZATION) {
+				this.possibleFnParameters.put(type.getName(), YADLLParameter.makeGenericParse(type));
+			} else {
+				this.possibleFnNodes.put(type.getName(), YADLLFunctionNode.makeGenericParse(type));
+			}
+		}
 	}
 	
 	@Override
 	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
 		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
 		
-		// FIXME Hyper-parameters, and eval on test data
+		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+				return false;
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false);
 		Matrix X = dataMatrices.getFirst();
 		Matrix Y = dataMatrices.getSecond();
-		//Compose a 2 hidden-layer rectifier MLP with softmax outputs
-		Variable x_0 = new Variable("x0", data.getFeatureVocabularySize());
-		Variable y_0 = new Variable("y0", this.validLabels.size());
-		Function f_0 = new Function("f0", data.getFeatureVocabularySize(),"relu(W0 * x0 + b0)");
-		Function f_1 = new Function("f1",data.getFeatureVocabularySize()/2,"relu(W1 * f0 + b1)");
-		Function f_2 = new Function("f2", this.validLabels.size(), "softmax(U0 * f1 + d0)");
-		Function L_0 = new Function("L0",1,"neg_log_loss(f2, y0)");//loss function
-		    
-		//Generate the function-graph that uses these functionals/variables
-		this.model = new FunctionGraph();
-		this.model.setSeed(1);
-		this.model.defineVariable(x_0);
-		this.model.defineLabel(y_0);
-		this.model.defineFunction(f_0);
-		this.model.defineFunction(f_1);
-		this.model.defineFunction(f_2);
-		this.model.defineFunction(L_0);
-		this.model.defineParamInit_("W0","gaussian(0,1)");
-		this.model.defineParamInit_("W1","gaussian(0,1)");
-		this.model.defineParamInit_("U0","gaussian(0,1)");
-		this.model.compile();
-		    
-		//Now set up an parameter-update estimator and an optimizer
-		Estimator estimator = new BP(this.model);
+		
+		Estimator estimator = new BP(this.model); // FIXME: Add other estimators
 		GradOpt optimizer = new GradOpt(estimator);
-		optimizer.setStepSize(0.1f);
+		optimizer.setStepSize(this.stepSize);
 		optimizer.setOptType("descent");
 		
 		int epoch = 0;
-		while(epoch < this.numEpochs){
-			//NOTE: to get validation error, simply perform a separate call to .eval()
-			//e.g.:
-			// graph.clamp(x_0, Validation_Set)
-			// graph.eval()
-			// println(epoch + " Valid.Error = " + graph.getStat("L0"))
-			// graph.flush_stats()
-		  
-			//Clamp training data set to model
-			this.model.clamp_("x0", X);
-			this.model.clamp_("y0", Y);
+		while(epoch < this.numEpochs) {
+			this.model.clamp_("x", X);
+			this.model.clamp_("y", Y);
 			this.model.eval();
 			
-			//Grab value of loss function to get training error...
-			//System.out.println(epoch + " Training.Error = " + graph.getStat_("L0")[1]);
-			optimizer.accum_grad(1f);// get the gradient for X
-			//Perform a step of batch gradient descent     
+			optimizer.accum_grad(1f); 
 			optimizer.update_graph();
 			this.model.flush_stats(false);
 			
@@ -117,12 +386,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 					" Epoch: " + epoch + " " + 
 					evaluations.get(0).getReferenceName() + ": " + 
 						evaluations.get(0).evaluate(this, testData, classify(testData)));
-			
-			
+
 			epoch = epoch + 1;
 		}
-		
-		//this.nonZeroFeatureNames = data.getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
 
 		output.debugWriteln("YADLL finished training"); 
 		
@@ -135,13 +401,15 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		int datumFeatureCount = data.getFeatureVocabularySize();
 		int datumCount = data.size();
 		int labelCount = labelMap.size();
-		float[] X = new float[datumCount*datumFeatureCount];
+		
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
+		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
+		int numNonZeroFeatures = 0;
 		for (D datum : data) {
-			Vector datumFeatures = data.getFeatureVocabularyValues(datum);
-			for (VectorElement feature : datumFeatures)
-				X[i*datumFeatureCount + feature.index()] = (float)feature.value();
+			Map<Integer, Double> datumFeatureMap = data.getFeatureVocabularyValuesAsMap(datum);
+			featureMaps.add(datumFeatureMap);
+			numNonZeroFeatures += datumFeatureMap.size();
 			
 			if (!onlyX) {
 				int labelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
@@ -151,8 +419,94 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			i++;
 		}
 		
-		return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
+		int[] featureIndices = new int[numNonZeroFeatures];
+		int[] datumIndices = new int[numNonZeroFeatures];
+		float[] values = new float[numNonZeroFeatures];
+		
+		i = 0;
+		for (int datumIndex = 0; datumIndex < featureMaps.size(); datumIndex++) {
+			for (Entry<Integer, Double> entry : featureMaps.get(datumIndex).entrySet()) {
+				featureIndices[i] = entry.getKey();
+				datumIndices[i] = datumIndex;
+				values[i] = entry.getValue().floatValue();
+				
+				i++;
+			}
+		}
+		
+		return new Pair<Matrix, Matrix>(new SMatrix(datumFeatureCount, datumCount, featureIndices, datumIndices, values),
 										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
+	}
+	
+	private boolean buildModelFromParameters(int inputVectorSize) {
+		Variable x = new Variable("x", inputVectorSize);
+		Variable y = new Variable("y", this.validLabels.size());
+
+		this.model = new FunctionGraph();
+		this.model.setSeed(1);
+		this.model.defineVariable(x);
+		this.model.defineLabel(y);
+		
+		for (int i = 0; i < this.fnNodes.size(); i++) {
+			String fnNodeStr = this.fnNodes.get(i);
+			String fnNodeStrAndIndex = fnNodeStr + "_" + i;
+			Map<String, Obj> fnNodeParamMap = new HashMap<String, Obj>();
+			
+			// FIXME This is slow, but okay for now
+			for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
+				if (!entry.getKey().startsWith(fnNodeStrAndIndex))
+					continue;
+				fnNodeParamMap.put(entry.getKey().substring(fnNodeStrAndIndex.length() + 1), entry.getValue());
+			}
+			
+			Obj fnNodeObj = this.possibleFnNodes.get(fnNodeStr).clone();
+			if (!fnNodeObj.resolveValues(fnNodeParamMap))
+				return false;
+			
+			YADLLFunctionNode fnNode = new YADLLFunctionNode(this.context);
+			if (!fnNode.fromParse(fnNodeObj))
+				return false;
+			
+			if (!fnNode.replaceFnParameterValues("%i",String.valueOf(i))
+					|| !fnNode.replaceFnParameterValues("%(i-1)", String.valueOf(i-1))
+					|| !fnNode.replaceFnParameterValues("%(i+1)", String.valueOf(i-1)))
+				return false;
+			
+			this.model.defineFunction(fnNode.getYADLLModelFunctionObject(fnNodeStrAndIndex));
+		}
+		
+		for (int i = 0; i < this.fnParameters.size(); i++) {
+			String fnParameterStr = this.fnParameters.get(i);
+			String fnParameterStrAndIndex = fnParameterStr + "_" + i;
+			Map<String, Obj> fnParameterParamMap = new HashMap<String, Obj>();
+			
+			// FIXME This is slow, but okay for now
+			for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
+				if (!entry.getKey().startsWith(fnParameterStrAndIndex))
+					continue;
+				fnParameterParamMap.put(entry.getKey().substring(fnParameterStrAndIndex.length() + 1), entry.getValue());
+			}
+			
+			Obj fnParameterObj = this.possibleFnParameters.get(fnParameterStr).clone();
+			if (!fnParameterObj.resolveValues(fnParameterParamMap))
+				return false;
+			
+			YADLLParameter fnParameter = new YADLLParameter(this.context);
+			if (!fnParameter.fromParse(fnParameterObj))
+				return false;
+			
+			if (!fnParameter.replaceInitFnParameterValues("%i",String.valueOf(i))
+					|| !fnParameter.replaceInitFnParameterValues("%(i-1)", String.valueOf(i-1))
+					|| !fnParameter.replaceInitFnParameterValues("%(i+1)", String.valueOf(i-1)))
+				return false;
+			
+			this.model.defineParamInit_(fnParameterStrAndIndex, fnParameter.getYADLLInitFnString());
+			// FIXME Build model from existing weights when available from deserialization
+		}
+		
+		this.model.compile();
+		
+		return true;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -169,12 +523,15 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+			return null;
+	
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
 		L[] labels = (L[])this.validLabels.toArray();
 		
 		this.model.flush_stats(false);
-		this.model.clamp_("x0", X);
+		this.model.clamp_("x", X);
 		this.model.eval();
 		
 		float[] outputY = this.model.getOutput("f2").getData();
@@ -197,18 +554,23 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			i++;
 		}
 		
+		this.model.flush_stats(false);
+		
 		return posteriors;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
+		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+				return null;
+		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
 		L[] labels = (L[])this.validLabels.toArray();
 		
 		this.model.flush_stats(false);
-		this.model.clamp_("x0", X);
+		this.model.clamp_("x", X);
 		this.model.eval();
 		
 		float[] outputY = this.model.getOutput("f2").getData();
@@ -230,6 +592,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			i++;
 		}
 		
+		this.model.flush_stats(false);
+		
 		return classifications;
 	}
 
@@ -242,26 +606,16 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("numEpochs"))
 			return Obj.stringValue(String.valueOf(this.numEpochs));
-		/* FIXME if (parameter.equals("l1"))
-			return Obj.stringValue(String.valueOf(this.l1));
-		else if (parameter.equals("l2"))
-			return Obj.stringValue(String.valueOf(this.l2));
-		else if (parameter.equals("convergenceEpsilon"))
-			return Obj.stringValue(String.valueOf(this.convergenceEpsilon));
-		else if (parameter.equals("maxTrainingExamples"))
-			return Obj.stringValue(String.valueOf(this.maxTrainingExamples));
-		else if (parameter.equals("batchSize"))
-			return Obj.stringValue(String.valueOf(this.batchSize));
-		else if (parameter.equals("evaluationIterations"))
-			return Obj.stringValue(String.valueOf(this.evaluationIterations));
-		else if (parameter.equals("maxEvaluationConstantIterations"))
-			return Obj.stringValue(String.valueOf(this.maxEvaluationConstantIterations));
-		else if (parameter.equals("weightedLabels"))
-			return Obj.stringValue(String.valueOf(this.weightedLabels));
-		else if (parameter.equals("classificationThreshold"))
-			return Obj.stringValue(String.valueOf(this.classificationThreshold));
-		else if (parameter.equals("computeTestEvaluations"))
-			return Obj.stringValue(String.valueOf(this.computeTestEvaluations)); */
+		else if (parameter.equals("stepSize"))
+			return Obj.stringValue(String.valueOf(this.stepSize));
+		else if (parameter.equals("trainingEstimator"))
+			return Obj.stringValue(this.trainingEstimator.toString());
+		else if (parameter.equals("fnNodes"))
+			return Obj.array(this.fnNodes); 
+		else if (parameter.equals("fnParameters"))
+			return Obj.array(this.fnParameters);
+		else if (this.additionalParameters.containsKey(parameter))
+			return this.additionalParameters.get(parameter);
 		return null;
 	}
 
@@ -269,36 +623,44 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("numEpochs"))
 			this.numEpochs = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		else
+		else if (parameter.equals("stepSize"))
+			this.stepSize = Float.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("trainingExtimator"))
+			this.trainingEstimator = YADLLTrainingEstimator.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("fnNodes"))
+			this.fnNodes = this.context.getMatchArray(parameterValue);
+		else if (parameter.equals("fnParameters"))
+			this.fnParameters = this.context.getMatchArray(parameterValue);
+		else if (getParameterNameList().contains(parameter)) {
+			this.additionalParameters.put(parameter, parameterValue);
+		} else
 			return false;
 		return true;
-		/* FIXME if (parameter.equals("l1"))
-			this.l1 = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("l2"))
-			this.l2 = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("convergenceEpsilon"))
-			this.convergenceEpsilon = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("maxTrainingExamples"))
-			this.maxTrainingExamples = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("batchSize"))
-			this.batchSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("evaluationIterations"))
-			this.evaluationIterations = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("maxEvaluationConstantIterations"))
-			this.maxEvaluationConstantIterations = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("weightedLabels"))
-			this.weightedLabels = Boolean.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("classificationThreshold"))
-			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("computeTestEvaluations"))
-			this.computeTestEvaluations = Boolean.valueOf(this.context.getMatchValue(parameterValue));
-		else
-			return false;*/
+	}
+	
+	private List<String> getParameterNameList() {
+		List<String> parameterNameList = Arrays.asList(this.defaultParameterNames);
+		
+		for (int i = 0; i < this.fnNodes.size(); i++) {
+			String fnNodeStr = this.fnNodes.get(i) + "_" + i;
+			Set<String> fnNodeParams = this.possibleFnNodes.get(this.fnNodes.get(i)).getCurlyBracedValueStrs();
+			for (String fnNodeParam : fnNodeParams)
+				parameterNameList.add(fnNodeStr + "_" + fnNodeParam);
+		}
+		
+		for (int i = 0; i < this.fnParameters.size(); i++) {
+			String fnParameterStr = this.fnParameters.get(i) + "_" + i;
+			Set<String> fnParameterParams = this.possibleFnParameters.get(this.fnParameters.get(i)).getCurlyBracedValueStrs();
+			for (String fnParameterParam : fnParameterParams)
+				parameterNameList.add(fnParameterStr + "_" + fnParameterParam);
+		}
+		
+		return parameterNameList;
 	}
 	
 	@Override
 	public String[] getParameterNames() {
-		return this.hyperParameterNames;
+		return getParameterNameList().toArray(new String[0]);
 	}
 
 	@Override
@@ -307,84 +669,21 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	}
 
 	@Override
-	protected boolean fromParseInternalHelper(AssignmentList internalAssignments) {
+	protected boolean fromParseInternalHelper(AssignmentList internalAssignments) {		
+		// FIXME Deserialize weights if available
+		
 		return true;
-		/* FIXME if (!internalAssignments.contains("featureVocabularySize")
-				|| !internalAssignments.contains("nonZeroWeights")
-				|| !internalAssignments.contains("bias"))
-			return true;
-		
-		int weightVectorSize = Integer.valueOf(((Obj.Value)internalAssignments.get("featureVocabularySize").getValue()).getStr());
-		double bias = Double.valueOf(((Obj.Value)internalAssignments.get("bias").getValue()).getStr());
-		
-		TreeMap<Integer, Double> nonZeroWeights = new TreeMap<Integer, Double>();
-		
-		for (int i = 0; i < internalAssignments.size(); i++) {
-			Assignment assignment = internalAssignments.get(i);
-			if (assignment.getName().startsWith("w_")) {
-				Obj.Array wArray = (Obj.Array)assignment.getValue();
-				int index = Integer.valueOf(wArray.getStr(2));
-				double w = Double.valueOf(wArray.getStr(1));
-				
-				nonZeroWeights.put(index, w);
-			}
-		} 
-		
-		nonZeroWeights.put(weightVectorSize-1, bias);
-		
-		Vector weights = new SparseVector(weightVectorSize, nonZeroWeights);
-		
-		this.classifier = new LogisticRegressionAdaGrad.Builder(weightVectorSize - 1, weights)
-			.sparse(true)
-			.useBiasTerm(true)
-			.build();
-		
-		return true; */
 	}
 	
 	@Override
 	protected AssignmentList toParseInternalHelper(
 			AssignmentList internalAssignments) {
-		/* FIXME 
-		if (this.classifierWeights == null)
+		
+		if (this.model == null)
 			return internalAssignments;
 		
-		double[] weightArray = this.classifierWeights.getDenseArray(); 
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "featureVocabularySize", Obj.stringValue(String.valueOf(weightArray.length))));
-		
-		List<Pair<Integer, Double>> sortedWeights = new ArrayList<Pair<Integer, Double>>();
-		for (Integer index : this.nonZeroFeatureNames.keySet()) {
-			sortedWeights.add(new Pair<Integer, Double>(index, weightArray[index]));
-		}
-		
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "nonZeroWeights", Obj.stringValue(String.valueOf(this.nonZeroFeatureNames.size()))));
-		
-		Collections.sort(sortedWeights, new Comparator<Pair<Integer, Double>>() {
-			@Override
-			public int compare(Pair<Integer, Double> w1,
-					Pair<Integer, Double> w2) {
-				if (Math.abs(w1.getSecond()) > Math.abs(w2.getSecond()))
-					return -1;
-				else if (Math.abs(w1.getSecond()) < Math.abs(w2.getSecond()))
-					return 1;
-				else
-					return 0;
-			} });
-		
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "bias", Obj.stringValue(String.valueOf(weightArray[weightArray.length - 1]))));
-		
-		for (Pair<Integer, Double> weight : sortedWeights) {
-			double w = weight.getSecond();
-			int index = weight.getFirst();
-			String featureName = this.nonZeroFeatureNames.get(index);
-			Obj.Array weightArr = Obj.array(new String[]{ featureName, String.valueOf(w), String.valueOf(index) });
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + index, weightArr));
-		}
-		
-		// this.nonZeroFeatureNames = null; Assumes convert toParse only once... add back in if memory issues
-		
-		return internalAssignments;
-		*/
+		// FIXME Serialize model (need a way to turn matrix into a string or write to disk)
+		// How to get biases?
 		return internalAssignments;
 	}
 	

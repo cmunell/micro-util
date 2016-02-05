@@ -2,6 +2,7 @@ package edu.cmu.ml.rtw.generic.model.evaluation;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -38,11 +39,14 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		private String name = "";
 		private Obj.Array values = new Obj.Array();
 		private boolean trainingDimension = true;
+		private Map<Integer, List<GridDimension>> subDimensions = null;
+		private Integer parentValueIndex = null;
 		
 		private Context<?, ?> context;
 		
 		public GridDimension(Context<?, ?> context) {
 			this.context = context;
+			this.subDimensions = new HashMap<Integer, List<GridDimension>>();
 		}
 		
 		public boolean isTrainingDimension() {
@@ -56,10 +60,14 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		public String getName() {
 			return this.name;
 		}
+		
+		public List<GridDimension> getSubDimensions(int valueIndex) {
+			return this.subDimensions.get(valueIndex);
+		}
 
 		@Override
 		public String[] getParameterNames() {
-			return new String[] { "name", "values", "trainingDimension" };
+			return new String[] { "name", "values", "trainingDimension", "parentValueIndex" };
 		}
 
 		@Override
@@ -70,6 +78,8 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				return this.values;
 			else if (parameter.equals("trainingDimension"))
 				return Obj.stringValue(String.valueOf(this.trainingDimension));
+			else if (parameter.equals("parentValueIndex") && this.parentValueIndex != null)
+				return Obj.stringValue(String.valueOf(this.parentValueIndex));
 			else
 				return null;
 		}
@@ -82,6 +92,8 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				this.values = (Obj.Array)parameterValue;
 			else if (parameter.equals("trainingDimension"))
 				this.trainingDimension = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+			else if (parameter.equals("parentValueIndex"))
+				this.parentValueIndex = Integer.valueOf(this.context.getMatchValue(parameterValue));
 			else
 				return false;
 			return true;
@@ -89,12 +101,36 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 
 		@Override
 		protected boolean fromParseInternal(AssignmentList internalAssignments) {
+			if (internalAssignments == null)
+				return true;
+			
+			for (int i = 0; i < internalAssignments.size(); i++) {
+				AssignmentTyped assignment = (AssignmentTyped)internalAssignments.get(i);
+				
+				if (assignment.getType().equals(DIMENSION_STR)) {
+					GridDimension subDimension = new GridDimension(this.context);
+					if (!subDimension.fromParse(null, assignment.getName(), assignment.getValue()))
+						return false;
+					if (!this.subDimensions.containsKey(subDimension.parentValueIndex))
+						this.subDimensions.put(subDimension.parentValueIndex, new ArrayList<GridDimension>());
+					this.subDimensions.get(subDimension.parentValueIndex).add(subDimension);
+				}
+			}
+			
 			return true;
 		}
 
 		@Override
 		protected AssignmentList toParseInternal() {
-			return null;
+			AssignmentList internalAssignments = new AssignmentList();
+			
+			for (Entry<Integer, List<GridDimension>> entry : this.subDimensions.entrySet()) {
+				for (GridDimension dimension : entry.getValue()) {
+					internalAssignments.add(Assignment.assignmentTyped(null, DIMENSION_STR, dimension.getReferenceName(), dimension.toParse(true)));
+				}
+			}
+			
+			return internalAssignments;
 		}
 
 		@Override
@@ -351,10 +387,10 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 	}
 	
 	private List<GridPosition> constructGrid() {
-		return constructGrid(null, true);
+		return constructGrid(null, this.dimensions, true);
 	}
 	
-	private List<GridPosition> constructGrid(GridPosition initialPosition, boolean training) {
+	private List<GridPosition> constructGrid(GridPosition initialPosition, List<GridDimension> dimensions, boolean training) {
 		List<GridPosition> positions = new ArrayList<GridPosition>();
 		
 		if (initialPosition != null) 
@@ -372,7 +408,11 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				for (int i = 0; i < dimension.getValues().size(); i++) {
 					GridPosition newPosition = position.clone();
 					newPosition.setParameterValue(dimension.getName(), dimension.getValues().get(i));
-					newPositions.add(newPosition);
+					List<GridDimension> subDimensions = dimension.getSubDimensions(i);
+					if (subDimensions == null)
+						newPositions.add(newPosition);
+					else 
+						newPositions.addAll(constructGrid(newPosition, dimension.getSubDimensions(i), training));
 				}
 			}
 			
@@ -418,7 +458,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			SupervisedModel<D, L> positionModel = context.getMatchModel(GridSearch.this.modelObj);
 			SupervisedModelEvaluation<D, L> positionEvaluation = context.getMatchEvaluation(GridSearch.this.evaluationObj);
 			
-			List<GridPosition> positions = constructGrid(position, false); // Positions for non-training dimensions
+			List<GridPosition> positions = constructGrid(position, GridSearch.this.dimensions, false); // Positions for non-training dimensions
 			List<EvaluatedGridPosition> evaluatedPositions = new ArrayList<EvaluatedGridPosition>();
 			boolean skipTraining = false;
 			for (GridPosition p : positions) {

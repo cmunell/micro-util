@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
@@ -22,6 +23,7 @@ import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
  * @author Bill McDowell
  *
  */
+
 public class AssignmentList extends Obj {
 	private List<Assignment> assignments;
 	private Map<String, Assignment> assignmentMap;
@@ -197,5 +199,12 @@ public class AssignmentList extends Obj {
 		}
 		
 		return clone;
+	}
+
+	@Override
+	protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
+		for (Assignment assignment : this.assignments)
+			assignment.getValue().getCurlyBracedValueStrs(strs);
+		return strs;
 	}
 }

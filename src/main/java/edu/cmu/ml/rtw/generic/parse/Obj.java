@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Obj represents an object that can be
@@ -32,10 +34,15 @@ public abstract class Obj extends Serializable {
 		ASSIGNMENT_LIST
 	}
 	
+	public Set<String> getCurlyBracedValueStrs() {
+		return getCurlyBracedValueStrs(new TreeSet<String>());
+	}
+	
 	public abstract Type getObjType();
 	public abstract Map<String, Obj> match(Obj obj);
 	public abstract boolean resolveValues(Map<String, Obj> context);
-	public abstract Obj clone();
+	public abstract Obj clone();	
+	protected abstract Set<String> getCurlyBracedValueStrs(Set<String> strs);
 	
 	public static Function function(String name, AssignmentList parameters, AssignmentList internalAssignments) { return new Function(name, parameters, internalAssignments); }
 	public static Function function(String name, AssignmentList parameters) { return new Function(name, parameters); }
@@ -174,6 +181,14 @@ public abstract class Obj extends Serializable {
 		public Obj clone() {
 			return Obj.function(this.name, (AssignmentList)this.parameters.clone(), (this.internalAssignments != null) ? (AssignmentList)this.internalAssignments.clone() : null);
 		}
+
+		@Override
+		protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
+			this.parameters.getCurlyBracedValueStrs(strs);
+			if (this.internalAssignments != null)
+				this.internalAssignments.getCurlyBracedValueStrs(strs);
+			return strs;
+		}
 	}
 	
 	public static Value squareBracketedValue(String str) { return new Value(str, Value.Type.SQUARE_BRACKETED); }
@@ -288,6 +303,12 @@ public abstract class Obj extends Serializable {
 		@Override
 		public Obj clone() {
 			return new Obj.Value(this.str, this.type);
+		}
+
+		@Override
+		protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
+			strs.add(this.str);
+			return strs;
 		}
 	}
 	
@@ -408,6 +429,13 @@ public abstract class Obj extends Serializable {
 				array.add((Obj.Value)value.clone());
 			return array;
 		}
+
+		@Override
+		protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
+			for (Value value : this.values)
+				value.getCurlyBracedValueStrs(strs);
+			return strs;
+		}
 	}
 	
 	public static Rule rule(Function source, Function target) { return new Rule(source, target); }
@@ -471,6 +499,13 @@ public abstract class Obj extends Serializable {
 		@Override
 		public Obj clone() {
 			return Obj.rule((Obj.Function)this.source.clone(), (Obj.Function)this.target.clone());
+		}
+
+		@Override
+		protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
+			this.source.getCurlyBracedValueStrs(strs);
+			this.target.getCurlyBracedValueStrs(strs);
+			return strs;
 		}
 	}
 }
