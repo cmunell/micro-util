@@ -631,7 +631,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			this.posAnnotatorName = annotator;
 			this.posTags = new PoSTag[annotation.length][];
 			boolean hasConf = false;
-			if (annotation.length > 0 && annotation[0].length > 0 && annotation[0][0].getSecond() != null) {
+			if (annotation.length > 0&& annotation[0].length > 0 && annotation[0][0].getSecond() != null) {
 				hasConf = true; 
 				this.posTagsConf = new double[annotation.length][];
 			}

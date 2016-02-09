@@ -299,21 +299,21 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 				}
 			}
 		
-			if (annotationTypes.contains(AnnotationTypeNLP.TOKEN))
+			if (annotationTypes.contains(AnnotationTypeNLP.TOKEN)  && (tokens.length == 0 || tokens[0] != null))
 				document.setTokenAnnotation(annotatorNames.get(AnnotationTypeNLP.TOKEN), AnnotationTypeNLP.TOKEN, tokens);
-			if (annotationTypes.contains(AnnotationTypeNLP.POS))
+			if (annotationTypes.contains(AnnotationTypeNLP.POS) && posTags != null && (posTags.length == 0 || posTags[0] != null))
 				document.setTokenAnnotation(annotatorNames.get(AnnotationTypeNLP.POS), AnnotationTypeNLP.POS, posTags);
 			for (Entry<AnnotationTypeNLP<?>, Pair<?, Double>[][]> entry : otherTokenAnnotations.entrySet()) {
-				if (annotationTypes.contains(entry.getKey()))
+				if (annotationTypes.contains(entry.getKey()) && (entry.getValue().length == 0 || entry.getValue() != null))
 					document.setTokenAnnotation(annotatorNames.get(entry.getKey()), entry.getKey(), entry.getValue());
 			}
 			
-			if (annotationTypes.contains(AnnotationTypeNLP.DEPENDENCY_PARSE))
+			if (annotationTypes.contains(AnnotationTypeNLP.DEPENDENCY_PARSE) && dependencyParses != null)
 				document.setSentenceAnnotation(annotatorNames.get(AnnotationTypeNLP.DEPENDENCY_PARSE), AnnotationTypeNLP.DEPENDENCY_PARSE, dependencyParses);
-			if (annotationTypes.contains(AnnotationTypeNLP.CONSTITUENCY_PARSE))
+			if (annotationTypes.contains(AnnotationTypeNLP.CONSTITUENCY_PARSE) && constituencyParses != null)
 				document.setSentenceAnnotation(annotatorNames.get(AnnotationTypeNLP.CONSTITUENCY_PARSE), AnnotationTypeNLP.CONSTITUENCY_PARSE, constituencyParses);
 			for (Entry<AnnotationTypeNLP<?>, Map<Integer, Pair<?, Double>>> entry : otherSentenceAnnotations.entrySet()) {
-				if (annotationTypes.contains(entry.getKey()))
+				if (annotationTypes.contains(entry.getKey()) && entry.getValue() != null)
 					document.setSentenceAnnotation(annotatorNames.get(entry.getKey()), entry.getKey(), entry.getValue());
 			}
 			

@@ -432,7 +432,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			
 			output.debugWriteln("Grid search evaluating " + GridSearch.this.evaluationObj.toString() + " of model (" + GridSearch.this.referenceName + " " + position.toString() + ")");
 			
-			positionModel.setParameterValues(position.getCoordinates());
+			positionModel.setParameterValues(position.getCoordinates());			
 			
 			List<SupervisedModelEvaluation<D, L>> evaluations = new ArrayList<SupervisedModelEvaluation<D, L>>(1);
 			evaluations.add(positionEvaluation);

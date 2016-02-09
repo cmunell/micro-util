@@ -93,6 +93,14 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				parameters.add(Assignment.assignmentUntyped(argName, Obj.curlyBracedValue(argName)));
 			return Obj.function(this.name, parameters);
 		}
+		
+		public static YADLLFunctionPrototype fromName(String name) {
+			YADLLFunctionPrototype[] types = YADLLFunctionPrototype.values();
+			for (YADLLFunctionPrototype type : types)
+				if (type.getName().equals(name))
+					return type;
+			return null;
+		}
 	}
 	
 	private static class YADLLFunction extends CtxParsableFunction {
@@ -109,7 +117,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		@Override
 		protected boolean fromParseHelper(Obj obj) {
 			Obj.Function fnObj = (Obj.Function)obj;
-			this.fnType = YADLLFunctionPrototype.valueOf(fnObj.getName());
+			this.fnType = YADLLFunctionPrototype.fromName(fnObj.getName());
 			
 			if (!super.fromParseHelper(obj))
 				return false;
@@ -461,9 +469,13 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				fnNodeParamMap.put(entry.getKey().substring(fnNodeStrAndIndex.length() + 1), entry.getValue());
 			}
 			
+			System.out.println("PARAM MAP " + fnNodeParamMap);
+			
 			Obj fnNodeObj = this.possibleFnNodes.get(fnNodeStr).clone();
-			if (!fnNodeObj.resolveValues(fnNodeParamMap))
+			if (!fnNodeObj.resolveValues(fnNodeParamMap)) {
+				System.out.println("FAILED TO RESOLVE VALUES " + fnNodeParamMap);
 				return false;
+			}
 			
 			YADLLFunctionNode fnNode = new YADLLFunctionNode(this.context);
 			if (!fnNode.fromParse(fnNodeObj))
@@ -635,17 +647,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.fnNodes = this.context.getMatchArray(parameterValue);
 		else if (parameter.equals("fnParameters"))
 			this.fnParameters = this.context.getMatchArray(parameterValue);
-		else if (parameter.equals("targetFnNode"))
+		else if (parameter.equals("targetFnNode")) {
 			this.targetFnNode = this.context.getMatchValue(parameterValue);
-		else if (getParameterNameList().contains(parameter)) {
+		} else 
 			this.additionalParameters.put(parameter, parameterValue);
-		} else
-			return false;
+		
 		return true;
 	}
 	
 	private List<String> getParameterNameList() {
-		List<String> parameterNameList = Arrays.asList(this.defaultParameterNames);
+		List<String> parameterNameList = new ArrayList<String>();
+		parameterNameList.addAll(Arrays.asList(this.defaultParameterNames));
 		
 		for (int i = 0; i < this.fnNodes.size(); i++) {
 			String fnNodeStr = this.fnNodes.get(i) + "_" + i;

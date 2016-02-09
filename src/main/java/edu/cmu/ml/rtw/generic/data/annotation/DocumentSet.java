@@ -8,7 +8,7 @@ public abstract class DocumentSet<E extends Document, I extends E> implements It
 	protected StoredCollection<I, ?> storedDocuments;
 	
 	public DocumentSet(StoredCollection<I, ?> storedDocuments) {
-			this.storedDocuments = storedDocuments;	
+		this.storedDocuments = storedDocuments;	
 	}
 	
 	public abstract String getName();
