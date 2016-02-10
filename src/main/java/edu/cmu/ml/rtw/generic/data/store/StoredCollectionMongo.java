@@ -70,7 +70,7 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 
 	// FIXME Possibly non-deterministic results if limit is imposed
 	@Override
-	public Set<String> getIndex(String indexField, int limit) {
+	public synchronized Set<String> getIndex(String indexField, int limit) {
 		Set<String> values = new HashSet<String>();
 		
 		FindIterable<Document> index = null;
@@ -87,7 +87,7 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 	}
 
 	@Override
-	public List<I> getItemsByIndex(String indexField, Object indexValue) {
+	public synchronized List<I> getItemsByIndex(String indexField, Object indexValue) {
 		List<I> items = new ArrayList<I>();
 		for (Document document : this.collection.find(new Document().append(indexField, indexValue))) {
 			items.add(getSerializer().deserialize(document));
@@ -96,7 +96,7 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 	}
 
 	@Override
-	public List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues) {
+	public synchronized List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues) {
 		if (indexFields.size() != indexValues.size())
 			return null;
 		
