@@ -165,7 +165,6 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 			new Fn<DocumentSetInMemoryLazy<E, I>, Boolean>() {
 				@Override
 				public Boolean apply(DocumentSetInMemoryLazy<E, I> item) {
-					List<T> results = new ArrayList<T>();
 					for (String documentName : item.documents.keySet()) {
 						T result = fn.apply(getDocumentByName(documentName));
 						synchronized (results) {
