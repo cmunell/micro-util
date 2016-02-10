@@ -69,13 +69,14 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		return this.serializer;
 	}
 
+	// FIXME Possibly non-deterministic results if limit is imposed
 	@Override
 	public Set<String> getIndex(String indexField, int limit) {
 		Set<String> values = new HashSet<String>();
 		
 		FindIterable<Document> index = null;
 		if (limit > 0) {
-			index = this.collection.find().sort(Sorts.ascending(indexField)).limit(limit).projection(Projections.include(indexField));
+			index = this.collection.find().limit(limit).projection(Projections.include(indexField));
 		} else {
 			index = this.collection.find().projection(Projections.include(indexField));
 		}
