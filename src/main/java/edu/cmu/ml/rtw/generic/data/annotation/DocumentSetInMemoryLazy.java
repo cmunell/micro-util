@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import edu.cmu.ml.rtw.generic.data.store.StoredCollection;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
 public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends DocumentSet<E, I> {
 	private class DocumentSetIterator implements Iterator<E> {
@@ -147,5 +149,20 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	@Override
 	public Iterator<E> iterator() {
 		return new DocumentSetIterator();
+	}
+
+	@Override
+	public <T> List<T> map(Fn<E, T> fn, int threads) {
+		ThreadMapper<String, T> mapper = new ThreadMapper<String, T>(
+			new Fn<String, T>() {
+				@Override
+				public T apply(String item) {
+					E document = getDocumentByName(item);
+					return fn.apply(document);
+				}
+			}
+		);
+		
+		return mapper.run(this.documents.keySet(), threads);
 	}
 }
