@@ -41,11 +41,15 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	private String name;
 	
 	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments) {
+		this(storedDocuments, -1);
+	}
+	
+	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments, int sizeLimit) {
 		super(storedDocuments);
 		this.documents = new ConcurrentSkipListMap<String, Pair<Object, E>>();
 		this.nameIndexField = this.storedDocuments.getSerializer().getIndices().get(0).getField();
 		
-		Set<String> documentNames = this.storedDocuments.getIndex(this.nameIndexField);
+		Set<String> documentNames = this.storedDocuments.getIndex(this.nameIndexField, sizeLimit);
 		for (String documentName : documentNames)
 			this.documents.put(documentName, new Pair<Object, E>(new Object(), null));
 	

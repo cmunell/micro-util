@@ -60,22 +60,37 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 	}
 
 	@Override
-	public Set<String> getIndex(String indexField) {
+	public Set<String> getIndex(String indexField, int limit) {
 		int indexNum = getIndexNumber(indexField);
 		
 		if (indexNum < 0)
 			return null;
 		
-		return getIndex(this.directory, 0, indexNum, new HashSet<String>());
+		return getIndex(this.directory, 0, indexNum, new HashSet<String>(), limit);
 	}
 	
-	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values) {
+	// FIXME: Note that this gives possibly non-deterministic results if limit >= 0
+	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values, int limit) {
 		if (curIndexNum == targetIndexNum) {
-			values.addAll(Arrays.asList(curIndexDir.list()));
+			if (limit > 0) {
+				String[] curValues = curIndexDir.list();
+				for (int i = 0; i < curValues.length; i++) {
+					if (values.size() >= limit)
+						break;
+					values.add(curValues[i]);
+				}
+				
+				return values;
+			} else {
+				values.addAll(Arrays.asList(curIndexDir.list()));
+			}
 		} else {
 			for (File file : curIndexDir.listFiles()) {
-				if (file.isDirectory())
-					getIndex(file, curIndexNum + 1, targetIndexNum, values);
+				if (file.isDirectory()) {
+					getIndex(file, curIndexNum + 1, targetIndexNum, values, limit);
+					if (limit > 0 && values.size() >= limit)
+						return values;
+				}
 			}
 		}
 

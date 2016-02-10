@@ -8,8 +8,11 @@ import java.util.Set;
 
 import org.bson.Document;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
 
 import edu.cmu.ml.rtw.generic.data.Serializer;
 
@@ -67,9 +70,16 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 	}
 
 	@Override
-	public Set<String> getIndex(String indexField) {
+	public Set<String> getIndex(String indexField, int limit) {
 		Set<String> values = new HashSet<String>();
-		for (Document document : this.collection.find()) {
+		
+		FindIterable<Document> index = null;
+		if (limit > 0) {
+			index = this.collection.find().sort(Sorts.ascending(indexField)).limit(limit).projection(Projections.include(indexField));
+		} else {
+			index = this.collection.find().projection(Projections.include(indexField));
+		}
+		for (Document document : index) {
 			values.add(document.get(indexField).toString());
 		}
 		

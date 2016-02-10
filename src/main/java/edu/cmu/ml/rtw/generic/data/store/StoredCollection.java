@@ -32,8 +32,12 @@ public abstract class StoredCollection<I, S> implements Iterable<I> {
 			return null;
 	}
 	
+	public Set<String> getIndex(String indexField) {
+		return getIndex(indexField, -1);
+	}
+	
 	public abstract Serializer<I, S> getSerializer();
-	public abstract Set<String> getIndex(String indexField);
+	public abstract Set<String> getIndex(String indexField, int limit);
 	public abstract List<I> getItemsByIndex(String indexField, Object indexValue);
 	public abstract List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues);
 	public abstract boolean addItem(I item);
