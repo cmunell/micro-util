@@ -12,7 +12,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.Sorts;
 
 import edu.cmu.ml.rtw.generic.data.Serializer;
 
