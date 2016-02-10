@@ -105,7 +105,7 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 	}
 
 	@Override
-	public synchronized List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues) {
+	public List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues) {
 		if (indexFields.size() != indexValues.size())
 			return null;
 		
