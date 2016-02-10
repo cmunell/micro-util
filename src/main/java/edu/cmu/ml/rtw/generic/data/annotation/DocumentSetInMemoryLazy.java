@@ -43,18 +43,24 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	private String name;
 	
 	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments) {
-		this(storedDocuments, -1);
+		this(storedDocuments, -1, false);
 	}
 	
 	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments, int sizeLimit) {
+		this(storedDocuments, sizeLimit, false);
+	}
+	
+	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments, int sizeLimit, boolean initEmpty) {
 		super(storedDocuments);
 		this.documents = new ConcurrentSkipListMap<String, Pair<Object, E>>();
 		this.nameIndexField = this.storedDocuments.getSerializer().getIndices().get(0).getField();
 		
-		Set<String> documentNames = this.storedDocuments.getIndex(this.nameIndexField, sizeLimit);
-		for (String documentName : documentNames)
-			this.documents.put(documentName, new Pair<Object, E>(new Object(), null));
-	
+		if (!initEmpty) {
+			Set<String> documentNames = this.storedDocuments.getIndex(this.nameIndexField, sizeLimit);
+			for (String documentName : documentNames)
+				this.documents.put(documentName, new Pair<Object, E>(new Object(), null));
+		}
+		
 		this.name = this.storedDocuments.getName();
 	}
 	
@@ -131,7 +137,7 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 			if (i == distribution.length - 1 && offset + partSize < documentList.size())
 				partSize = documentList.size() - offset;
 			
-			DocumentSetInMemoryLazy<E, I> part = new DocumentSetInMemoryLazy<E, I>(this.storedDocuments);
+			DocumentSetInMemoryLazy<E, I> part = new DocumentSetInMemoryLazy<E, I>(this.storedDocuments, -1, true);
 			part.name = names[i];
 			
 			for (int j = offset; j < offset + partSize; j++) {
@@ -152,17 +158,28 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	}
 
 	@Override
-	public <T> List<T> map(Fn<E, T> fn, int threads) {
-		ThreadMapper<String, T> mapper = new ThreadMapper<String, T>(
-			new Fn<String, T>() {
+	public <T> List<T> map(Fn<E, T> fn, int threads, Random r) {
+		List<T> results = new ArrayList<T>();
+		List<DocumentSetInMemoryLazy<E, I>> partition = this.makePartition(threads, r);
+		ThreadMapper<DocumentSetInMemoryLazy<E, I>, Boolean> mapper = new ThreadMapper<DocumentSetInMemoryLazy<E, I>, Boolean>(
+			new Fn<DocumentSetInMemoryLazy<E, I>, Boolean>() {
 				@Override
-				public T apply(String item) {
-					E document = getDocumentByName(item);
-					return fn.apply(document);
+				public Boolean apply(DocumentSetInMemoryLazy<E, I> item) {
+					List<T> results = new ArrayList<T>();
+					for (String documentName : item.documents.keySet()) {
+						T result = fn.apply(getDocumentByName(documentName));
+						synchronized (results) {
+							results.add(result);
+						}
+					}
+					
+					return true;
 				}
 			}
 		);
 		
-		return mapper.run(this.documents.keySet(), threads);
+		mapper.run(partition, threads);
+		
+		return results;
 	}
 }
