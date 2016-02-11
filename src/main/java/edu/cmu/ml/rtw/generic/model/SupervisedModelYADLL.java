@@ -449,8 +449,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	}
 	
 	private boolean buildModelFromParameters(int inputVectorSize) {
-		Variable x = new Variable("x", inputVectorSize);
-		Variable y = new Variable("y", this.validLabels.size());
+		
+		Variable x = new Variable("x", inputVectorSize, null);
+		Variable y = new Variable("y", this.validLabels.size(), null);
 
 		this.model = new FunctionGraph();
 		this.model.setSeed(1);

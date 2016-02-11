@@ -144,7 +144,7 @@
     <dependency>
          <groupId>jcuda</groupId>
          <artifactId>jcuda</artifactId>
-         <version>0.6.5</version>
+         <version>0.7.0a</version>
     </dependency>
     <dependency>
          <groupId>org.scala-lang</groupId>
