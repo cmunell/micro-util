@@ -42,6 +42,8 @@ public class FileUtil {
 			while ((line = reader.readLine()) != null) {
 				str = str.append(line).append("\n");
 			}
+			
+			reader.close();
 		} catch (IOException e) {
 			return null;
 		}
