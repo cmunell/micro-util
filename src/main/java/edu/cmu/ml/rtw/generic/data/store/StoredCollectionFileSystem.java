@@ -69,11 +69,10 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 		return getIndex(this.directory, 0, indexNum, new HashSet<String>(), limit);
 	}
 	
-	// FIXME: Note that this gives possibly non-deterministic results if limit >= 0
 	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values, int limit) {
 		if (curIndexNum == targetIndexNum) {
 			if (limit > 0) {
-				String[] curValues = curIndexDir.list();
+				String[] curValues = FileUtil.listFileNamesSorted(curIndexDir);
 				for (int i = 0; i < curValues.length; i++) {
 					if (values.size() >= limit)
 						break;
@@ -82,10 +81,10 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 				
 				return values;
 			} else {
-				values.addAll(Arrays.asList(curIndexDir.list()));
+				values.addAll(Arrays.asList(FileUtil.listFileNamesSorted(curIndexDir)));
 			}
 		} else {
-			for (File file : curIndexDir.listFiles()) {
+			for (File file : FileUtil.listFilesSorted(curIndexDir)) {
 				if (file.isDirectory()) {
 					getIndex(file, curIndexNum + 1, targetIndexNum, values, limit);
 					if (limit > 0 && values.size() >= limit)

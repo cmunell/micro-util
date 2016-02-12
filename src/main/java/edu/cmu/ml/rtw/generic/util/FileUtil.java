@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,5 +177,23 @@ public class FileUtil {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+	
+	public static File[] listFilesSorted(File directory) {
+		if (!directory.isDirectory())
+			return null;
+		
+		File[] files = directory.listFiles();
+		Arrays.parallelSort(files);
+		return files;
+	}
+	
+	public static String[] listFileNamesSorted(File directory) {
+		if (!directory.isDirectory())
+			return null;
+		
+		String[] fileNames = directory.list();
+		Arrays.parallelSort(fileNames);
+		return fileNames;
 	}
 }
