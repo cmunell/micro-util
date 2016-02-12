@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -60,19 +61,19 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 	}
 
 	@Override
-	public Set<String> getIndex(String indexField, int limit) {
+	public Set<String> getIndex(String indexField, int limit, Random r) {
 		int indexNum = getIndexNumber(indexField);
 		
 		if (indexNum < 0)
 			return null;
 		
-		return getIndex(this.directory, 0, indexNum, new HashSet<String>(), limit);
+		return getIndex(this.directory, 0, indexNum, new HashSet<String>(), limit, r);
 	}
 	
-	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values, int limit) {
+	private Set<String> getIndex(File curIndexDir, int curIndexNum, int targetIndexNum, Set<String> values, int limit, Random r) {
 		if (curIndexNum == targetIndexNum) {
 			if (limit > 0) {
-				String[] curValues = FileUtil.listFileNamesSorted(curIndexDir);
+				String[] curValues = FileUtil.listFileNamesRandomOrder(curIndexDir, r);
 				for (int i = 0; i < curValues.length; i++) {
 					if (values.size() >= limit)
 						break;
@@ -81,12 +82,12 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 				
 				return values;
 			} else {
-				values.addAll(Arrays.asList(FileUtil.listFileNamesSorted(curIndexDir)));
+				values.addAll(Arrays.asList(FileUtil.listFileNamesRandomOrder(curIndexDir, r)));
 			}
 		} else {
-			for (File file : FileUtil.listFilesSorted(curIndexDir)) {
+			for (File file : FileUtil.listFilesRandomOrder(curIndexDir, r)) {
 				if (file.isDirectory()) {
-					getIndex(file, curIndexNum + 1, targetIndexNum, values, limit);
+					getIndex(file, curIndexNum + 1, targetIndexNum, values, limit, r);
 					if (limit > 0 && values.size() >= limit)
 						return values;
 				}

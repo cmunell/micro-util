@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -195,5 +196,25 @@ public class FileUtil {
 		String[] fileNames = directory.list();
 		Arrays.parallelSort(fileNames);
 		return fileNames;
+	}
+	
+	public static File[] listFilesRandomOrder(File directory, Random r) {
+		File[] files = listFilesSorted(directory);
+		return MathUtil.randomPermutation(r, files);
+	}
+	
+	public static String[] listFileNamesRandomOrder(File directory, Random r) {
+		String[] files = listFileNamesSorted(directory);
+		return MathUtil.randomPermutation(r, files);
+	}
+	
+	public static File[] listFilesRandomSubset(File directory, int size, Random r) {
+		File[] files = listFilesRandomOrder(directory, r);
+		return Arrays.copyOf(files, size);
+	}
+	
+	public static String[] listFileNamesRandomSubset(File directory, int size, Random r) {
+		String[] files = listFileNamesRandomOrder(directory, r);
+		return Arrays.copyOf(files, size);
 	}
 }

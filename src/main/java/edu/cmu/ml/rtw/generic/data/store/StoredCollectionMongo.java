@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.bson.Document;
@@ -68,9 +69,9 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		return this.serializer;
 	}
 
-	// FIXME Possibly non-deterministic results if limit is imposed
+	// FIXME Possibly non-deterministic results if limit is imposed..  Use random object to ensure determinism
 	@Override
-	public synchronized Set<String> getIndex(String indexField, int limit) {
+	public synchronized Set<String> getIndex(String indexField, int limit, Random r) {
 		Set<String> values = new HashSet<String>();
 		
 		FindIterable<Document> index = null;
