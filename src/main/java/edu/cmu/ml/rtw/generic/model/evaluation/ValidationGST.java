@@ -178,28 +178,30 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 		
 		timer.stopClock(this.name + " Grid Search");
 		
-		
 		output.debugWriteln("Train and/or evaluating model with best parameters (" + this.name + ")");
 		
+		int evaluationIndex = getEvaluationIndexByReferenceName(bestGridPosition.getValidation().getEvaluations().get(0).getReferenceName());
 		this.evaluationValues = null;
 		if (this.testData != null) {
 			if (this.trainOnDev) 
 				this.trainData.addAll(this.devData); // FIXME Reinitialize features on train+dev?
 	
-			ValidationTrainTest<D, L> accuracy = new ValidationTrainTest<D, L>(this.name, 1, this.model, this.trainData, this.testData, this.evaluations, this.errorExampleExtractor);
-			this.evaluationValues = accuracy.run(!this.trainOnDev);
-			if (this.evaluationValues.get(0) < 0) {
+			ValidationTrainTest<D, L> validation = new ValidationTrainTest<D, L>(this.name, 1, this.model, this.trainData, this.testData, this.evaluations, this.errorExampleExtractor);
+			
+			this.evaluationValues = validation.run(!this.trainOnDev);
+			if (this.evaluationValues.get(evaluationIndex) < 0) {
 				output.debugWriteln("Error: Validation failed (" + this.name + ")");
 				return null;
 			} 
 			
-			this.confusionMatrix = accuracy.getConfusionMatrix();
-			output.debugWriteln("Test " + this.evaluations.get(0).toString() + " (" + this.name + "): " + cleanDouble.format(this.evaluationValues.get(0)));
+			
+			this.confusionMatrix = validation.getConfusionMatrix();
+			output.debugWriteln("Test " + this.evaluations.get(0).toString() + " (" + this.name + "): " + cleanDouble.format(this.evaluationValues.get(evaluationIndex)));
 			
 		} else {
 			this.evaluationValues = bestGridPosition.getValidation().getEvaluationValues();
 			this.confusionMatrix = bestGridPosition.getValidation().getConfusionMatrix();
-			output.debugWriteln("Dev best " + this.evaluations.get(0).toString() + " (" + this.name + "): " + cleanDouble.format(this.evaluationValues.get(0)));
+			output.debugWriteln("Dev best " + this.evaluations.get(evaluationIndex).toString() + " (" + this.name + "): " + cleanDouble.format(this.evaluationValues.get(evaluationIndex)));
 			this.model = bestGridPosition.getValidation().getModel();
 		}
 		
@@ -213,6 +215,8 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 		
 		GridSearch<D,L>.EvaluatedGridPosition bestGridPosition = (this.gridSearch.getDimensions().size() > 0) ? this.gridSearch.getBestPosition(this.maxThreads) : null;
 		List<GridSearch<D, L>.EvaluatedGridPosition> gridEvaluation = (this.gridSearch.getDimensions().size() > 0) ? this.gridSearch.getGridEvaluation(this.maxThreads) : null;
+		
+		int evaluationIndex = getEvaluationIndexByReferenceName(bestGridPosition.getValidation().getEvaluations().get(0).getReferenceName());
 		
 		if (bestGridPosition != null) {
 			Map<String, Obj> parameters = bestGridPosition.getCoordinates();
@@ -233,8 +237,8 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 		output.resultsWriteln("\nConfusion matrix:\n" + this.confusionMatrix.toString());
 		
 		if (gridEvaluation != null && gridEvaluation.size() > 0) {
-			output.resultsWriteln("\nGrid search on " + this.evaluations.get(0).toString() + ":");
-			output.resultsWriteln(gridEvaluation.get(0).toKeyString("\t") + "\t" + this.evaluations.get(0).toString());
+			output.resultsWriteln("\nGrid search on " + this.evaluations.get(evaluationIndex).toString() + ":");
+			output.resultsWriteln(gridEvaluation.get(0).toKeyString("\t") + "\t" + this.evaluations.get(evaluationIndex).toString());
 			for (GridSearch<D, L>.EvaluatedGridPosition gridPosition : gridEvaluation) {
 				output.resultsWriteln(gridPosition.toValueString("\t") + "\t" + gridPosition.getPositionValue());
 			}
@@ -259,5 +263,13 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 			return false;
 		
 		return true;
+	}
+	
+	private int getEvaluationIndexByReferenceName(String referenceName) {
+		for (int i = 0; i < this.evaluations.size(); i++) {
+			if (this.evaluations.get(i).getReferenceName().equals(referenceName))
+				return i;
+		}
+		return -1;
 	}
 }

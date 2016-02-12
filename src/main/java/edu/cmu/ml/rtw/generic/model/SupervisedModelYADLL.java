@@ -29,6 +29,7 @@ import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	public static enum YADLLTrainingEstimator {
@@ -382,6 +383,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		optimizer.setStepSize(this.stepSize);
 		optimizer.setOptType("descent");
 		
+		List<Double> iterativeEvaluations = new ArrayList<Double>();
+		
 		int epoch = 0;
 		while(epoch < this.numEpochs) {
 			this.model.clamp_("x", X);
@@ -392,13 +395,20 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			optimizer.update_graph();
 			this.model.flush_stats(false);
 			
-			output.debugWriteln(this.toParse(false) + 
-					" Epoch: " + epoch + " " + 
-					evaluations.get(0).getReferenceName() + ": " + 
-						evaluations.get(0).evaluate(this, testData, classify(testData)));
+			// FIXME iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData));
 
 			epoch = epoch + 1;
 		}
+		
+		StringBuilder iterativeOutput = new StringBuilder();
+		
+		
+		
+		output.debugWriteln(this.toParse(false) + 
+				" Epoch: " + epoch + " " + 
+				evaluations.get(0).getReferenceName() + ": " + 
+					evaluations.get(0).evaluate(this, testData, classify(testData)));
+		
 
 		output.debugWriteln("YADLL finished training"); 
 		
