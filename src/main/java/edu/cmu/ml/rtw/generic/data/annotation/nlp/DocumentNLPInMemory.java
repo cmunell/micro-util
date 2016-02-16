@@ -3,6 +3,7 @@ package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -324,13 +325,16 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		List<Pair<TokenSpan, T>> anno = super.getTokenSpanAnnotations(annotationType, tokenSpan, relationsToAnnotations);
 		if (anno != null)
 			return anno;
-		List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
-		if (tokenSpanAnnotation == null)
-			return new ArrayList<Pair<TokenSpan, T>>();
-		anno = new ArrayList<Pair<TokenSpan, T>>();
-		for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
-			anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
-		return anno;
+		if (this.otherTokenSpanAnnotations != null && this.otherTokenSpanAnnotations.containsKey(annotationType)) {
+                        List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
+                        if (tokenSpanAnnotation == null) return Collections.EMPTY_LIST;
+                        anno = new ArrayList<Pair<TokenSpan, T>>();
+                        for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
+	        		anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
+                        return anno;
+                } else {
+                        return Collections.EMPTY_LIST;
+                }
 	}
 	
 	@Override
