@@ -155,10 +155,26 @@ public class DocumentAnnotation {
     return new DocumentAnnotation(documentId, newAnnotations);
   }
 
+  public String toString() {
+    // NOTE: if this implementation changes, be sure to change writeToFile to match, or have
+    // writeToFile use toString should toString become sufficiently nontrivial.
+    StringBuilder sb = null;
+    for (Annotation a : annotations) {
+      if (sb == null) sb = new StringBuilder();
+      else sb.append("\n");
+      sb.append(a.toJsonString());
+    }
+    return sb.toString();
+  }
+
   public void writeToFile(String filename) {
     PrintWriter writer = null;
     try {
       writer = new PrintWriter(filename, "UTF-8");
+
+      // We could/should use toString here, but the implementation at this point is so trivial that
+      // we might as well replicate it here and not waste the time and space building a single
+      // String object to write out.
       for (Annotation a : annotations) {
         writer.println(a.toJsonString());
       }
