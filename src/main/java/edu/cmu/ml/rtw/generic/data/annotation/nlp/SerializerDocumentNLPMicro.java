@@ -40,7 +40,7 @@ public class SerializerDocumentNLPMicro extends SerializerDocument<DocumentNLPMu
 	}
 
 	@Override
-	public DocumentAnnotation serialize(DocumentNLPMutable document) {
+        public DocumentAnnotation serialize(DocumentNLPMutable document) {
 		DateTime annotationTime = DateTime.now();
 		List<Annotation> annotations = new ArrayList<Annotation>();
 		
