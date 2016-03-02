@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.Gazetteer;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
@@ -87,13 +88,13 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 		
 	}
 	
-	public FeatureGazetteer(Context<D, L> context) {
+	public FeatureGazetteer(DatumContext<D, L> context) {
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(); 
 		this.context = context;
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		if (!this.includeIds)
 			return true;
 		
@@ -108,7 +109,7 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 					counter.incrementCount(id.getFirst());
 				return true;
 			}
-		});
+		}, this.context.getMaxThreads());
 		
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
 		
@@ -219,7 +220,7 @@ public abstract class FeatureGazetteer<D extends Datum<L>, L> extends Feature<D,
 	
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		FeatureGazetteer<T, Boolean> binaryFeatureGaz = (FeatureGazetteer<T, Boolean>)binaryFeature;
 		

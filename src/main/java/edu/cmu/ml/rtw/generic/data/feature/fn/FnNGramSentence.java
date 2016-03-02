@@ -30,7 +30,7 @@ public class FnNGramSentence extends FnNGram {
 		this(null);
 	}
 	
-	public FnNGramSentence(Context<?, ?> context) {
+	public FnNGramSentence(Context context) {
 		super(context);
 		
 		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 1);
@@ -62,7 +62,7 @@ public class FnNGramSentence extends FnNGram {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnNGramSentence(context);
 	}
 	

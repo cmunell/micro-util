@@ -9,8 +9,11 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.DataTools.Command;
+import edu.cmu.ml.rtw.generic.data.DataTools.MakeInstanceFn;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.structure.DatumStructureCollection;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConjunction;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyPath;
@@ -25,32 +28,13 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramDep;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramSentence;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureStringForm;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenCount;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocab;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocabTrie;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnFilteredVocab;
-import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnCoref;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnDependencyRelation;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnHead;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnIdentity;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramContext;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
-import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
+import edu.cmu.ml.rtw.generic.data.feature.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelCreg;
@@ -61,11 +45,28 @@ import edu.cmu.ml.rtw.generic.model.SupervisedModelPartition;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelSVM;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelSVMStructured;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelYADLL;
+import edu.cmu.ml.rtw.generic.model.evaluation.GridSearch;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationAccuracy;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationF;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationPrecision;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationRecall;
+import edu.cmu.ml.rtw.generic.opt.search.ParameterSearchable;
+import edu.cmu.ml.rtw.generic.opt.search.Search;
+import edu.cmu.ml.rtw.generic.parse.AssignmentList;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.parse.Obj.Function;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassification;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionData;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionMatrix;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureAccuracy;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureF;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasurePrecision;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureRecall;
+import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
+import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationSupervisedModel;
+import edu.cmu.ml.rtw.generic.task.classify.TaskClassification;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
 /**
@@ -159,6 +160,13 @@ public abstract class Datum<L> {
 	 * 
 	 */
 	public static abstract class Tools<D extends Datum<L>, L> {
+		public static abstract class DataSetBuilder<D extends Datum<L>, L> extends CtxParsableFunction {
+			protected DatumContext<D, L> context;
+			
+			public abstract DataSetBuilder<D, L> makeInstance(DatumContext<D, L> context);
+			public abstract DataSet<D, L> build();
+		}
+		
 		public static interface StringExtractor<D extends Datum<L>, L> {
 			String toString();
 			String[] extract(D datum);
@@ -197,6 +205,7 @@ public abstract class Datum<L> {
 		
 		protected DataTools dataTools;
 		
+		private Map<String, DataSetBuilder<D, L>> dataSetBuilders;
 		private Map<String, TokenSpanExtractor<D, L>> tokenSpanExtractors;
 		private Map<String, StringExtractor<D, L>> stringExtractors;
 		private Map<String, DoubleExtractor<D, L>> doubleExtractors;
@@ -210,13 +219,15 @@ public abstract class Datum<L> {
 		
 		private Map<String, DatumStructureCollection<D, L>> genericDatumStructureCollections;
 		
-
-		private Map<String, List<Fn<TokenSpan, TokenSpan>>> genericTokenSpanFns;
-		private Map<String, List<Fn<TokenSpan, String>>> genericTokenSpanStrFns;
-		private Map<String, List<Fn<String, String>>> genericStrFns;
+		private Map<String, MethodClassification<D, L>> genericClassifyMethods;
+		private Map<String, EvaluationClassification<D, L, ?>> genericClassifyEvals;
+		
+		private Map<String, List<Command<?>>> commands;
 		
 		public Tools(DataTools dataTools) {
 			this.dataTools = dataTools;
+			
+			this.dataSetBuilders = new HashMap<String, DataSetBuilder<D, L>>();
 			
 			this.tokenSpanExtractors = new HashMap<String, TokenSpanExtractor<D, L>>();
 			this.stringExtractors = new HashMap<String, StringExtractor<D, L>>();
@@ -224,15 +235,17 @@ public abstract class Datum<L> {
 			this.labelMappings = new HashMap<String, LabelMapping<L>>();
 			this.labelIndicators = new HashMap<String, LabelIndicator<L>>();
 			this.inverseLabelIndicators = new HashMap<String, InverseLabelIndicator<L>>();
+			
 			this.genericFeatures = new HashMap<String, Feature<D, L>>();
 			this.genericModels = new HashMap<String, SupervisedModel<D, L>>();
 			this.genericEvaluations = new HashMap<String, SupervisedModelEvaluation<D, L>>();
 			
 			this.genericDatumStructureCollections = new HashMap<String, DatumStructureCollection<D, L>>();
 			
-			this.genericTokenSpanFns = new HashMap<String, List<Fn<TokenSpan, TokenSpan>>>();
-			this.genericTokenSpanStrFns = new HashMap<String, List<Fn<TokenSpan, String>>>();
-			this.genericStrFns = new HashMap<String, List<Fn<String, String>>>();
+			this.genericClassifyMethods = new HashMap<String, MethodClassification<D, L>>();
+			this.genericClassifyEvals = new HashMap<String, EvaluationClassification<D, L, ?>>();
+			
+			this.commands = new HashMap<String, List<Command<?>>>();
 			
 			addLabelMapping(new LabelMapping<L>() {
 				public String toString() {
@@ -279,34 +292,55 @@ public abstract class Datum<L> {
 			addGenericEvaluation(new SupervisedModelEvaluationRecall<D, L>());
 			addGenericEvaluation(new SupervisedModelEvaluationF<D, L>());
 			
-			addGenericTokenSpanFn(new FnComposite.FnCompositeTokenSpan());
-			addGenericTokenSpanFn(new FnCompositeAppend.FnCompositeAppendTokenSpan());
-			addGenericTokenSpanFn(new FnHead());
-			addGenericTokenSpanFn(new FnNGramContext());
-			addGenericTokenSpanFn(new FnNGramDocument());
-			addGenericTokenSpanFn(new FnNGramInside());
-			addGenericTokenSpanFn(new FnNGramSentence());
-			addGenericTokenSpanFn(new FnIdentity<TokenSpan>());
-			addGenericTokenSpanFn(new FnCoref());
-			addGenericTokenSpanFn(new FnDependencyRelation());
+			addGenericClassifyMethod(new MethodClassificationSupervisedModel<D, L>());
 			
-			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
-			addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
-			addGenericTokenSpanStrFn(new FnRelationStr.FnRelationStrTokenSpan());
-			addGenericTokenSpanStrFn(new FnPoS());
-			addGenericTokenSpanStrFn(new FnString());
-			addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
+			addGenericClassifyEval(new EvaluationClassificationConfusionData<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationConfusionMatrix<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasureAccuracy<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasurePrecision<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasureRecall<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasureF<D, L>());
+			
+			addConstructionCommand(new RuleSet<D, L>(null), new MakeInstanceFn<RuleSet<D, L>>() {
+					@SuppressWarnings("unchecked")
+					public RuleSet<D, L> make(String name, Context parentContext) {
+						return new RuleSet<D, L>((DatumContext<D, L>)parentContext); } });
+	
+			addConstructionCommand(new GridSearch<D, L>(null), new MakeInstanceFn<GridSearch<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public GridSearch<D, L> make(String name, Context parentContext) {
+					return new GridSearch<D, L>((DatumContext<D, L>)parentContext); } });
+			
+			addConstructionCommand(new FeatureSet<D, L>(null), new MakeInstanceFn<FeatureSet<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public FeatureSet<D, L> make(String name, Context parentContext) {
+					return new FeatureSet<D, L>((DatumContext<D, L>)parentContext); } });
+			
+			addConstructionCommand(new DataFeatureMatrix<D, L>(null), new MakeInstanceFn<DataFeatureMatrix<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public DataFeatureMatrix<D, L> make(String name, Context parentContext) {
+					return new DataFeatureMatrix<D, L>((DatumContext<D, L>)parentContext); } });
+			
+			addConstructionCommand(new TaskClassification<D, L>(null), new MakeInstanceFn<TaskClassification<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public TaskClassification<D, L> make(String name, Context parentContext) {
+					return new TaskClassification<D, L>((DatumContext<D, L>)parentContext); } });
+			
+			addCommand("RunClassifyMethodSearch", new Command<MethodClassification<D, L>>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public MethodClassification<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					ParameterSearchable fn = context.getMatchParameterSearchable(parameters.get("fn").getValue());
+					Search search = context.getMatchSearch(parameters.get("search").getValue());
 
-			addGenericStrFn(new FnComposite.FnCompositeStr());
-			addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
-			addGenericStrFn(new FnRelationStr.FnRelationStrStr());
-			addGenericStrFn(new FnAffix());
-			addGenericStrFn(new FnFilter());
-			addGenericStrFn(new FnGazetteerFilter());
-			addGenericStrFn(new FnGazetteer());
-			addGenericStrFn(new FnSplit());
-			addGenericStrFn(new FnIdentity<String>());
-			addGenericStrFn(new FnClean());
+					if (!search.run(fn))
+						return null;
+					
+					EvaluationClassification<D, L, ?> evaluation = (EvaluationClassification<D, L, ?>)search.getPositionFn(search.getBestPosition());
+					return evaluation.getMethod();
+				}
+			});
 		}
 		
 		public DataTools getDataTools() {
@@ -337,59 +371,57 @@ public abstract class Datum<L> {
 			return this.inverseLabelIndicators.get(name);
 		}
 		
-		public Feature<D, L> makeFeatureInstance(String genericFeatureName, Context<D, L> context) {
+		public DataSetBuilder<D, L> makeDataSetBuilder(String name, DatumContext<D, L> context) {
+			return this.dataSetBuilders.get(name).makeInstance(context);
+		}
+		
+		public DataSet<D, L> makeUnbuiltDataSet(String name, DatumContext<D, L> context) {
+			return new DataSet<D, L>(this.dataSetBuilders.get(name).makeInstance(context), this);
+		}
+		
+		public Feature<D, L> makeFeatureInstance(String genericFeatureName, DatumContext<D, L> context) {
 			return this.genericFeatures.get(genericFeatureName).makeInstance(context); 
 		}
 		
-		public SupervisedModel<D, L> makeModelInstance(String genericModelName, Context<D, L> context) {
+		public SupervisedModel<D, L> makeModelInstance(String genericModelName, DatumContext<D, L> context) {
 			return this.genericModels.get(genericModelName).makeInstance(context); 
 		}
 		
-		public SupervisedModelEvaluation<D, L> makeEvaluationInstance(String genericEvaluationName, Context<D, L> context) {
+		public SupervisedModelEvaluation<D, L> makeEvaluationInstance(String genericEvaluationName, DatumContext<D, L> context) {
 			if (!this.genericEvaluations.containsKey(genericEvaluationName))
 				return null;
 			return this.genericEvaluations.get(genericEvaluationName).makeInstance(context); 
+		}
+		
+		public EvaluationClassification<D, L, ?> makeClassifyEvalInstance(String genericClassifyEvalName, DatumContext<D, L> context) {
+			return this.genericClassifyEvals.get(genericClassifyEvalName).makeInstance(context); 
+		}
+		
+		public MethodClassification<D, L> makeClassifyMethodInstance(String genericClassifyMethodName, DatumContext<D, L> context) {
+			return this.genericClassifyMethods.get(genericClassifyMethodName).makeInstance(context); 
 		}
 		
 		public DatumStructureCollection<D, L> makeDatumStructureCollection(String genericCollectionName, DataSet<D, L> data) {
 			return this.genericDatumStructureCollections.get(genericCollectionName).makeInstance(data);
 		}
 		
-		public List<Fn<String, String>> makeStrFns(String genericStrFnName, Context<D, L> context) {
-			if (!this.genericStrFns.containsKey(genericStrFnName))
-				return new ArrayList<Fn<String, String>>();
-			List<Fn<String, String>> genericStrFns = this.genericStrFns.get(genericStrFnName);
-			List<Fn<String, String>> strFns = new ArrayList<Fn<String, String>>(genericStrFns.size());
-			
-			for (Fn<String, String> genericStrFn : genericStrFns)
-				strFns.add(genericStrFn.makeInstance(context));
-			
-			return strFns;
+		public boolean addCommand(String name, Command<?> command) {
+			if (!this.commands.containsKey(name))
+				this.commands.put(name, new ArrayList<Command<?>>());
+			this.commands.get(name).add(command);
+			return true;
 		}
 		
-		public List<Fn<TokenSpan, TokenSpan>> makeTokenSpanFns(String genericTokenSpanFnName, Context<D, L> context) {
-			if (!this.genericTokenSpanFns.containsKey(genericTokenSpanFnName))
-				return new ArrayList<Fn<TokenSpan, TokenSpan>>();
-			
-			List<Fn<TokenSpan, TokenSpan>> genericTokenSpanFns = this.genericTokenSpanFns.get(genericTokenSpanFnName);
-			List<Fn<TokenSpan, TokenSpan>> tokenSpanFns = new ArrayList<Fn<TokenSpan, TokenSpan>>(genericTokenSpanFns.size());
-			
-			for (Fn<TokenSpan, TokenSpan> genericTokenSpanFn : genericTokenSpanFns)
-				tokenSpanFns.add(genericTokenSpanFn.makeInstance(context));
-			
-			return tokenSpanFns;
-		}
-		
-		public List<Fn<TokenSpan, String>> makeTokenSpanStrFns(String genericTokenSpanStrFnName, Context<D, L> context) {
-			if (!this.genericTokenSpanStrFns.containsKey(genericTokenSpanStrFnName))
-				return new ArrayList<Fn<TokenSpan, String>>();
-			List<Fn<TokenSpan, String>> genericTokenSpanStrFns = this.genericTokenSpanStrFns.get(genericTokenSpanStrFnName);
-			List<Fn<TokenSpan, String>> tokenSpanStrFns = new ArrayList<Fn<TokenSpan, String>>(genericTokenSpanStrFns.size());
-			
-			for (Fn<TokenSpan, String> genericTokenSpanStrFn : genericTokenSpanStrFns)
-				tokenSpanStrFns.add(genericTokenSpanStrFn.makeInstance(context));
-			
-			return tokenSpanStrFns;
+		public <T extends CtxParsableFunction> boolean addConstructionCommand(CtxParsableFunction obj, MakeInstanceFn<T> makeInstanceFn) {
+			return addCommand(obj.getGenericName(), new Command<T>() {
+				@Override
+				public T run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					T instance = makeInstanceFn.make(obj.getGenericName(), context);
+					if (instance.fromParse(modifiers, referenceName, fnObj))
+						return instance;
+					return null;
+				}
+			});
 		}
 		
 		public boolean addTokenSpanExtractor(TokenSpanExtractor<D, L> tokenSpanExtractor) {
@@ -412,44 +444,68 @@ public abstract class Datum<L> {
 			return true;
 		}
 		
+		public boolean addGenericDataSetBuilder(DataSetBuilder<D, L> builder) {
+			this.dataSetBuilders.put(builder.getGenericName(), builder);
+
+			return addConstructionCommand(builder, new MakeInstanceFn<DataSet<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public DataSet<D, L> make(String name, Context parentContext) {
+					return makeUnbuiltDataSet(name, (DatumContext<D, L>)parentContext); } }
+			);
+		}
+		
 		public boolean addGenericFeature(Feature<D, L> feature) {
 			this.genericFeatures.put(feature.getGenericName(), feature);
-			return true;
+			
+			return addConstructionCommand(feature, new MakeInstanceFn<Feature<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public Feature<D, L> make(String name, Context parentContext) {
+					return makeFeatureInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
 		}
 		
 		public boolean addGenericModel(SupervisedModel<D, L> model) {
 			this.genericModels.put(model.getGenericName(), model);
-			return true;
+			
+			return addConstructionCommand(model, new MakeInstanceFn<SupervisedModel<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public SupervisedModel<D, L> make(String name, Context parentContext) {
+					return makeModelInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
 		}
 		
 		public boolean addGenericEvaluation(SupervisedModelEvaluation<D, L> evaluation) {
 			this.genericEvaluations.put(evaluation.getGenericName(), evaluation);
-			return true;
+			
+			return addConstructionCommand(evaluation, new MakeInstanceFn<SupervisedModelEvaluation<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public SupervisedModelEvaluation<D, L> make(String name, Context parentContext) {
+					return makeEvaluationInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
+		}
+		
+		public boolean addGenericClassifyEval(EvaluationClassification<D, L, ?> classifyEval) {
+			this.genericClassifyEvals.put(classifyEval.getGenericName(), classifyEval);
+			
+			return addConstructionCommand(classifyEval, new MakeInstanceFn<EvaluationClassification<D, L, ?>>() {
+				@SuppressWarnings("unchecked")
+				public EvaluationClassification<D, L, ?> make(String name, Context parentContext) {
+					return makeClassifyEvalInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
+		}
+		
+		public boolean addGenericClassifyMethod(MethodClassification<D, L> classifyMethod) {
+			this.genericClassifyMethods.put(classifyMethod.getGenericName(), classifyMethod);
+			
+			return addConstructionCommand(classifyMethod, new MakeInstanceFn<MethodClassification<D, L>>() {
+				@SuppressWarnings("unchecked")
+				public MethodClassification<D, L> make(String name, Context parentContext) {
+					return makeClassifyMethodInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
 		}
 		
 		public boolean addGenericDatumStructureCollection(DatumStructureCollection<D, L> datumStructureCollection) {
 			this.genericDatumStructureCollections.put(datumStructureCollection.getGenericName(), datumStructureCollection);
-			return true;
-		}
-		
-		public boolean addGenericStrFn(Fn<String, String> strFn) {
-			if (!this.genericStrFns.containsKey(strFn.getGenericName()))
-				this.genericStrFns.put(strFn.getGenericName(), new ArrayList<Fn<String, String>>());
-			this.genericStrFns.get(strFn.getGenericName()).add(strFn);
-			return true;
-		}
-		
-		public boolean addGenericTokenSpanFn(Fn<TokenSpan, TokenSpan> tokenSpanFn) {
-			if (!this.genericTokenSpanFns.containsKey(tokenSpanFn.getGenericName()))
-				this.genericTokenSpanFns.put(tokenSpanFn.getGenericName(), new ArrayList<Fn<TokenSpan, TokenSpan>>());
-			this.genericTokenSpanFns.get(tokenSpanFn.getGenericName()).add(tokenSpanFn);
-			return true;
-		}
-		
-		public boolean addGenericTokenSpanStrFn(Fn<TokenSpan, String> tokenSpanStrFn) {
-			if (!this.genericTokenSpanStrFns.containsKey(tokenSpanStrFn.getGenericName()))
-				this.genericTokenSpanStrFns.put(tokenSpanStrFn.getGenericName(), new ArrayList<Fn<TokenSpan, String>>());
-			this.genericTokenSpanStrFns.get(tokenSpanStrFn.getGenericName()).add(tokenSpanStrFn);
 			return true;
 		}
 		
@@ -469,6 +525,20 @@ public abstract class Datum<L> {
 		
 		public <T extends Datum<Boolean>> T makeBinaryDatum(D datum, String labelIndicator) {
 			return makeBinaryDatum(datum, this.getLabelIndicator(labelIndicator));
+		}
+		
+		@SuppressWarnings("unchecked")
+		public <T> T runCommand(Context context, List<String> modifiers, String referenceName, Obj.Function fnObj) {
+			if (this.commands.containsKey(fnObj.getName())) {
+				for (Command<?> command : this.commands.get(fnObj.getName())) {
+					Object obj = command.run(context, modifiers, referenceName, fnObj);
+					if (obj != null) {
+						return (T)obj;
+					}
+				}
+			}
+			
+			return this.dataTools.runCommand(context, modifiers, referenceName, fnObj);
 		}
 		
 		public abstract L labelFromString(String str);

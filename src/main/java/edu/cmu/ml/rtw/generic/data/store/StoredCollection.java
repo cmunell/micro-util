@@ -42,5 +42,5 @@ public abstract class StoredCollection<I, S> implements Iterable<I> {
 	public abstract List<I> getItemsByIndex(String indexField, Object indexValue);
 	public abstract List<I> getItemsByIndices(List<String> indexFields, List<Object> indexValues);
 	public abstract boolean addItem(I item);
-	public abstract boolean addItems(List<I> items);
+	public abstract boolean addItems(List<I> items);	
 }

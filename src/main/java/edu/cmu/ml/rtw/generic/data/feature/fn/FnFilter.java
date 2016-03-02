@@ -39,13 +39,13 @@ public class FnFilter extends Fn<String, String> {
 	private Type type = Type.SUFFIX;
 	private Fn<String, String> filterTransform = null;
 	
-	private Context<?, ?> context;
+	private Context context;
 
 	public FnFilter() {
 		
 	}
 	
-	public FnFilter(Context<?, ?> context) {
+	public FnFilter(Context context) {
 		this.context = context;
 	}
 	
@@ -73,7 +73,7 @@ public class FnFilter extends Fn<String, String> {
 		else if (parameter.equals("filter"))
 			this.filter = this.context.getMatchValue(parameterValue);
 		else if (parameter.equals("filterTransform"))
-			this.filterTransform = this.context.getMatchOrConstructStrFn(parameterValue); 
+			this.filterTransform = this.context.getMatchOrRunCommandStrFn(parameterValue); 
 		else
 			return false;
 		return true;
@@ -123,7 +123,7 @@ public class FnFilter extends Fn<String, String> {
 	}
 
 	@Override
-	public Fn<String, String> makeInstance(Context<?, ?> context) {
+	public Fn<String, String> makeInstance(Context context) {
 		return new FnFilter(context);
 	}
 

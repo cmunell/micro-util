@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.cmu.ml.rtw.generic.cluster.Clusterer;
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -60,7 +60,7 @@ public abstract class FeatureNGram<D extends Datum<L>, L> extends FeatureGram<D,
 		
 	}
 	
-	public FeatureNGram(Context<D, L> context) {
+	public FeatureNGram(DatumContext<D, L> context) {
 		super(context);
 		
 		this.n = 1;

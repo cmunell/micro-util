@@ -4,12 +4,21 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public abstract class DocumentNLPMutable extends DocumentNLP {
 	public DocumentNLPMutable(DataTools dataTools) {
 		super(dataTools);
+	}
+	
+	public DocumentNLPMutable(DataTools dataTools, String name) {
+		super(dataTools, name);
+	}
+	
+	public DocumentNLPMutable(DataTools dataTools, String name, String storageName, String collectionName) {
+		super(dataTools, name, storageName, collectionName);
 	}
 
 	public boolean setDocumentAnnotation(AnnotationTypeNLP<?> annotationType, Pair<?, Double> annotation) {
@@ -29,6 +38,7 @@ public abstract class DocumentNLPMutable extends DocumentNLP {
 	}
 
 	public abstract DocumentNLPMutable makeInstance(String name);
+	public abstract DocumentNLPMutable makeInstance(StoreReference storeReference);
 	public abstract boolean setDocumentAnnotation(String annotator, AnnotationTypeNLP<?> annotationType, Pair<?, Double> annotation);
 	public abstract boolean setSentenceAnnotation(String annotator, AnnotationTypeNLP<?> annotationType, Map<Integer, ?> annotation);
 	public abstract boolean setTokenSpanAnnotation(String annotator, AnnotationTypeNLP<?> annotationType, List<Triple<TokenSpan, ?, Double>> annotation);

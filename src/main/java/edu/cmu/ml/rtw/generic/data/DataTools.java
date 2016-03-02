@@ -1,11 +1,23 @@
 package edu.cmu.ml.rtw.generic.data;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 
+import edu.cmu.ml.rtw.generic.opt.search.Search;
+import edu.cmu.ml.rtw.generic.opt.search.SearchGrid;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
+import edu.cmu.ml.rtw.generic.parse.AssignmentList;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.parse.Obj.Function;
+import edu.cmu.ml.rtw.generic.util.NamedIterable;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.Properties;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 import edu.cmu.ml.rtw.generic.util.Timer;
 import edu.cmu.ml.rtw.generic.cluster.Clusterer;
@@ -21,6 +33,27 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPMicro;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCoref;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnDependencyRelation;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnHead;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnIdentity;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramContext;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
 
 /**
  * 
@@ -105,6 +138,14 @@ public class DataTools {
 		}
 	}
 	
+	public static interface Command<T> {
+		T run(Context context, List<String> modifiers, String referenceName, Obj.Function fnObj);
+	}
+	
+	public static interface MakeInstanceFn<T> {
+		T make(String name, Context context);
+	}
+	
 	protected Map<String, Gazetteer> gazetteers;
 	protected Map<String, DataTools.StringTransform> cleanFns;
 	protected Map<String, DataTools.StringCollectionTransform> collectionFns;
@@ -115,7 +156,20 @@ public class DataTools {
 	protected Map<String, AnnotationTypeNLP<?>> annotationTypesNLP;
 	protected Map<String, SerializerDocument<?, ?>> documentSerializers;
 	
-	protected long randomSeed;
+	protected Map<String, List<Fn<TokenSpan, TokenSpan>>> genericTokenSpanFns;
+	protected Map<String, List<Fn<TokenSpan, String>>> genericTokenSpanStrFns;
+	protected Map<String, List<Fn<String, String>>> genericStrFns;
+	
+	protected Map<String, Search> genericSearches;
+	
+	protected Map<String, List<Command<?>>> commands;
+	
+	protected Map<String, Context> genericContexts;
+	
+	protected Properties properties;
+	protected StoredItemSetManager storedItemSetManager;
+	
+	protected long randomSeed = 1;
 	protected Random globalRandom;
 	protected OutputWriter outputWriter;
 	protected Timer timer;
@@ -125,6 +179,10 @@ public class DataTools {
 	}
 	
 	public DataTools(OutputWriter outputWriter) {
+		this(outputWriter, null);
+	}
+	
+	public DataTools(OutputWriter outputWriter, Properties properties) {
 		this.gazetteers = new HashMap<String, Gazetteer>();
 		this.cleanFns = new HashMap<String, DataTools.StringTransform>();
 		this.collectionFns = new HashMap<String, DataTools.StringCollectionTransform>();
@@ -133,6 +191,18 @@ public class DataTools {
 		this.paths = new HashMap<String, Path>();
 		this.annotationTypesNLP = new HashMap<String, AnnotationTypeNLP<?>>();
 		this.documentSerializers = new HashMap<String, SerializerDocument<?, ?>>();
+		
+		this.genericTokenSpanFns = new HashMap<String, List<Fn<TokenSpan, TokenSpan>>>();
+		this.genericTokenSpanStrFns = new HashMap<String, List<Fn<TokenSpan, String>>>();
+		this.genericStrFns = new HashMap<String, List<Fn<String, String>>>();
+		
+		this.genericSearches = new HashMap<String, Search>();
+		
+		this.commands = new HashMap<String, List<Command<?>>>();
+		
+		this.genericContexts = new HashMap<String, Context>();
+		
+		this.properties = properties;
 		
 		this.outputWriter = outputWriter;
 		
@@ -161,7 +231,7 @@ public class DataTools {
 		this.collectionFns.put("None", null);
 		this.stringClusterers.put("None", null);
 		this.tokenSpanClusterers.put("None", null);
-		this.globalRandom = new Random();
+		this.globalRandom = new Random(this.randomSeed);
 		this.timer = new Timer();
 		
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.ORIGINAL_TEXT);
@@ -179,6 +249,145 @@ public class DataTools {
 		this.addDocumentSerializer(new SerializerDocumentNLPHTML(this));
 		this.addDocumentSerializer(new SerializerDocumentNLPJSONLegacy(this));
 		this.addDocumentSerializer(new SerializerDocumentNLPMicro(this));
+		
+		this.addGenericTokenSpanFn(new FnComposite.FnCompositeTokenSpan());
+		this.addGenericTokenSpanFn(new FnCompositeAppend.FnCompositeAppendTokenSpan());
+		this.addGenericTokenSpanFn(new FnHead());
+		this.addGenericTokenSpanFn(new FnNGramContext());
+		this.addGenericTokenSpanFn(new FnNGramDocument());
+		this.addGenericTokenSpanFn(new FnNGramInside());
+		this.addGenericTokenSpanFn(new FnNGramSentence());
+		this.addGenericTokenSpanFn(new FnIdentity<TokenSpan>());
+		this.addGenericTokenSpanFn(new FnCoref());
+		this.addGenericTokenSpanFn(new FnDependencyRelation());
+		
+		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
+		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
+		this.addGenericTokenSpanStrFn(new FnRelationStr.FnRelationStrTokenSpan());
+		this.addGenericTokenSpanStrFn(new FnPoS());
+		this.addGenericTokenSpanStrFn(new FnString());
+		this.addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
+
+		this.addGenericStrFn(new FnComposite.FnCompositeStr());
+		this.addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
+		this.addGenericStrFn(new FnRelationStr.FnRelationStrStr());
+		this.addGenericStrFn(new FnAffix());
+		this.addGenericStrFn(new FnFilter());
+		this.addGenericStrFn(new FnGazetteerFilter());
+		this.addGenericStrFn(new FnGazetteer());
+		this.addGenericStrFn(new FnSplit());
+		this.addGenericStrFn(new FnIdentity<String>());
+		this.addGenericStrFn(new FnClean());
+		
+		this.addGenericSearch(new SearchGrid());
+		
+		this.addCommand("SetRandomSeed", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				int seed = 0;
+				if (fnObj.getParameters().contains("seed"))
+					seed = Integer.valueOf(context.getMatchValue(fnObj.getParameters().get("seed").getValue()));
+				else
+					seed = context.getRandomSeed();
+					
+				if (!context.getDataTools().setRandomSeed(seed))
+					return null;
+				else
+					return String.valueOf(seed);
+			}
+		});
+		
+		this.addCommand("Debug", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				File outputFile = null;
+				if (fnObj.getParameters().contains("output"))
+					outputFile = new File(DataTools.this.properties.getDebugDirectory(),
+						context.getMatchValue(fnObj.getParameters().get("output").getValue()));
+				
+				return String.valueOf( 
+					DataTools.this.outputWriter.setDebugFile(outputFile, false));
+			}
+		});
+		
+		this.addCommand("OutputParses", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				String storageName = context.getMatchValue(parameters.get("storage").getValue());
+				String collectionName = context.getMatchValue(parameters.get("collection").getValue());
+				String id = context.getMatchValue(parameters.get("id").getValue());
+				
+				Obj.Array objRefs = (Obj.Array)parameters.get("fns").getValue();
+				List<String> objTypes = context.getMatchArray(parameters.get("types").getValue());
+				List<String> objParams = (parameters.contains("params")) ?
+											context.getMatchArray(parameters.get("params").getValue())
+										  : null;
+				
+				SerializerAssignmentListString serializer = new SerializerAssignmentListString(DataTools.this);
+				AssignmentList list = new AssignmentList();
+				for (int i = 0; i < objRefs.size(); i++) {
+					List<?> objs = context.getAssignedMatches(objRefs.get(i));
+					CtxParsableFunction ctxObj = (CtxParsableFunction)objs.get(0);
+					Obj obj = null;
+					if (objParams != null && objParams.get(i).length() > 0) {
+						obj = ctxObj.getParameterValue(objParams.get(i));
+					} else {
+						obj = ctxObj.toParse();
+					}
+					
+					list.add(Assignment.assignmentTyped(null, objTypes.get(i), objRefs.getStr(i), obj));
+				}
+				
+				return String.valueOf(
+					DataTools.this.getStoredItemSetManager()
+						.getItemSet(storageName, collectionName, true, serializer)
+						.addItem(new NamedIterable<AssignmentList, Assignment>(id, list)
+					));
+			}
+		});
+		
+		this.addCommand("OutputStrings", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				String storageName = context.getMatchValue(parameters.get("storage").getValue());
+				String collectionName = context.getMatchValue(parameters.get("collection").getValue());
+				String id = context.getMatchValue(parameters.get("id").getValue());
+				
+				Obj.Array objRefs = (Obj.Array)parameters.get("fns").getValue();
+				
+				SerializerNamedIterableToString serializer = new SerializerNamedIterableToString();
+				List<Object> list = new ArrayList<Object>();
+				for (int i = 0; i < objRefs.size(); i++) {
+					List<?> objs = context.getAssignedMatches(objRefs.get(i));
+					CtxParsableFunction ctxObj = (CtxParsableFunction)objs.get(0);
+					list.add(ctxObj);
+				}
+				
+				return String.valueOf(
+					DataTools.this.getStoredItemSetManager()
+						.getItemSet(storageName, collectionName, true, serializer)
+						.addItem(new NamedIterable<List<Object>, Object>(id, list)
+					));
+			}
+		});
+	}
+	
+	public StoredItemSetManager getStoredItemSetManager() {
+		if (this.storedItemSetManager == null) {	
+			Map<String, Serializer<?, ?>> serializers = new HashMap<String, Serializer<?, ?>>();
+			serializers.putAll(this.documentSerializers);
+			
+			SerializerAssignmentListString aListSerializer = new SerializerAssignmentListString(this);
+			serializers.put(aListSerializer.getName(), aListSerializer);
+			SerializerNamedIterableToString nIterSerializer = new SerializerNamedIterableToString();
+			serializers.put(nIterSerializer.getName(), nIterSerializer);
+			
+			this.storedItemSetManager = new StoredItemSetManager(this.properties, serializers);
+		}
+		
+		return this.storedItemSetManager;
 	}
 	
 	public Gazetteer getGazetteer(String name) {
@@ -229,11 +438,19 @@ public class DataTools {
 		return this.outputWriter;
 	}
 	
+	public Random getGlobalRandom() {
+		return getGlobalRandom(this.randomSeed);
+	}
+	
 	/**
 	 * @return a Random object instance that was instantiated when the DataTools
 	 * object was instantiated. 
 	 */
-	public Random getGlobalRandom() {
+	public Random getGlobalRandom(long seed) {
+		if (this.randomSeed != seed) {
+			this.randomSeed = seed;
+			this.globalRandom = new Random(seed);
+		}
 		return this.globalRandom;
 	}
 	
@@ -246,12 +463,65 @@ public class DataTools {
 	 * the behavior of the program.
 	 * 
 	 */
+	public Random makeLocalRandom(long seed) {
+		return new Random(seed); 
+	}
+	
 	public Random makeLocalRandom() {
 		return new Random(this.randomSeed); 
 	}
 	
 	public Timer getTimer() {
 		return this.timer;
+	}
+	
+	public List<Fn<String, String>> makeStrFns(String genericStrFnName, Context context) {
+		if (!this.genericStrFns.containsKey(genericStrFnName))
+			return new ArrayList<Fn<String, String>>();
+		List<Fn<String, String>> genericStrFns = this.genericStrFns.get(genericStrFnName);
+		List<Fn<String, String>> strFns = new ArrayList<Fn<String, String>>(genericStrFns.size());
+		
+		for (Fn<String, String> genericStrFn : genericStrFns)
+			strFns.add(genericStrFn.makeInstance(context));
+		
+		return strFns;
+	}
+	
+	public List<Fn<TokenSpan, TokenSpan>> makeTokenSpanFns(String genericTokenSpanFnName, Context context) {
+		if (!this.genericTokenSpanFns.containsKey(genericTokenSpanFnName))
+			return new ArrayList<Fn<TokenSpan, TokenSpan>>();
+		
+		List<Fn<TokenSpan, TokenSpan>> genericTokenSpanFns = this.genericTokenSpanFns.get(genericTokenSpanFnName);
+		List<Fn<TokenSpan, TokenSpan>> tokenSpanFns = new ArrayList<Fn<TokenSpan, TokenSpan>>(genericTokenSpanFns.size());
+		
+		for (Fn<TokenSpan, TokenSpan> genericTokenSpanFn : genericTokenSpanFns)
+			tokenSpanFns.add(genericTokenSpanFn.makeInstance(context));
+		
+		return tokenSpanFns;
+	}
+	
+	public List<Fn<TokenSpan, String>> makeTokenSpanStrFns(String genericTokenSpanStrFnName, Context context) {
+		if (!this.genericTokenSpanStrFns.containsKey(genericTokenSpanStrFnName))
+			return new ArrayList<Fn<TokenSpan, String>>();
+		List<Fn<TokenSpan, String>> genericTokenSpanStrFns = this.genericTokenSpanStrFns.get(genericTokenSpanStrFnName);
+		List<Fn<TokenSpan, String>> tokenSpanStrFns = new ArrayList<Fn<TokenSpan, String>>(genericTokenSpanStrFns.size());
+		
+		for (Fn<TokenSpan, String> genericTokenSpanStrFn : genericTokenSpanStrFns)
+			tokenSpanStrFns.add(genericTokenSpanStrFn.makeInstance(context));
+		
+		return tokenSpanStrFns;
+	}
+	
+	public Context makeContext(String genericContextName, Context parentContext) {
+		if (!this.genericContexts.containsKey(genericContextName))
+			return null;
+		return this.genericContexts.get(genericContextName).makeInstance(parentContext);
+	}
+	
+	public Search makeSearch(String genericSearchName, Context context) {
+		if (!this.genericSearches.containsKey(genericSearchName))
+			return null;
+		return this.genericSearches.get(genericSearchName).makeInstance(context);
 	}
 	
 	public boolean addGazetteer(Gazetteer gazetteer) {
@@ -315,16 +585,128 @@ public class DataTools {
 		return true;
 	}
 	
+	public boolean addGenericStrFn(Fn<String, String> strFn) {
+		if (!this.genericStrFns.containsKey(strFn.getGenericName()))
+			this.genericStrFns.put(strFn.getGenericName(), new ArrayList<Fn<String, String>>());
+		this.genericStrFns.get(strFn.getGenericName()).add(strFn);
+		
+		return addCommand(strFn.getGenericName(), new Command<Fn<String, String>>() {
+			@Override
+			public Fn<String, String> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				List<Fn<String, String>> strFns = makeStrFns(strFn.getGenericName(), context);
+				for (Fn<String, String> strFn : strFns) {
+					if (strFn.fromParse(modifiers, referenceName, fnObj)) {
+						return strFn;
+					}
+				}
+				
+				return null;
+			}
+		});
+	}
+	
+	public boolean addGenericTokenSpanFn(Fn<TokenSpan, TokenSpan> tokenSpanFn) {
+		if (!this.genericTokenSpanFns.containsKey(tokenSpanFn.getGenericName()))
+			this.genericTokenSpanFns.put(tokenSpanFn.getGenericName(), new ArrayList<Fn<TokenSpan, TokenSpan>>());
+		this.genericTokenSpanFns.get(tokenSpanFn.getGenericName()).add(tokenSpanFn);
+		
+		return addCommand(tokenSpanFn.getGenericName(), new Command<Fn<TokenSpan, TokenSpan>>() {
+			@Override
+			public Fn<TokenSpan, TokenSpan> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				List<Fn<TokenSpan, TokenSpan>> tokenSpanFns = makeTokenSpanFns(tokenSpanFn.getGenericName(), context);
+				for (Fn<TokenSpan, TokenSpan> tokenSpanFn : tokenSpanFns) {
+					if (tokenSpanFn.fromParse(modifiers, referenceName, fnObj)) {
+						return tokenSpanFn;
+					}
+				}
+				
+				return null;
+			}
+		});
+	}
+	
+	public boolean addGenericTokenSpanStrFn(Fn<TokenSpan, String> tokenSpanStrFn) {
+		if (!this.genericTokenSpanStrFns.containsKey(tokenSpanStrFn.getGenericName()))
+			this.genericTokenSpanStrFns.put(tokenSpanStrFn.getGenericName(), new ArrayList<Fn<TokenSpan, String>>());
+		this.genericTokenSpanStrFns.get(tokenSpanStrFn.getGenericName()).add(tokenSpanStrFn);
+		
+		return addCommand(tokenSpanStrFn.getGenericName(), new Command<Fn<TokenSpan, String>>() {
+			@Override
+			public Fn<TokenSpan, String> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				List<Fn<TokenSpan, String>> tokenSpanStrFns = makeTokenSpanStrFns(tokenSpanStrFn.getGenericName(), context);
+				for (Fn<TokenSpan, String> tokenSpanStrFn : tokenSpanStrFns) {
+					if (tokenSpanStrFn.fromParse(modifiers, referenceName, fnObj)) {
+						return tokenSpanStrFn;
+					}
+				}
+				return null;
+			}
+		});
+	}
+	
+	public boolean addGenericContext(Context context) {
+		this.genericContexts.put(context.getGenericName(), context);
+		
+		return addConstructionCommand(context, new MakeInstanceFn<Context>() {
+			public Context make(String name, Context parentContext) {
+				return makeContext(name, parentContext); } }
+		);
+	}
+	
+	public boolean addGenericSearch(Search search) {
+		this.genericSearches.put(search.getGenericName(), search);
+		
+		return addConstructionCommand(search, new MakeInstanceFn<Search>() {
+			public Search make(String name, Context context) {
+				return makeSearch(name, context); } }
+		);
+	}
+	
+	public boolean addCommand(String name, Command<?> command) {
+		if (!this.commands.containsKey(name))
+			this.commands.put(name, new ArrayList<Command<?>>());
+		this.commands.get(name).add(command);
+		return true;
+	}
+	
+	public <T extends CtxParsableFunction> boolean addConstructionCommand(CtxParsableFunction obj, MakeInstanceFn<T> makeInstanceFn) {
+		return addCommand(obj.getGenericName(), new Command<T>() {
+			@Override
+			public T run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				T instance = makeInstanceFn.make(obj.getGenericName(), context);
+				if (instance.fromParse(modifiers, referenceName, fnObj))
+					return instance;
+				return null;
+			}
+		});
+	}
+	
 	public boolean setRandomSeed(long seed) {
 		this.randomSeed = seed;
 		this.globalRandom.setSeed(this.randomSeed);
 		return true;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public <T> T runCommand(Context context, List<String> modifiers, String referenceName, Obj.Function fnObj) {
+		for (Command<?> command : this.commands.get(fnObj.getName())) {
+			Object obj = command.run(context, modifiers, referenceName, fnObj);
+			if (obj != null) {
+				return (T)obj;
+			}
+		}
+		
+		return null;
+	}
+	
+	public Properties getProperties() {
+		return this.properties;
+	}
+	
 	public DataTools makeInstance(OutputWriter outputWriter) {
 		DataTools instance = makeInstance();
 		instance.outputWriter = outputWriter;
-		instance.setRandomSeed(getGlobalRandom().nextLong());
+		instance.setRandomSeed(getGlobalRandom(this.randomSeed).nextLong());
 		return instance;
 	}
 	

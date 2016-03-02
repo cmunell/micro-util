@@ -18,6 +18,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.Annotation;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.micro.DocumentAnnotation;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -135,9 +136,13 @@ public class SerializerDocumentNLPMicro extends SerializerDocument<DocumentNLPMu
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public DocumentNLPMutable deserialize(DocumentAnnotation documentAnnotation) {
-		DocumentNLPMutable document = this.genericDocument.makeInstance(documentAnnotation.getDocumentId());
-
+	public DocumentNLPMutable deserialize(DocumentAnnotation documentAnnotation, StoreReference storeReference) {
+		DocumentNLPMutable document = null;
+		if (storeReference != null)
+			document = this.genericDocument.makeInstance(storeReference);
+		else
+			document = this.genericDocument.makeInstance(documentAnnotation.getDocumentId());
+		
 		Collection<AnnotationType<?>> annotationTypes = null;
 		if (this.annotationTypes == null) {
 			annotationTypes = new ArrayList<AnnotationType<?>>();
@@ -316,8 +321,8 @@ public class SerializerDocumentNLPMicro extends SerializerDocument<DocumentNLPMu
 	}
 
 	@Override
-	public DocumentNLPMutable deserializeFromString(String str) {
-		return deserialize(DocumentAnnotation.fromString(str).get(0));
+	public DocumentNLPMutable deserializeFromString(String str, StoreReference storeReference) {
+		return deserialize(DocumentAnnotation.fromString(str).get(0), storeReference);
 	}
 
 	@Override

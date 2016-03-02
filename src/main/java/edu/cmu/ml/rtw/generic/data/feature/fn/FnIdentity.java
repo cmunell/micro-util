@@ -21,7 +21,7 @@ public class FnIdentity<S> extends Fn<S, S> {
 		
 	}
 	
-	public FnIdentity(Context<?, ?> context) {
+	public FnIdentity(Context context) {
 		
 	}
 	
@@ -50,7 +50,7 @@ public class FnIdentity<S> extends Fn<S, S> {
 
 	@Override
 	public Fn<S, S> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnIdentity<S>(context);
 	}
 

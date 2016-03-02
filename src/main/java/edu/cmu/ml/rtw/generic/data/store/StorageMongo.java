@@ -23,11 +23,18 @@ public class StorageMongo implements Storage<StoredCollectionMongo<?>, Document>
 	private Map<String, Serializer<?, ?>> serializers;
 	private MongoClient client;
 	private MongoDatabase database;
+	private String name;
 	
-	public StorageMongo(String host, String database, Map<String, Serializer<?, ?>> serializers) {
+	public StorageMongo(String name, String host, String database, Map<String, Serializer<?, ?>> serializers) {
 		this.client = new MongoClient(host);
 		this.database = this.client.getDatabase(database);
 		this.serializers = serializers;
+		this.name = name;
+	}
+	
+	@Override
+	public String getName() {
+		return this.name;
 	}
 
 	@Override

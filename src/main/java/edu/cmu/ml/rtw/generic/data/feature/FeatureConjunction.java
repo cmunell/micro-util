@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
@@ -39,21 +40,17 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	private String[] featureReferences;
 	private String[] parameterNames = {"minFeatureOccurrence", "featureReferences"};
 	
-	private FeaturizedDataSet<D, L> dataSet; // Has other initialized features to be conjoined
-	
 	public FeatureConjunction() {
 		
 	}
 	
-	public FeatureConjunction(Context<D, L> context) {
+	public FeatureConjunction(DatumContext<D, L> context) {
 		this.context = context;
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
-		this.dataSet = dataSet;
-
+	public boolean init(DataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
 		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
 			@Override
@@ -63,7 +60,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 					counter.incrementCount(key);
 				return true;
 			}
-		});
+		}, this.context.getMaxThreads());
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
@@ -86,7 +83,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		Map<String, Double> conjunction = new HashMap<String, Double>();
 		conjunction.put("", 1.0);
 		for (int i = 0; i < this.featureReferences.length; i++) {
-			Feature<D, L> feature = this.dataSet.getFeatureByReferenceName(this.featureReferences[i]);
+			Feature<D, L> feature = this.context.getMatchFeature(Obj.curlyBracedValue(this.featureReferences[i])); // FIXME These should be stored as an Obj.Array
 			Map<Integer, Double> values = feature.computeVector(datum, 0, new HashMap<Integer, Double>());
 			Map<Integer, String> vocab = feature.getVocabularyForIndices(values.keySet());
 			Map<String, Double> nextConjunction = new HashMap<String, Double>();
@@ -161,13 +158,13 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureConjunction<D, L>(context);
 	}
 
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		FeatureConjunction<T, Boolean> binaryFeatureConj = (FeatureConjunction<T, Boolean>)binaryFeature;
 		binaryFeatureConj.vocabulary = this.vocabulary;

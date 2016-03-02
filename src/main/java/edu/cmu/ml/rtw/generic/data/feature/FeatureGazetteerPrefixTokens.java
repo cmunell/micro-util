@@ -3,9 +3,9 @@ package edu.cmu.ml.rtw.generic.data.feature;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
@@ -51,7 +51,7 @@ public class FeatureGazetteerPrefixTokens<D extends Datum<L>, L> extends Feature
 		
 	}
 	
-	public FeatureGazetteerPrefixTokens(Context<D, L> context) {
+	public FeatureGazetteerPrefixTokens(DatumContext<D, L> context) {
 		super(context);
 		
 		this.extremumType = FeatureGazetteer.ExtremumType.Maximum;
@@ -84,7 +84,7 @@ public class FeatureGazetteerPrefixTokens<D extends Datum<L>, L> extends Feature
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureGazetteerPrefixTokens<D, L>(context);
 	}
 

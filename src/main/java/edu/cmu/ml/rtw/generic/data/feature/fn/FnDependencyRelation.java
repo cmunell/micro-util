@@ -34,7 +34,7 @@ public class FnDependencyRelation extends Fn<TokenSpan, TokenSpan> {
 		PARENTS_AND_CHILDREN
 	}
 	
-	private Context<?, ?> context;
+	private Context context;
 	
 	private String[] parameterNames = { "mode" };
 	private Mode mode = Mode.PARENTS_AND_CHILDREN;
@@ -43,7 +43,7 @@ public class FnDependencyRelation extends Fn<TokenSpan, TokenSpan> {
 		
 	}
 	
-	public FnDependencyRelation(Context<?, ?> context) {
+	public FnDependencyRelation(Context context) {
 		this.context = context;
 	}
 	
@@ -95,7 +95,7 @@ public class FnDependencyRelation extends Fn<TokenSpan, TokenSpan> {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnDependencyRelation(context);
 	}
 

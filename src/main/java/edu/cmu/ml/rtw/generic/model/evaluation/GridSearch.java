@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
@@ -42,9 +42,9 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		private Map<Integer, List<GridDimension>> subDimensions = null;
 		private Integer parentValueIndex = null;
 		
-		private Context<?, ?> context;
+		private DatumContext<?, ?> context;
 		
-		public GridDimension(Context<?, ?> context) {
+		public GridDimension(DatumContext<?, ?> context) {
 			this.context = context;
 			this.subDimensions = new HashMap<Integer, List<GridDimension>>();
 		}
@@ -149,9 +149,9 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 	 */
 	public class GridPosition {
 		protected TreeMap<String, Obj> coordinates;
-		protected Context<?, ?> context;
+		protected DatumContext<?, ?> context;
 		
-		public GridPosition(Context<?, ?> context) {
+		public GridPosition(DatumContext<?, ?> context) {
 			this.coordinates = new TreeMap<String, Obj>();
 			this.context = context;
 		}
@@ -256,7 +256,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		private double positionValue;
 		private ValidationTrainTest<D, L> validation;
 		
-		public EvaluatedGridPosition(Context<?, ?> context, GridPosition position, double positionValue, ValidationTrainTest<D, L> validation) {
+		public EvaluatedGridPosition(DatumContext<?, ?> context, GridPosition position, double positionValue, ValidationTrainTest<D, L> validation) {
 			super(context);
 			this.coordinates = position.coordinates;
 			this.positionValue = positionValue;
@@ -273,7 +273,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		}
 	}
 	
-	private Context<D, L> context;
+	private DatumContext<D, L> context;
 	private Obj modelObj;
 	private Obj evaluationObj;
 	
@@ -286,13 +286,13 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 	
 	private DecimalFormat cleanDouble;
 	
-	public GridSearch(Context<D, L> context) {
+	public GridSearch(DatumContext<D, L> context) {
 		this.context = context;
 		this.dimensions = new ArrayList<GridDimension>();
 		this.cleanDouble = new DecimalFormat("0.00000");
 	}
 	
-	public Context<D, L> getContext() {
+	public DatumContext<D, L> getContext() {
 		return this.context;
 	}
 	
@@ -427,7 +427,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			
 		}
 		
-		private EvaluatedGridPosition evaluatePosition(Context<D, L> context, GridPosition position, boolean skipTraining, SupervisedModel<D, L> positionModel, SupervisedModelEvaluation<D, L> positionEvaluation) {
+		private EvaluatedGridPosition evaluatePosition(DatumContext<D, L> context, GridPosition position, boolean skipTraining, SupervisedModel<D, L> positionModel, SupervisedModelEvaluation<D, L> positionEvaluation) {
 			OutputWriter output = trainData.getDatumTools().getDataTools().getOutputWriter();
 			
 			output.debugWriteln("Grid search evaluating " + GridSearch.this.evaluationObj.toString() + " of model (" + GridSearch.this.referenceName + " " + position.toString() + ")");
@@ -449,9 +449,10 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			return new EvaluatedGridPosition(context, position, computedEvaluation, validation);
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Boolean apply(GridSearch<D, L>.GridPosition position) {
-			Context<D, L> context = GridSearch.this.context.clone(false);
+			DatumContext<D, L> context = (DatumContext<D, L>)GridSearch.this.context.clone(false);
 			
 			/* Why is this here? FIXME Remove it for (Entry<String, Obj> entry : position.getCoordinates().entrySet())
 				context.addValue(entry.getKey(), context.getMatchValue(entry.getValue()));
@@ -514,9 +515,9 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				if (!dimension.fromParse(assignment.getModifiers(), assignment.getName(), assignment.getValue()))
 					return false;
 				this.dimensions.add(dimension);
-			} else if (assignment.getType().equals(Context.MODEL_STR)) {
+			} else if (assignment.getType().equals(DatumContext.ObjectType.MODEL.toString())) {
 				this.modelObj = assignment.getValue();
-			} else if (assignment.getType().equals(Context.EVALUATION_STR)) {
+			} else if (assignment.getType().equals(DatumContext.ObjectType.EVALUATION.toString())) {
 				this.evaluationObj = assignment.getValue();
 			}
 		}
@@ -534,13 +535,13 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			);
 		}
 		
-		assignmentList.add(Assignment.assignmentTyped(null, Context.MODEL_STR, Context.MODEL_STR, this.modelObj));
-		assignmentList.add(Assignment.assignmentTyped(null, Context.EVALUATION_STR, Context.EVALUATION_STR, this.evaluationObj));
+		assignmentList.add(Assignment.assignmentTyped(null, DatumContext.ObjectType.MODEL.toString(), DatumContext.ObjectType.MODEL.toString(), this.modelObj));
+		assignmentList.add(Assignment.assignmentTyped(null, DatumContext.ObjectType.EVALUATION.toString(), DatumContext.ObjectType.EVALUATION.toString(), this.evaluationObj));
 		
 		return assignmentList;
 	}
 	
-	public <T extends Datum<Boolean>> GridSearch<T, Boolean> makeBinary(Context<T, Boolean> binaryContext, LabelIndicator<L> labelIndicator) {
+	public <T extends Datum<Boolean>> GridSearch<T, Boolean> makeBinary(DatumContext<T, Boolean> binaryContext, LabelIndicator<L> labelIndicator) {
 		GridSearch<T, Boolean> gridSearch = new GridSearch<T, Boolean>(binaryContext);
 		
 		gridSearch.referenceName = this.referenceName;

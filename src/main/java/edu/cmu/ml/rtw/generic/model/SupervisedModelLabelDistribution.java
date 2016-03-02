@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -31,19 +31,19 @@ public class SupervisedModelLabelDistribution<D extends Datum<L>, L> extends Sup
 		this.labelDistribution = new HashMap<L, Double>();
 	}
 	
-	public SupervisedModelLabelDistribution(Context<D, L> context) {
+	public SupervisedModelLabelDistribution(DatumContext<D, L> context) {
 		this();
 		this.context = context;
 	}
 	
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
 		double total = 0;
 		
 		for (L label : this.validLabels)
 			this.labelDistribution.put(label, 0.0);
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			L label = mapValidLabel(datum.getLabel());
 			if (label == null)
 				continue;
@@ -60,9 +60,9 @@ public class SupervisedModelLabelDistribution<D extends Datum<L>, L> extends Sup
 	}
 
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		Map<D, Map<L, Double>> posterior = new HashMap<D, Map<L, Double>>();
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			posterior.put(datum, this.labelDistribution);
 		}
 		return posterior;
@@ -74,7 +74,7 @@ public class SupervisedModelLabelDistribution<D extends Datum<L>, L> extends Sup
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelLabelDistribution<D, L>(context);
 	}
 
@@ -106,7 +106,7 @@ public class SupervisedModelLabelDistribution<D extends Datum<L>, L> extends Sup
 
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}

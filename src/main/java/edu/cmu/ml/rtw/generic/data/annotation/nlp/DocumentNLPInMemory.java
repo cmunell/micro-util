@@ -16,6 +16,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.Token;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan.Relation;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -64,19 +65,29 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 	}
 	
 	public DocumentNLPInMemory(DataTools dataTools, String name) {
-		super(dataTools);
-		this.name = name;
+		super(dataTools, name);
+	}
+	
+	public DocumentNLPInMemory(DataTools dataTools, String name, String storageName, String collectionName) {
+		super(dataTools, name, storageName, collectionName);
 	}
 	
 	public DocumentNLPInMemory(DataTools dataTools, String name, String originalText) {
-		super(dataTools);
-		this.name = name;
+		this(dataTools, name, null, null, originalText);
+	}
+	
+	public DocumentNLPInMemory(DataTools dataTools, String name, String storageName, String collectionName, String originalText) {
+		super(dataTools, name, storageName, collectionName);
 		this.originalText = originalText;
 	}
 
 	@SuppressWarnings("unchecked")
 	public DocumentNLPInMemory(DocumentNLP document) {
-		this(document.getDataTools(), document.getName(), document.getOriginalText());
+		this(document.getDataTools(), 
+			document.getName(), 
+			(document.getStoreReference() != null) ? document.getStoreReference().getStorageName() : null, 
+			(document.getStoreReference() != null) ? document.getStoreReference().getCollectionName() : null, 
+			document.getOriginalText());
 		
 		Collection<AnnotationType<?>> annotationTypes = document.getAnnotationTypes();
 		for (AnnotationType<?> annotationType : annotationTypes) {
@@ -502,6 +513,15 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 	@Override
 	public DocumentNLPMutable makeInstance(String name) {
 		return new DocumentNLPInMemory(this.dataTools, name);
+	}
+	
+	@Override
+	public DocumentNLPMutable makeInstance(StoreReference storeReference) {
+		return new DocumentNLPInMemory(this.dataTools, 
+									   storeReference.getIndexValues().get(0).toString(),
+									   storeReference.getStorageName(), 
+									   storeReference.getCollectionName()
+									   );
 	}
 
 	@Override

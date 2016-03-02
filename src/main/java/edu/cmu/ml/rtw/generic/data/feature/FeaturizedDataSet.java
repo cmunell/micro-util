@@ -16,14 +16,17 @@ import org.platanios.learn.math.matrix.SparseVector;
 import org.platanios.learn.math.matrix.Vector;
 import org.platanios.learn.math.matrix.Vector.VectorElement;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
 /**
+ * FIXME This class should be removed at some point, and all uses of it should
+ * be replaced by DataFeatureMatrix or some other extension of that
+ * 
  * FeaturizedDataSet represents a collection of labeled and/or unlabeled 'datums'
  * that have been featurized by a provided set of features to train and 
  * evaluate models.  
@@ -337,7 +340,7 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 	}
 	
 	@Override
-	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(LabelIndicator<L> labelIndicator, Context<T, Boolean> context) {
+	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(LabelIndicator<L> labelIndicator, DatumContext<T, Boolean> context) {
 		List<Feature<T, Boolean>> features = new ArrayList<Feature<T, Boolean>>();
 		for (Feature<D, L> feature : this.featureList) {
 			features.add(feature.makeBinary(context, labelIndicator));
@@ -354,6 +357,10 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 		dataSet.featureVocabularyValues = this.featureVocabularyValues;
 		
 		return dataSet;
+	}
+	
+	public DataFeatureMatrix<D, L> toDataFeatureMatrix(DatumContext<D, L> context) {
+		return new DataFeatureMatrix<D, L>(context, this.name, this, new FeatureSet<D, L>(context, this.featureList));
 	}
 	
 	/**

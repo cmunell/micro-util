@@ -30,7 +30,7 @@ public class FnNGramDocument extends FnNGram {
 		this(null);
 	}
 	
-	public FnNGramDocument(Context<?, ?> context) {
+	public FnNGramDocument(Context context) {
 		super(context);
 		
 		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 1);
@@ -56,7 +56,7 @@ public class FnNGramDocument extends FnNGram {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnNGramDocument(context);
 	}
 	

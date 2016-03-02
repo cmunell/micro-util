@@ -21,8 +21,11 @@ import java.util.TreeMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DataSetBuilder;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.parse.AssignmentList;
+import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
+import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
@@ -36,7 +39,7 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  * @param <D> Datum type
  * @param <L> Datum label type
  */
-public class DataSet<D extends Datum<L>, L> implements Collection<D> {
+public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implements Collection<D> {
 	public enum DataFilter {
 		All,
 		OnlyLabeled,
@@ -89,6 +92,9 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
 		
 	}
 	
+	private Datum.Tools.DataSetBuilder<D, L> builder;
+	private boolean built;
+	
 	private Datum.Tools<D, L> datumTools;
 	private Datum.Tools.LabelMapping<L> labelMapping;
 	
@@ -110,11 +116,44 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
           }
 	};
 	
+	public DataSet(Datum.Tools<D, L> datumTools) {
+		clear();
+		this.datumTools = datumTools;
+	}
+	
+	public DataSet(Datum.Tools.DataSetBuilder<D, L> builder, Datum.Tools<D, L> datumTools) {
+		clear();
+		
+		this.builder = builder;
+		this.datumTools = datumTools;
+	}
+	
+	// FIXME Remove this constructor and labelMapping at some point
 	public DataSet(Datum.Tools<D, L> datumTools, Datum.Tools.LabelMapping<L> labelMapping) {
 		clear();
 		
 		this.labelMapping = labelMapping;
 		this.datumTools = datumTools;
+	}
+	
+	public synchronized boolean build() {
+		DataSet<D, L> data = this.builder.build();
+		
+		this.labelMapping = data.labelMapping;
+		this.labeledData = data.labeledData;
+		this.unlabeledData = data.unlabeledData;
+		this.data = data.data;
+		this.built = true;
+		
+		return true;
+	}
+	
+	public boolean isBuildable() {
+		return this.builder != null;
+	}
+	
+	public boolean isBuilt() {
+		return this.built;
 	}
 	
 	public boolean setDatumLabel(D datum, L label) {
@@ -157,6 +196,10 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
 		this.data.put(datum.getId(), datum);
 		
 		return true;
+	}
+	
+	public DataSetBuilder<D, L> getBuilder() {
+		return this.builder;
 	}
 	
 	public D getDatumById(int id) {
@@ -355,6 +398,8 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
 		
 		// For iterating in order by ID
 		this.data = new TreeMap<Integer, D>();
+		
+		this.built = false;
 	}
 	
 	@Override
@@ -451,11 +496,11 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
 		return true;
 	}
 	
-	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(Context<T, Boolean> context) {
+	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(DatumContext<T, Boolean> context) {
 		return makeBinary(null, context);
 	}
 	
-	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(LabelIndicator<L> labelIndicator, Context<T, Boolean> context) {
+	public <T extends Datum<Boolean>> DataSet<T, Boolean> makeBinary(LabelIndicator<L> labelIndicator, DatumContext<T, Boolean> context) {
 		DataSet<T, Boolean> dataSet = new DataSet<T, Boolean>(context.getDatumTools(), null);
 		
 		for (D datum : this) {
@@ -463,5 +508,42 @@ public class DataSet<D extends Datum<L>, L> implements Collection<D> {
 		}
 		
 		return dataSet;
+	}
+
+	@Override
+	public String[] getParameterNames() {
+		return this.builder.getParameterNames();
+	}
+
+	@Override
+	public Obj getParameterValue(String parameter) {
+		return this.builder.getParameterValue(parameter);
+	}
+
+	@Override
+	public boolean setParameterValue(String parameter, Obj parameterValue) {
+		return this.builder.setParameterValue(parameter, parameterValue);
+	}
+
+	@Override
+	protected boolean fromParseInternal(AssignmentList internalAssignments) {
+		if (internalAssignments == null || internalAssignments.size() == 0)
+			return true;
+		
+		// FIXME This is kind of a hack... but not really necessary anyway since datasets don't really need
+		// internal assignments;
+		return this.builder.fromParse(this.builder.getModifiers(), this.builder.getReferenceName(),
+				Obj.function(this.builder.getGenericName(), 
+				((Obj.Function)this.builder.toParse(false)).getParameters(), internalAssignments));
+	}
+
+	@Override
+	protected AssignmentList toParseInternal() {
+		return ((Obj.Function)(this.builder.toParse(true))).getInternalAssignments();
+	}
+
+	@Override
+	public String getGenericName() {
+		return this.builder.getGenericName();
 	}
 }

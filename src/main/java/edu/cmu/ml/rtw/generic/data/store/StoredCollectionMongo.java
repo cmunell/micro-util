@@ -15,6 +15,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Projections;
 
 import edu.cmu.ml.rtw.generic.data.Serializer;
+import edu.cmu.ml.rtw.generic.data.Serializer.Index;
 
 public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 	private class MongoIterator implements Iterator<I> {
@@ -31,7 +32,8 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 
 		@Override
 		public I next() {
-			return getSerializer().deserialize(this.cursor.next());
+			Document doc = this.cursor.next();
+			return getSerializer().deserialize(doc, getStoreReference(doc));
 		}
 
 		@Override
@@ -123,7 +125,7 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		
 		List<I> items = new ArrayList<I>();
 		for (Document doc : docs) {
-			items.add(getSerializer().deserialize(doc));
+			items.add(getSerializer().deserialize(doc, getStoreReference(doc)));
 		}
 		
 		return items;
@@ -142,5 +144,22 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 			documents.add(getSerializer().serialize(item));
 		this.collection.insertMany(documents);
 		return true;
+	}
+	
+	private StoreReference getStoreReference(Document document) {
+		List<String> fields = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		List<Index<I>> indices = getSerializer().getIndices();
+		
+		for (int i = 0; i < indices.size(); i++) {
+			fields.add(indices.get(i).getField());
+			values.add(document.get(indices.get(i).getField()));
+		}
+		
+		if (this.storage == null) {
+			return new StoreReference(null, this.name, fields, values);
+		} else {
+			return new StoreReference(this.storage.getName(), this.name, fields, values);
+		}
 	}
 }

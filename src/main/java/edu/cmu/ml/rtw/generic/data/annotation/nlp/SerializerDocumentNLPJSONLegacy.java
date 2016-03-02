@@ -15,6 +15,7 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -157,7 +158,7 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 								JSONObject annotationSpanJson = new JSONObject();
 								Pair<TokenSpan, ?> tsAnnotation = (Pair<TokenSpan, ?>)tokenSpanAnnotation;
 								
-								annotationSpanJson.put("tokenSpan", tsAnnotation.getFirst().toJSON(false, false));
+								annotationSpanJson.put("tokenSpan", tsAnnotation.getFirst().toJSON());
 								annotationSpanJson.put("type", annotationTypeNLP.serialize(tsAnnotation.getSecond()));
 								annotationSpansJson.put(annotationSpanJson);
 							}
@@ -180,9 +181,14 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public DocumentNLPMutable deserialize(JSONObject json) {
+	public DocumentNLPMutable deserialize(JSONObject json, StoreReference storeReference) {
 		try {
-			DocumentNLPMutable document = this.genericDocument.makeInstance((json.has("name") ? json.getString("name") : ""));
+			DocumentNLPMutable document = null;
+			if (storeReference != null)
+				document = this.genericDocument.makeInstance(storeReference);
+			else
+				document =this.genericDocument.makeInstance(json.getString("name"));
+			
 			
 			Collection<AnnotationType<?>> annotationTypes = null;
 			if (this.annotationTypes == null) {
@@ -411,9 +417,9 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 	}
 
 	@Override
-	public DocumentNLPMutable deserializeFromString(String str) {
+	public DocumentNLPMutable deserializeFromString(String str, StoreReference storeReference) {
 		try {
-			return deserialize(new JSONObject(str));
+			return deserialize(new JSONObject(str), storeReference);
 		} catch (JSONException e) {
 			return null;
 		}

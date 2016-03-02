@@ -24,7 +24,7 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * 
  */
 public class FnCoref extends Fn<TokenSpan, TokenSpan> {
-	private Context<?, ?> context;
+	private Context context;
 	
 	private String[] parameterNames = { "spanMinLength", "spanMaxLength" };
 	private int spanMinLength = -1;
@@ -34,7 +34,7 @@ public class FnCoref extends Fn<TokenSpan, TokenSpan> {
 		
 	}
 	
-	public FnCoref(Context<?, ?> context) {
+	public FnCoref(Context context) {
 		this.context = context;
 	}
 	
@@ -84,7 +84,7 @@ public class FnCoref extends Fn<TokenSpan, TokenSpan> {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnCoref(context);
 	}
 

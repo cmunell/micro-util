@@ -9,7 +9,8 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -33,7 +34,7 @@ import edu.cmu.ml.rtw.generic.util.Pair;
  * @param <L> datum label type
  */
 public abstract class SupervisedModelEvaluation<D extends Datum<L>, L> extends CtxParsableFunction {
-	protected Context<D, L> context;
+	protected DatumContext<D, L> context;
 	protected LabelMapping<L> labelMapping;
 	
 	/**
@@ -52,13 +53,13 @@ public abstract class SupervisedModelEvaluation<D extends Datum<L>, L> extends C
 	 * function, and then compute the measure using those returned labels.
 	 * 
 	 */
-	protected abstract double compute(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions);
+	protected abstract double compute(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions);
 	
 	/**
 	 * @return a generic instance of the evaluation measure.  This is used when deserializing
 	 * the parameters for the measure from a configuration file
 	 */
-	public abstract SupervisedModelEvaluation<D, L> makeInstance(Context<D, L> context);
+	public abstract SupervisedModelEvaluation<D, L> makeInstance(DatumContext<D, L> context);
 	
 	/**
 	 * @param predictions
@@ -91,7 +92,7 @@ public abstract class SupervisedModelEvaluation<D extends Datum<L>, L> extends C
 	 * given data set.  If the model has a label mapping, then it is used when 
 	 * computing the evaluation measure.
 	 */
-	public double evaluate(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	public double evaluate(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		LabelMapping<L> modelLabelMapping = null;
 		if (model != null)
 			model.getLabelMapping();
@@ -113,7 +114,7 @@ public abstract class SupervisedModelEvaluation<D extends Datum<L>, L> extends C
 		return clone;
 	}
 	
-	public <T extends Datum<Boolean>> SupervisedModelEvaluation<T, Boolean> makeBinary(Context<T, Boolean> context, LabelIndicator<L> labelIndicator) {
+	public <T extends Datum<Boolean>> SupervisedModelEvaluation<T, Boolean> makeBinary(DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator) {
 		SupervisedModelEvaluation<T, Boolean> binaryEvaluation = context.getDatumTools().makeEvaluationInstance(getGenericName(), context);
 		
 		if (binaryEvaluation == null)
@@ -149,7 +150,7 @@ public abstract class SupervisedModelEvaluation<D extends Datum<L>, L> extends C
 		
 		if (this.labelMapping != null) {
 			Obj.Value labelMapping = Obj.stringValue(this.labelMapping.toString());
-			internalAssignments.add(Assignment.assignmentTyped(new ArrayList<String>(), Context.VALUE_STR, "labelMapping", labelMapping));
+			internalAssignments.add(Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.VALUE.toString(), "labelMapping", labelMapping));
 		}
 		
 		return (internalAssignments.size() == 0) ? null : internalAssignments;

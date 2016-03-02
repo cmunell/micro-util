@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
@@ -32,10 +32,10 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 public class RuleSet<D extends Datum<L>, L> extends CtxParsableFunction {
 	public static final String RULE_STR = "rule";
 	
-	private Context<D, L> context;
+	private DatumContext<D, L> context;
 	private Map<String, Obj.Rule> rules;
 	
-	public RuleSet(Context<D, L> context) {
+	public RuleSet(DatumContext<D, L> context) {
 		this.context = context;
 		this.rules = new HashMap<String, Obj.Rule>();
 	}
@@ -89,7 +89,7 @@ public class RuleSet<D extends Datum<L>, L> extends CtxParsableFunction {
 		return "RuleSet";
 	}
 	
-	public <T extends Datum<Boolean>> RuleSet<T, Boolean> makeBinary(Context<T, Boolean> binaryContext, LabelIndicator<L> labelIndicator) {
+	public <T extends Datum<Boolean>> RuleSet<T, Boolean> makeBinary(DatumContext<T, Boolean> binaryContext, LabelIndicator<L> labelIndicator) {
 		RuleSet<T, Boolean> binaryRuleSet = new RuleSet<T, Boolean>(binaryContext);
 		
 		binaryRuleSet.referenceName = this.referenceName;

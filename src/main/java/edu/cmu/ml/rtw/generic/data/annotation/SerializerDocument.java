@@ -7,6 +7,8 @@ import java.util.List;
 import edu.cmu.ml.rtw.generic.data.Serializer;
 
 public abstract class SerializerDocument<D extends Document, S> extends Serializer<D, S> {	
+	public static final String NAME_INDEX_FIELD = "name";
+	
 	protected List<Index<D>> indices;
 	protected Collection<AnnotationType<?>> annotationTypes;
 	protected D genericDocument;
@@ -26,7 +28,7 @@ public abstract class SerializerDocument<D extends Document, S> extends Serializ
 		this.indices.add(new Serializer.Index<D>() {
 			@Override
 			public String getField() {
-				return "name";
+				return NAME_INDEX_FIELD;
 			}
 
 			@Override

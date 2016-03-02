@@ -155,7 +155,7 @@ public abstract class Fn<S, T> extends CtxParsableFunction {
 	 * @return a generic instance of the function.  This is used when deserializing
 	 * the parameters for the function from a configuration file
 	 */
-	public abstract Fn<S, T> makeInstance(Context<?, ?> context);
+	public abstract Fn<S, T> makeInstance(Context context);
 
 	public List<String> computeRelations(S input, T output) {
 		List<String> relations = new ArrayList<String>();

@@ -12,7 +12,8 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -22,7 +23,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 /**
  * SupervisedModel represents a supervised classification model
  * that can be trained and evaluated using a 
- * edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet.
+ * edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix.
  * 
  * @author Bill McDowell
  *
@@ -30,7 +31,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * @param <L> datum label type
  */
 public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsableFunction {
-	protected Context<D, L> context;
+	protected DatumContext<D, L> context;
 	
 	protected Set<L> validLabels; // Labels that this model can assign
 	protected LabelMapping<L> labelMapping; // Mapping from actual labels into valid labels
@@ -42,13 +43,13 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 	 * @return a generic instance of some model that can be used
 	 * when deserializing from an experiment configuration file
 	 */
-	public abstract SupervisedModel<D, L> makeInstance(Context<D, L> context);
+	public abstract SupervisedModel<D, L> makeInstance(DatumContext<D, L> context);
 	
 	protected abstract boolean fromParseInternalHelper(AssignmentList internalAssignments);
 	
 	protected abstract AssignmentList toParseInternalHelper(AssignmentList internalAssignments);
 	
-	protected abstract <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(Context<T, Boolean> context, LabelIndicator<L> labelIndicator, SupervisedModel<T, Boolean> binaryModel);
+	protected abstract <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator, SupervisedModel<T, Boolean> binaryModel);
 	
 	/**
 	 * @return the generic name of the model in the configuration files.  For
@@ -56,13 +57,13 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 	 */
 	public abstract String getGenericName();
 	
-	public abstract boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations);
+	public abstract boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations);
 	
 	/**
 	 * @param data
 	 * @return a map from datums to distributions over labels for the datums
 	 */
-	public abstract Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data);
+	public abstract Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data);
 	
 	public boolean setLabelMapping(LabelMapping<L> labelMapping) {
 		this.labelMapping = labelMapping;
@@ -72,6 +73,10 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 	public boolean fixDatumLabels(Map<D, L> fixedDatumLabels) {
 		this.fixedDatumLabels = fixedDatumLabels;
 		return true;
+	}
+	
+	public DatumContext<D, L> getContext() {
+		return this.context;
 	}
 	
 	public Set<L> getValidLabels() {
@@ -93,7 +98,7 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 			return null;
 	}
 	
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> classifiedData = new HashMap<D, L>();
 		Map<D, Map<L, Double>> posterior = posterior(data);
 	
@@ -127,7 +132,7 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 		return clone;
 	}
 	
-	public <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinary(Context<T, Boolean> context, LabelIndicator<L> labelIndicator) {
+	public <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinary(DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator) {
 		SupervisedModel<T, Boolean> binaryModel = context.getDatumTools().makeModelInstance(getGenericName(), context);
 		
 		binaryModel.referenceName = this.referenceName;
@@ -172,12 +177,12 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 		}
 		
 		internalAssignments.add(
-				Assignment.assignmentTyped(new ArrayList<String>(), Context.ARRAY_STR, "validLabels", validLabels)
+				Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.ARRAY.toString(), "validLabels", validLabels)
 		);
 		
 		if (this.labelMapping != null) {
 			internalAssignments.add(
-					Assignment.assignmentTyped(new ArrayList<String>(), Context.VALUE_STR, "labelMapping", Obj.stringValue(this.labelMapping.toString()))
+					Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.VALUE.toString(), "labelMapping", Obj.stringValue(this.labelMapping.toString()))
 			);	
 		}
 		

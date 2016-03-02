@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.structure.DatumStructure;
 import edu.cmu.ml.rtw.generic.data.annotation.structure.DatumStructureCollection;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 
 /**
  * SupervisedModelSVMStructured represents a structured SVM trained with
@@ -57,13 +58,13 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 		this.hyperParameterNames[this.hyperParameterNames.length - 3] = "includeStructuredTraining";
 	}
 	
-	public SupervisedModelSVMStructured(Context<D, L> context) {
+	public SupervisedModelSVMStructured(DatumContext<D, L> context) {
 		this();
 		this.context = context;
 	}
 	
 	@Override
-	protected boolean initializeTraining(FeaturizedDataSet<D, L> data) {
+	protected boolean initializeTraining(DataFeatureMatrix<D, L> data) {
 		if (!super.initializeTraining(data))
 			return false;
 	
@@ -72,7 +73,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 		// the reference datum structure collection 
 		// (edu.cmu.ml.rtw.generic.data.structure.DatumStructureCollection)
 		if (this.includeStructuredTraining)
-			this.trainingDatumStructureCollection = data.getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data);
+			this.trainingDatumStructureCollection = data.getData().getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data.getData());
 		return true;
 	}
 	
@@ -83,7 +84,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * data set.
 	 */
 	@Override
-	protected boolean trainOneIteration(int iteration, FeaturizedDataSet<D, L> data) {
+	protected boolean trainOneIteration(int iteration, DataFeatureMatrix<D, L> data) {
 		// If no structure in training, then train as unstructured SVM
 		if (!this.includeStructuredTraining)
 			return super.trainOneIteration(iteration, data);
@@ -176,7 +177,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	}
 	
 	@Override
-	protected double objectiveValue(FeaturizedDataSet<D, L> data) {
+	protected double objectiveValue(DataFeatureMatrix<D, L> data) {
 		if (!this.includeStructuredTraining)
 			return super.objectiveValue(data);
 		
@@ -205,7 +206,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	}
 	
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelSVMStructured<D, L>(context);
 	}
 
@@ -221,7 +222,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * or not.  See methods below for details.
 	 */
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		Map<D, Map<L, Double>> posteriors = null;
 
 		if (this.includeStructuredTraining) {
@@ -239,9 +240,9 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * learned through structured training. Labels in the optimal datum structures are given 
 	 * a posterior value of 1, and all other labels are given a posterior value 0.
 	 */
-	protected Map<D, Map<L, Double>> posteriorFromStructureScores(FeaturizedDataSet<D, L> data) {
-		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>(data.size());
-		DatumStructureCollection<D, L> datumStructureCollection = data.getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data);
+	protected Map<D, Map<L, Double>> posteriorFromStructureScores(DataFeatureMatrix<D, L> data) {
+		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>(data.getData().size());
+		DatumStructureCollection<D, L> datumStructureCollection = data.getData().getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data.getData());
 		Map<D, L> bestDatumLabels = new HashMap<D, L>();
 
 		for (DatumStructure<D, L> datumStructure : datumStructureCollection) {
@@ -251,7 +252,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 			);
 		}
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			posteriors.put(datum, new HashMap<L, Double>());
 			L bestLabel = bestDatumLabels.get(datum);
 			
@@ -278,15 +279,15 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * Labels in the optimal datum structures are given a posterior value of 1, and all other 
 	 * labels are given a posterior value 0
 	 */
-	protected Map<D, Map<L, Double>> posteriorFromDatumScores(FeaturizedDataSet<D, L> data) {
-		Map<D, Map<L, Double>> datumPosteriors = new HashMap<D, Map<L, Double>>(data.size());
+	protected Map<D, Map<L, Double>> posteriorFromDatumScores(DataFeatureMatrix<D, L> data) {
+		Map<D, Map<L, Double>> datumPosteriors = new HashMap<D, Map<L, Double>>(data.getData().size());
 
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			datumPosteriors.put(datum, posteriorForDatum(data, datum));
 		}
 		
-		DatumStructureCollection<D, L> datumStructureCollection = data.getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data);
-		Map<D, Map<L, Double>> structurePosteriors = new HashMap<D, Map<L, Double>>(data.size());
+		DatumStructureCollection<D, L> datumStructureCollection = data.getData().getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data.getData());
+		Map<D, Map<L, Double>> structurePosteriors = new HashMap<D, Map<L, Double>>(data.getData().size());
 		
 		for (DatumStructure<D, L> datumStructure : datumStructureCollection) {
 			Map<D, L> optimizedDatumLabels = datumStructure.optimize(this.datumStructureOptimizer, datumPosteriors, this.fixedDatumLabels, this.validLabels, this.labelMapping);
@@ -311,7 +312,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * posterior methods defined above.
 	 */
 	@Override
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> classifiedData = null;
 		if (this.includeStructuredTraining) {
 			classifiedData = classifyFromStructureScores(data);
@@ -322,9 +323,9 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 		return classifiedData;
 	}
 	
-	protected Map<D, L> classifyFromStructureScores(FeaturizedDataSet<D, L> data) {
-		Map<D, L> classifiedData = new HashMap<D, L>(data.size());
-		DatumStructureCollection<D, L> datumStructureCollection = data.getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data);
+	protected Map<D, L> classifyFromStructureScores(DataFeatureMatrix<D, L> data) {
+		Map<D, L> classifiedData = new HashMap<D, L>(data.getData().size());
+		DatumStructureCollection<D, L> datumStructureCollection = data.getData().getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data.getData());
 		Map<D, L> bestDatumLabels = new HashMap<D, L>();
 
 		for (DatumStructure<D, L> datumStructure : datumStructureCollection) {
@@ -334,25 +335,25 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 			);
 		}
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			L bestLabel = bestDatumLabels.get(datum);
 			if (bestLabel == null)
-				data.getDatumTools().getDataTools().getOutputWriter().debugWriteln("WARNING: Optimizer returned no label for datum " + datum.getId());
+				data.getData().getDatumTools().getDataTools().getOutputWriter().debugWriteln("WARNING: Optimizer returned no label for datum " + datum.getId());
 			classifiedData.put(datum, (bestLabel == null) ? this.labelIndices.reverseGet(0) : bestLabel);
 		}
 		
 		return classifiedData;
 	}
 	
-	protected Map<D, L> classifyFromDatumScores(FeaturizedDataSet<D, L> data) {
-		Map<D, Map<L, Double>> datumPosteriors = new HashMap<D, Map<L, Double>>(data.size());
-		Map<D, L> classifiedData = new HashMap<D, L>(data.size());
+	protected Map<D, L> classifyFromDatumScores(DataFeatureMatrix<D, L> data) {
+		Map<D, Map<L, Double>> datumPosteriors = new HashMap<D, Map<L, Double>>(data.getData().size());
+		Map<D, L> classifiedData = new HashMap<D, L>(data.getData().size());
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			datumPosteriors.put(datum, posteriorForDatum(data, datum));
 		}
 		
-		DatumStructureCollection<D, L> datumStructureCollection = data.getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data);
+		DatumStructureCollection<D, L> datumStructureCollection = data.getData().getDatumTools().makeDatumStructureCollection(this.datumStructureCollection, data.getData());
 		for (DatumStructure<D, L> datumStructure : datumStructureCollection) {
 			Map<D, L> optimizedDatumLabels = datumStructure.optimize(this.datumStructureOptimizer, datumPosteriors, this.fixedDatumLabels, this.validLabels, this.labelMapping);
 			classifiedData.putAll(optimizedDatumLabels);
@@ -376,7 +377,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 	 * @return a map from datums in datumStructure to scores of their
 	 * label assignments.
 	 */
-	protected Map<D, Map<L, Double>> scoreDatumStructureLabels(FeaturizedDataSet<D, L> data, DatumStructure<D, L> datumStructure, boolean includeCost) {
+	protected Map<D, Map<L, Double>> scoreDatumStructureLabels(DataFeatureMatrix<D, L> data, DatumStructure<D, L> datumStructure, boolean includeCost) {
 		Map<D, Map<L, Double>> datumLabelScores = new HashMap<D, Map<L, Double>>();
 		
 		for (D datum : datumStructure) {
@@ -393,7 +394,7 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 		return datumLabelScores;
 	}
 	
-	protected double scoreDatumStructure(FeaturizedDataSet<D, L> data, DatumStructure<D, L> datumStructure, Map<D, L> structureLabels, boolean includeCost) {
+	protected double scoreDatumStructure(DataFeatureMatrix<D, L> data, DatumStructure<D, L> datumStructure, Map<D, L> structureLabels, boolean includeCost) {
 		double score = 0.0;
 	
 		Map<Integer, Double> datumStructureFeatureValues = computeDatumStructureFeatureValues(data, datumStructure, structureLabels, false);
@@ -418,11 +419,11 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 		return score;
 	}
 	
-	protected Map<Integer, Double> computeDatumStructureFeatureValues(FeaturizedDataSet<D,L> data, DatumStructure<D, L> datumStructure, Map<D, L> structureLabels, boolean cacheFeatureNames) {
+	protected Map<Integer, Double> computeDatumStructureFeatureValues(DataFeatureMatrix<D,L> data, DatumStructure<D, L> datumStructure, Map<D, L> structureLabels, boolean cacheFeatureNames) {
 		Map<Integer, Double> featureValues = new HashMap<Integer, Double>();
-		int numDatumFeatures = data.getFeatureVocabularySize();
+		int numDatumFeatures = data.getFeatures().getFeatureVocabularySize();
 		for (D datum : datumStructure) {
-			Map<Integer, Double> datumFeatureValues = data.getFeatureVocabularyValuesAsMap(datum);
+			Map<Integer, Double> datumFeatureValues = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 			int labelIndex = this.labelIndices.get(structureLabels.get(datum));
 			int featureLabelOffset = numDatumFeatures*labelIndex;
 			
@@ -438,14 +439,14 @@ public class SupervisedModelSVMStructured<D extends Datum<L>, L> extends Supervi
 				for (Integer key : datumFeatureValues.keySet())
 					if (!this.featureNames.containsKey(key))
 						missingNameKeys.add(key);
-				this.featureNames.putAll(data.getFeatureVocabularyNamesForIndices(missingNameKeys));				
+				this.featureNames.putAll(data.getFeatures().getFeatureVocabularyNamesForIndices(missingNameKeys));
 			}
 		}
 		
 		return featureValues;
 	}
 	
-	protected Map<D, L> getBestDatumLabels(FeaturizedDataSet<D, L> data, DatumStructure<D, L> datumStructure, Map<D, Map<L, Double>> scoredDatumLabels) {
+	protected Map<D, L> getBestDatumLabels(DataFeatureMatrix<D, L> data, DatumStructure<D, L> datumStructure, Map<D, Map<L, Double>> scoredDatumLabels) {
 		Map<D, L> optimizedDatumLabels = datumStructure.optimize(this.datumStructureOptimizer, scoredDatumLabels, this.fixedDatumLabels, this.validLabels, this.labelMapping);
 		Map<D, L> actualDatumLabels = datumStructure.getDatumLabels(this.labelMapping);
 		

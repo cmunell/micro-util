@@ -31,13 +31,13 @@ public class FnString extends Fn<TokenSpan, String> {
 	private boolean splitTokens = true;
 	private String[] parameterNames = { "cleanFn", "splitTokens" };
 	
-	private Context<?, ?> context;
+	private Context context;
 	
 	public FnString() {
 		
 	}
 	
-	public FnString(Context<?, ?> context) {
+	public FnString(Context context) {
 		this.context = context;
 	}
 	
@@ -59,7 +59,7 @@ public class FnString extends Fn<TokenSpan, String> {
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("cleanFn"))
-			this.cleanFn = this.context.getDatumTools().getDataTools().getCleanFn(this.context.getMatchValue(parameterValue));
+			this.cleanFn = this.context.getDataTools().getCleanFn(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("splitTokens"))
 			this.splitTokens = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else 
@@ -98,7 +98,7 @@ public class FnString extends Fn<TokenSpan, String> {
 	}
 
 	@Override
-	public Fn<TokenSpan, String> makeInstance(Context<?, ?> context) {
+	public Fn<TokenSpan, String> makeInstance(Context context) {
 		return new FnString(context);
 	}
 

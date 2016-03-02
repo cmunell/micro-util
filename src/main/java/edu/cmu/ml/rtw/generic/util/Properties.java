@@ -1,8 +1,10 @@
 package edu.cmu.ml.rtw.generic.util;
 
-import java.io.BufferedReader;
+import java.io.Reader;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * 
@@ -21,17 +23,18 @@ import java.util.Map.Entry;
  * @author Bill McDowell
  *
  */
-public abstract class Properties {
+public class Properties {
 	protected java.util.Properties properties = null;
 	protected Map<String, String> env = null;
 	
 	public Properties(String[] possiblePaths) {
+		this(FileUtil.getPropertiesReader(possiblePaths));
+	}
+	
+	public Properties(Reader reader) {
 		try {
 			this.properties = new java.util.Properties();
-			
-			BufferedReader reader = FileUtil.getPropertiesReader(possiblePaths);
 			this.properties.load(reader);
-			reader.close();
 			this.env = System.getenv();
 			
 			reader.close();
@@ -47,5 +50,54 @@ public abstract class Properties {
 				propertyValue = propertyValue.replace("${" + envEntry.getKey() + "}", envEntry.getValue());
 		}
 		return propertyValue;
+	}
+	
+	public Map<String, String> getFileSystemStorageBSONDirectories() {
+		return getFileSystemStorageDirectories("bson");
+	}
+	
+	public Map<String, String> getFileSystemStorageStringDirectories() {
+		return getFileSystemStorageDirectories("str");
+	}
+	
+	private Map<String, String> getFileSystemStorageDirectories(String type) {
+		Map<String, String> info = new HashMap<String, String>();
+		Set<String> propertyKeys = this.properties.stringPropertyNames();
+		
+		for (String propertyKey : propertyKeys) {
+			if (propertyKey.startsWith("storage_fs_")) {
+				String[] storageTypeAndName = propertyKey.substring("storage_fs_".length()).split("_");
+				String storageType = storageTypeAndName[0];
+				if (!storageType.equals(type))
+					continue;
+				
+				String storageName = storageTypeAndName[1];
+				String storageDir = loadProperty(propertyKey);
+				info.put(storageName, storageDir);
+			}
+		}
+		
+		return info;
+	}
+	
+	public String getDebugDirectory() {
+		if (this.properties.containsKey("debug_dir"))
+			return loadProperty("debug_dir");
+		else
+			return null;
+	}
+	
+	public Integer getMaxThreads() {
+		if (this.properties.containsKey("maxThreads"))
+			return Integer.valueOf(this.properties.get("maxThreads").toString());
+		else 
+			return null;
+	}
+	
+	public Integer getRandomSeed() {
+		if (this.properties.containsKey("randomSeed"))
+			return Integer.valueOf(this.properties.get("randomSeed").toString());
+		else 
+			return null;
 	}
 }

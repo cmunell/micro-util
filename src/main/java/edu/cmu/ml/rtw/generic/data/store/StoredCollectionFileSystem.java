@@ -47,7 +47,7 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 					new Function<File, I>() {
 						@Override
 						public I apply(File file) {
-							return getSerializer().deserializeFromString(FileUtil.readFile(file));
+							return getSerializer().deserializeFromString(FileUtil.readFile(file), getStoreReference(file));
 						}
 					}
 				).iterator();
@@ -136,7 +136,7 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 			if (file.isDirectory()) {
 				getItemsByIndices(file, curIndexNum + 1, constrainedIndices, items);
 			} else if (file.isFile() && (constrainedIndices.size() == 0 || curIndexNum >= constrainedIndices.lastKey())) {
-				items.add(serializer.deserializeFromString(FileUtil.readFile(file)));
+				items.add(serializer.deserializeFromString(FileUtil.readFile(file), getStoreReference(file)));
 			}
 		}
 		
@@ -152,6 +152,8 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 		for (Serializer.Index<I> index : indices) {
 			path.append(transformIndexValue(index.getValue(item))).append("/");
 		}
+		
+		path = path.delete(path.length() - 1, path.length());
 		
 		File file = new File(this.directory.getAbsolutePath(), path.toString());
 		
@@ -187,5 +189,22 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 			if (indices.get(i).getField().equals(indexField))
 				indexNum = i;
 		return indexNum;
+	}
+	
+	private StoreReference getStoreReference(File file) {
+		List<String> fields = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		String[] indexValues = file.getAbsolutePath().substring(this.directory.getAbsolutePath().length()).split("/");
+		
+		for (int i = 0; i < indexValues.length; i++) {
+			fields.add(getSerializer().getIndices().get(i).getField());
+			values.add(indexValues[i]);
+		}
+		
+		if (this.storage == null) {
+			return new StoreReference(null, this.name, fields, values);
+		} else {
+			return new StoreReference(this.storage.getName(), this.name, fields, values);
+		}
 	}
 }

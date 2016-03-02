@@ -27,13 +27,13 @@ public class FnGazetteer extends Fn<String, String> {
 	private Gazetteer gazetteer;
 	private double weightThreshold;
 	
-	private Context<?, ?> context;
+	private Context context;
 
 	public FnGazetteer() {
 		
 	}
 	
-	public FnGazetteer(Context<?, ?> context) {
+	public FnGazetteer(Context context) {
 		this.context = context;
 	}
 	
@@ -55,7 +55,7 @@ public class FnGazetteer extends Fn<String, String> {
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("gazetteer"))
-			this.gazetteer = this.context.getDatumTools().getDataTools().getGazetteer(this.context.getMatchValue(parameterValue));
+			this.gazetteer = this.context.getDataTools().getGazetteer(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("weightThreshold"))
 			this.weightThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else
@@ -81,7 +81,7 @@ public class FnGazetteer extends Fn<String, String> {
 	}
 
 	@Override
-	public Fn<String, String> makeInstance(Context<?, ?> context) {
+	public Fn<String, String> makeInstance(Context context) {
 		return new FnGazetteer(context);
 	}
 

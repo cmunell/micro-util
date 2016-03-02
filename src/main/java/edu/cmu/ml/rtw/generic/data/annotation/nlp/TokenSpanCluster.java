@@ -6,6 +6,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan.SerializationType;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
 /**
@@ -59,11 +61,11 @@ public class TokenSpanCluster implements JSONSerializable {
 			json.put("id", this.id);
 			
 			if (this.representative != null)
-				json.put("rep", this.representative.toJSON(true, false));
+				json.put("rep", this.representative.toJSON(SerializationType.SENTENCE));
 			
 			JSONArray tokenSpansJson = new JSONArray();
 			for (TokenSpan tokenSpan : this.tokenSpans)
-				tokenSpansJson.put(tokenSpan.toJSON(true, false));
+				tokenSpansJson.put(tokenSpan.toJSON(SerializationType.SENTENCE));
 			
 			json.put("spans", tokenSpansJson);
 		} catch (JSONException e) {

@@ -20,13 +20,15 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.CommandRunner;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 
 /**
  * SupervisedModelCreg is a wrapper for the creg 
@@ -67,13 +69,13 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 	}
 	
-	public SupervisedModelCreg(Context<D, L> context) {
+	public SupervisedModelCreg(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 		
 		String trainXPath = this.modelPath.getValue() + ".train.x";
 		String trainYPath = this.modelPath.getValue() + ".train.y";
@@ -106,7 +108,7 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 	}
 
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		String predictPPath = predict(data);
 		if (predictPPath == null)
 			return null;
@@ -114,17 +116,17 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 			return loadPData(predictPPath, data, false);
 	}
 	
-	private boolean outputXData(String outputPath, FeaturizedDataSet<D, L> data, boolean requireLabels) {
+	private boolean outputXData(String outputPath, DataFeatureMatrix<D, L> data, boolean requireLabels) {
         try {
     		BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath));
   
-    		for (D datum : data) {
+    		for (D datum : data.getData()) {
     			L label = mapValidLabel(datum.getLabel());
     			if (requireLabels && label == null)
     				continue;
     			
-    			Map<Integer, Double> featureValues = data.getFeatureVocabularyValuesAsMap(datum);
-    			Map<Integer, String> featureNames = data.getFeatureVocabularyNamesForIndices(featureValues.keySet());
+    			Map<Integer, Double> featureValues = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
+    			Map<Integer, String> featureNames = data.getFeatures().getFeatureVocabularyNamesForIndices(featureValues.keySet());
     			
     			StringBuilder datumStr = new StringBuilder();
     			datumStr = datumStr.append("id").append(datum.getId()).append("\t{");
@@ -151,11 +153,11 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
         } catch (IOException e) { e.printStackTrace(); return false; }
 	}
 	
-	private boolean outputYData(String outputPath, FeaturizedDataSet<D, L> data) {
+	private boolean outputYData(String outputPath, DataFeatureMatrix<D, L> data) {
         try {
     		BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath));
 
-    		for (D datum : data) {
+    		for (D datum : data.getData()) {
     			L label = mapValidLabel(datum.getLabel());
     			if (label == null)
     				continue;
@@ -175,12 +177,12 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
         } catch (IOException e) { e.printStackTrace(); return false; }
 	}
 
-	private Map<D, Map<L, Double>> loadPData(String path, FeaturizedDataSet<D, L> data, boolean requireLabels) {
+	private Map<D, Map<L, Double>> loadPData(String path, DataFeatureMatrix<D, L> data, boolean requireLabels) {
 		Map<D, Map<L, Double>> pData = new HashMap<D, Map<L, Double>>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(path));
 			
-			for (D datum : data) {
+			for (D datum : data.getData()) {
 				L label = mapValidLabel(datum.getLabel());
     			if (requireLabels && label == null)
     				continue;
@@ -224,8 +226,8 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 		return pData;
 	}
 	
-	private String predict(FeaturizedDataSet<D, L> data) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	private String predict(DataFeatureMatrix<D, L> data) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 		String predictXPath = this.modelPath.getValue() + ".predict.x";
 		String predictOutPath = this.modelPath.getValue() + ".predict.y";
 		
@@ -291,7 +293,7 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelCreg<D, L>(context);
 	}
 
@@ -339,7 +341,7 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 		for (List<String> lines : descendingWeights.values()) {
 			for (String line : lines) {
 				internalAssignments.add(
-					Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + i, Obj.stringValue(line))
+					Assignment.assignmentTyped(null, Context.ObjectType.ARRAY.toString(), "w_" + i, Obj.stringValue(line))
 				);
 				
 				i++;
@@ -351,7 +353,7 @@ public class SupervisedModelCreg<D extends Datum<L>, L> extends SupervisedModel<
 
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}

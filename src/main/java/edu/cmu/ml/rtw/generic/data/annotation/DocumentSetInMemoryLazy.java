@@ -6,41 +6,18 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
 
+import edu.cmu.ml.rtw.generic.data.StoredItemSetInMemoryLazy;
 import edu.cmu.ml.rtw.generic.data.store.StoredCollection;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
-public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends DocumentSet<E, I> {
-	private class DocumentSetIterator implements Iterator<E> {
-		private Iterator<String> nameIterator;
-		
-		public DocumentSetIterator() {
-			this.nameIterator = DocumentSetInMemoryLazy.this.documents.keySet().iterator();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return this.nameIterator.hasNext();
-		}
-
-		@Override
-		public E next() {
-			return DocumentSetInMemoryLazy.this.getDocumentByName(this.nameIterator.next(), false);
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
+public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends StoredItemSetInMemoryLazy<E, I> implements DocumentSet<E, I> {
+	public DocumentSetInMemoryLazy(StoredItemSetInMemoryLazy<E, I> itemSet) {
+		this(itemSet.getStoredItems());
 	}
-	
-	private ConcurrentSkipListMap<String, Pair<Object, E>> documents;
-	private String nameIndexField;
-	private String name;
 	
 	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments) {
 		this(storedDocuments, -1);
@@ -51,22 +28,7 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	}
 	
 	public DocumentSetInMemoryLazy(StoredCollection<I, ?> storedDocuments, int sizeLimit, Random r, boolean initEmpty) {
-		super(storedDocuments);
-		this.documents = new ConcurrentSkipListMap<String, Pair<Object, E>>();
-		this.nameIndexField = this.storedDocuments.getSerializer().getIndices().get(0).getField();
-		
-		if (!initEmpty) {
-			Set<String> documentNames = this.storedDocuments.getIndex(this.nameIndexField, sizeLimit, r);
-			for (String documentName : documentNames)
-				this.documents.put(documentName, new Pair<Object, E>(new Object(), null));
-		}
-		
-		this.name = this.storedDocuments.getName();
-	}
-	
-	@Override
-	public String getName() {
-		return this.name;
+		super(storedDocuments, sizeLimit, r, initEmpty);
 	}
 	
 	@Override
@@ -75,30 +37,12 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	}
 	
 	public E getDocumentByName(String name, boolean keepInMemory) {
-		if (this.documents.containsKey(name)) {
-			Pair<Object, E> lockAndDocument = this.documents.get(name);
-		
-			if (keepInMemory) {
-				synchronized (lockAndDocument.getFirst()) {
-					if (lockAndDocument.getSecond() == null)
-						lockAndDocument.setSecond(this.storedDocuments.getFirstItemByIndex(this.nameIndexField, name));
-				}
-				
-				return lockAndDocument.getSecond();
-			} else {
-				if (lockAndDocument.getSecond() == null)
-					return this.storedDocuments.getFirstItemByIndex(this.nameIndexField, name);
-				else
-					return lockAndDocument.getSecond();
-			}
-		} else {
-			return null;
-		}
+		return getItemByIndex(name, keepInMemory);
 	}
 	
 	@Override
 	public Set<String> getDocumentNames() {
-		return this.documents.keySet();
+		return this.items.keySet();
 	}
 	 
 	public List<DocumentSetInMemoryLazy<E, I>> makePartition(int parts, Random random) {
@@ -122,7 +66,7 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 	
 	public List<DocumentSetInMemoryLazy<E, I>> makePartition(double[] distribution, String[] names, Random random) {
 		List<Entry<String, Pair<Object, E>>> documentList = new ArrayList<Entry<String, Pair<Object, E>>>();
-		documentList.addAll(this.documents.entrySet());
+		documentList.addAll(this.items.entrySet());
 		
 		List<Integer> documentPermutation = new ArrayList<Integer>();
 		for (int i = 0; i < documentList.size(); i++)
@@ -137,12 +81,12 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 			if (i == distribution.length - 1 && offset + partSize < documentList.size())
 				partSize = documentList.size() - offset;
 			
-			DocumentSetInMemoryLazy<E, I> part = new DocumentSetInMemoryLazy<E, I>(this.storedDocuments, -1, new Random(), true);
+			DocumentSetInMemoryLazy<E, I> part = new DocumentSetInMemoryLazy<E, I>(this.storedItems, -1, new Random(), true);
 			part.name = names[i];
 			
 			for (int j = offset; j < offset + partSize; j++) {
 				Entry<String, Pair<Object, E>> entry = documentList.get(documentPermutation.get(j));
-				part.documents.put(entry.getKey(), entry.getValue());
+				part.items.put(entry.getKey(), entry.getValue());
 			}
 			
 			offset += partSize;
@@ -154,7 +98,7 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 
 	@Override
 	public Iterator<E> iterator() {
-		return new DocumentSetIterator();
+		return new ItemSetIterator();
 	}
 
 	@Override
@@ -165,7 +109,7 @@ public class DocumentSetInMemoryLazy<E extends Document, I extends E> extends Do
 			new Fn<DocumentSetInMemoryLazy<E, I>, Boolean>() {
 				@Override
 				public Boolean apply(DocumentSetInMemoryLazy<E, I> item) {
-					for (String documentName : item.documents.keySet()) {
+					for (String documentName : item.items.keySet()) {
 						T result = fn.apply(getDocumentByName(documentName));
 						synchronized (results) {
 							results.add(result);

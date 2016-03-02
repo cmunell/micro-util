@@ -28,13 +28,13 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 	private List<Fn<TokenSpan, TokenSpan>> spanFns;
 	private Fn<TokenSpan, String> strFn;
 	
-	private Context<?, ?> context;
+	private Context context;
 	
 	public FnTokenSpanPathStr() {
 		
 	}
 	
-	public FnTokenSpanPathStr(Context<?, ?> context) {
+	public FnTokenSpanPathStr(Context context) {
 		this.context = context;
 		this.spanFns = new ArrayList<Fn<TokenSpan, TokenSpan>>();
 	}
@@ -79,7 +79,7 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 			this.pathLength = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("spanFn1") || parameter.equals("spanFn2") || parameter.equals("spanFn3")) {
 			if (parameterValue.getObjType() != Obj.Type.VALUE || ((Obj.Value)parameterValue).getType() == Obj.Value.Type.CURLY_BRACED)
-				this.spanFns.add(this.context.getMatchOrConstructTokenSpanFn(parameterValue));
+				this.spanFns.add(this.context.getMatchOrRunCommandTokenSpanFn(parameterValue));
 		} else if (parameter.equals("strFn"))
 			this.strFn = this.context.getMatchOrConstructTokenSpanStrFn(parameterValue);
 		else
@@ -175,9 +175,8 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 		return nextPaths;
 	}
 	
-	
 	@Override
-	public Fn<TokenSpan, String> makeInstance(Context<?, ?> context) {
+	public Fn<TokenSpan, String> makeInstance(Context context) {
 		return new FnTokenSpanPathStr(context);
 	}
 

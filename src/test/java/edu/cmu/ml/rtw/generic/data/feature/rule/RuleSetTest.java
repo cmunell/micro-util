@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.junit.Assert;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -15,7 +15,7 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 public class RuleSetTest {
 	// FIXME Needs refactoring
 	public void testRuleSetApplication() {
-		Context<TestDatum<String>, String> context = Context.deserialize(TestDatum.getStringTools(new DataTools(new OutputWriter())),
+		DatumContext<TestDatum<String>, String> context = DatumContext.run(TestDatum.getStringTools(new DataTools(new OutputWriter())),
 				"ts_fn head=Head();\n" +
 				"ts_fn ins1=NGramInside(n=\"1\", noHead=\"true\");\n" +
 				"ts_fn ins2=NGramInside(n=\"2\", noHead=\"true\");\n" +

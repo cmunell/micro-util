@@ -7,6 +7,7 @@ import java.util.Map;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.TokenSpanExtractor;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
@@ -87,13 +88,14 @@ public class ValidationTrainTest<D extends Datum<L>, L> extends Validation<D, L>
 		this.evaluationValues = new ArrayList<Double>(this.evaluations.size());
 		for (int i = 0; i < this.evaluations.size(); i++)
 			this.evaluationValues.add(-1.0);
-		
-		
+
+		DataFeatureMatrix<D, L> testMatrix = this.testData.toDataFeatureMatrix(this.model.getContext()); 
+
 		if (!skipTraining) {
 			timer.startClock(this.name + " Train/Test (Training)");
 			output.debugWriteln("Training model (" + this.name + ")");
-			
-			if (!this.model.train(this.trainData, this.testData, this.evaluations))
+			DataFeatureMatrix<D, L> trainMatrix = this.trainData.toDataFeatureMatrix(this.model.getContext()); 
+			if (!this.model.train(trainMatrix, testMatrix, this.evaluations))
 				return this.evaluationValues;
 			
 			timer.stopClock(this.name + " Train/Test (Training)");
@@ -101,7 +103,7 @@ public class ValidationTrainTest<D extends Datum<L>, L> extends Validation<D, L>
 		output.debugWriteln("Classifying data (" + this.name + ")");
 		
 		timer.startClock(this.name + " Train/Test (Testing)");
-		Map<D, L> classifiedData = this.model.classify(this.testData);
+		Map<D, L> classifiedData = this.model.classify(testMatrix);
 		if (classifiedData == null)
 			return this.evaluationValues;
 		this.classifiedData = classifiedData;
@@ -109,7 +111,7 @@ public class ValidationTrainTest<D extends Datum<L>, L> extends Validation<D, L>
 		output.debugWriteln("Computing model score (" + this.name + ")");
 		
 		for (int i = 0; i < this.evaluations.size(); i++)
-			this.evaluationValues.set(i, this.evaluations.get(i).evaluate(this.model, this.testData, classifiedData));
+			this.evaluationValues.set(i, this.evaluations.get(i).evaluate(this.model, testMatrix, classifiedData));
 		
 		this.confusionMatrix = new ConfusionMatrix<D, L>(this.model.getValidLabels(), this.model.getLabelMapping());
 		this.confusionMatrix.addData(classifiedData);

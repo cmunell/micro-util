@@ -24,7 +24,7 @@ public class FnPoS extends Fn<TokenSpan, String> {
 		
 	}
 	
-	public FnPoS(Context<?, ?> context) {
+	public FnPoS(Context context) {
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class FnPoS extends Fn<TokenSpan, String> {
 	}
 
 	@Override
-	public Fn<TokenSpan, String> makeInstance(Context<?, ?> context) {
+	public Fn<TokenSpan, String> makeInstance(Context context) {
 		return new FnPoS(context);
 	}
 

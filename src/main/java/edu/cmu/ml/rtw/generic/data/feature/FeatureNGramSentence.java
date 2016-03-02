@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -57,7 +57,7 @@ public class FeatureNGramSentence<D extends Datum<L>, L> extends FeatureNGram<D,
 		
 	}
 	
-	public FeatureNGramSentence(Context<D, L> context) {
+	public FeatureNGramSentence(DatumContext<D, L> context) {
 		super(context);
 		
 		this.noTokenSpan = false;
@@ -121,7 +121,7 @@ public class FeatureNGramSentence<D extends Datum<L>, L> extends FeatureNGram<D,
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureNGramSentence<D, L>(context);
 	} 
 	

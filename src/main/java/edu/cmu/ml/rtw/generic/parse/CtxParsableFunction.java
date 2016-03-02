@@ -39,7 +39,7 @@ public abstract class CtxParsableFunction extends CtxParsable implements Paramet
 			if (internal == null)
 				internal = new AssignmentList();
 			if (this.referenceName != null)
-				internal.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "referenceName", Obj.stringValue(this.referenceName)));
+				internal.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "referenceName", Obj.stringValue(this.referenceName)));
 		}
 		
 		return Obj.function(getGenericName(), parameterList, internal);

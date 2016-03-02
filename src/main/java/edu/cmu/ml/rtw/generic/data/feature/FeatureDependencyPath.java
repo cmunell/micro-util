@@ -2,9 +2,10 @@ package edu.cmu.ml.rtw.generic.data.feature;
 
 import java.util.*;
 
-import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse.DependencyPath;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
@@ -57,13 +58,13 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 		
 	}
 	
-	public FeatureDependencyPath(Context<D, L> context) {
+	public FeatureDependencyPath(DatumContext<D, L> context) {
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		this.context = context;
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
 		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
 			@Override
@@ -74,7 +75,7 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 				}
 				return true;
 			}
-		});
+		}, this.context.getMaxThreads());
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
@@ -187,13 +188,13 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureDependencyPath<D, L>(context);
 	}
 
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		FeatureDependencyPath<T, Boolean> binaryFeatureDep = (FeatureDependencyPath<T, Boolean>)binaryFeature;
 		

@@ -18,12 +18,17 @@ import edu.cmu.ml.rtw.generic.util.FileUtil;
 public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<?, S>, S> {
 	private static final String META_COLLECTION = "meta";
 	
+	private String name;
 	private String rootDirectory;
 	private Map<String, Serializer<?, ?>> serializers;
 	
-	public StorageFileSystem(String rootDirectory, Map<String, Serializer<?, ?>> serializers) {
+	public StorageFileSystem(String name, String rootDirectory, Map<String, Serializer<?, ?>> serializers) {
 		this.rootDirectory = rootDirectory;
 		this.serializers = serializers;
+	}
+	
+	public String getName() {
+		return this.name;
 	}
 
 	@Override

@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.TokenSpanExtractor;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
@@ -48,7 +48,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 	private Map<String, FeaturizedDataSet<D, L>> compositeTestSets;
 	private Map<String, List<Double>> compositeTestSetEvaluationValues;
 	
-	public ValidationGSTBinary(String name, Context<D, L> context, Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator) {
+	public ValidationGSTBinary(String name, DatumContext<D, L> context, Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator) {
 		super(name, context);
 		this.inverseLabelIndicator = inverseLabelIndicator;
 		this.evaluations = context.getEvaluationsWithoutModifier("composite");
@@ -116,7 +116,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 	}
 
 	public ValidationGSTBinary(String name, 
-				 Context<D, L> context, 
+				 DatumContext<D, L> context, 
 				 DataSet<D, L> trainData, 
 				 DataSet<D, L> devData, 
 				 DataSet<D, L> testData,
@@ -131,7 +131,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 	}
 	
 	public ValidationGSTBinary(String name, 
-			 Context<D, L> context, 
+			 DatumContext<D, L> context, 
 			 DataSet<D, L> trainData, 
 			 DataSet<D, L> devData, 
 			 DataSet<D, L> testData,
@@ -142,7 +142,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 	}
 
 	public ValidationGSTBinary(String name, 
-						 Context<D, L> context, 
+						 DatumContext<D, L> context, 
 						 FeaturizedDataSet<D, L> trainData, 
 						 FeaturizedDataSet<D, L> devData, 
 						 FeaturizedDataSet<D, L> testData,
@@ -234,7 +234,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 		ThreadMapper<LabelIndicator<L>, ValidationGST<T, Boolean>> threads = new ThreadMapper<LabelIndicator<L>, ValidationGST<T, Boolean>>(new Fn<LabelIndicator<L>, ValidationGST<T, Boolean>>() {
 			public ValidationGST<T, Boolean> apply(LabelIndicator<L> labelIndicator) {
 				Datum.Tools<T, Boolean> binaryTools = trainData.getDatumTools().makeBinaryDatumTools(labelIndicator);
-				Context<T, Boolean> binaryContext = gridSearch.getContext().makeBinary(binaryTools, labelIndicator);
+				DatumContext<T, Boolean> binaryContext = gridSearch.getContext().makeBinary(binaryTools, labelIndicator);
 				
 				List<SupervisedModelEvaluation<T, Boolean>> binaryEvaluations = new ArrayList<SupervisedModelEvaluation<T, Boolean>>();
 				for (SupervisedModelEvaluation<D, L> evaluation : evaluations) {
@@ -327,14 +327,14 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 				this.inverseLabelIndicator);
 		
 		output.debugWriteln("Composite model classifying test data...");
-		final Map<D, L> classifiedData = this.learnedCompositeModel.classify(this.testData);
+		final Map<D, L> classifiedData = this.learnedCompositeModel.classify(this.testData.toDataFeatureMatrix(this.model.getContext()));
 		output.debugWriteln("Finished classifying test data.");
 		
 		output.debugWriteln("Evaluating composite model on test data...");
 		ThreadMapper<SupervisedModelEvaluation<D, L>, Double> evaluationMapper = new ThreadMapper<SupervisedModelEvaluation<D, L>, Double>(new Fn<SupervisedModelEvaluation<D, L>, Double>() {
 			@Override
 			public Double apply(SupervisedModelEvaluation<D, L> evaluation) {
-				return evaluation.evaluate(learnedCompositeModel, testData, classifiedData);
+				return evaluation.evaluate(learnedCompositeModel, testData.toDataFeatureMatrix(model.getContext()), classifiedData);
 			}
 		});
 		this.compositeEvaluationValues = evaluationMapper.run(this.compositeEvaluations, this.maxThreads);
@@ -343,14 +343,14 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 		
 		for (Entry<String, FeaturizedDataSet<D, L>> entry : this.compositeTestSets.entrySet()) {
 			output.debugWriteln("Composite model classifying " + entry.getKey() + " data...");
-			final Map<D, L> compositeTestSetClassifiedData = this.learnedCompositeModel.classify(entry.getValue());
+			final Map<D, L> compositeTestSetClassifiedData = this.learnedCompositeModel.classify(entry.getValue().toDataFeatureMatrix(this.model.getContext()));
 			output.debugWriteln("Composite model finished classifying " + entry.getKey() + " data.");
 			
 			output.debugWriteln("Evaluating composite model on " + entry.getKey() + " data...");
 			evaluationMapper = new ThreadMapper<SupervisedModelEvaluation<D, L>, Double>(new Fn<SupervisedModelEvaluation<D, L>, Double>() {
 				@Override
 				public Double apply(SupervisedModelEvaluation<D, L> evaluation) {
-					return evaluation.evaluate(learnedCompositeModel, entry.getValue(), compositeTestSetClassifiedData);
+					return evaluation.evaluate(learnedCompositeModel, entry.getValue().toDataFeatureMatrix(model.getContext()), compositeTestSetClassifiedData);
 				}
 			});
 			this.compositeTestSetEvaluationValues.put(entry.getKey(), evaluationMapper.run(this.compositeEvaluations, this.maxThreads));

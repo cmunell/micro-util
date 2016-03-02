@@ -12,8 +12,10 @@ import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 
 /**
@@ -78,7 +80,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 		
 	}
 	
-	public FeatureGram(Context<D, L> context) {
+	public FeatureGram(DatumContext<D, L> context) {
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		this.idfs = new HashMap<Integer, Double>();
 		this.scale = Scale.INDICATOR;
@@ -86,7 +88,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
 		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
 			@Override
@@ -97,7 +99,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 				}
 				return true;
 			}
-		});
+		}, this.context.getMaxThreads());
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		
@@ -211,7 +213,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 	
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		FeatureGram<T, Boolean> binaryFeatureGram = (FeatureGram<T, Boolean>)binaryFeature;
 		
@@ -251,7 +253,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 				idfs.add(Obj.stringValue("0.0"));
 		}
 		
-		internalAssignments.add(Assignment.assignmentTyped(new ArrayList<String>(), Context.ARRAY_STR, "idfs", idfs));
+		internalAssignments.add(Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.ARRAY.toString(), "idfs", idfs));
 		
 		return internalAssignments;
 	}

@@ -29,7 +29,7 @@ public class FnNGramInside extends FnNGram {
 		this(null);
 	}
 	
-	public FnNGramInside(Context<?, ?> context) {
+	public FnNGramInside(Context context) {
 		super(context);
 		
 		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 1);
@@ -49,7 +49,7 @@ public class FnNGramInside extends FnNGram {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnNGramInside(context);
 	}
 	

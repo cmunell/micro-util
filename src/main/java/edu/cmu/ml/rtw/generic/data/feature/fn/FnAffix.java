@@ -27,7 +27,7 @@ public class FnAffix extends Fn<String, String> {
 		PREFIX
 	}
 	
-	private Context<?, ?> context;
+	private Context context;
 	private Type type = Type.SUFFIX;
 	private int nMin = 3;
 	private int nMax = 3;
@@ -37,7 +37,7 @@ public class FnAffix extends Fn<String, String> {
 		
 	}
 	
-	public FnAffix(Context<?, ?> context) {
+	public FnAffix(Context context) {
 		this.context = context;
 	}
 
@@ -86,7 +86,7 @@ public class FnAffix extends Fn<String, String> {
 	}
 
 	@Override
-	public Fn<String, String> makeInstance(Context<?, ?> context) {
+	public Fn<String, String> makeInstance(Context context) {
 		return new FnAffix(context);
 	}
 

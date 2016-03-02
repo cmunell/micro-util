@@ -10,9 +10,10 @@ import org.ardverk.collection.PatriciaTrie;
 import org.ardverk.collection.StringKeyAnalyzer;
 import org.ardverk.collection.Trie;
 
-import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
@@ -41,7 +42,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 		super();
 	}
 	
-	public FeatureTokenSpanFnDataVocabTrie(Context<D, L> context) {
+	public FeatureTokenSpanFnDataVocabTrie(DatumContext<D, L> context) {
 		super(context);
 		
 		this.forwardTrie = new PatriciaTrie<String, Double>(StringKeyAnalyzer.CHAR);
@@ -49,7 +50,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		final CounterTable<String> counter = new CounterTable<String>();
 		if (FeatureTokenSpanFnDataVocabTrie.this.initMode == InitMode.BY_DATUM) { 
 			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
@@ -61,7 +62,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 					}
 					return true;
 				}
-			});
+			}, this.context.getMaxThreads());
 		} else {
 			final Map<String, Set<String>> gramsToDocuments = new ConcurrentHashMap<String, Set<String>>();
 			dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
@@ -78,7 +79,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 					}
 					return true;
 				}
-			});
+			}, this.context.getMaxThreads());
 			
 			for (Entry<String, Set<String>> entry : gramsToDocuments.entrySet()) {
 				counter.incrementCount(entry.getKey(), entry.getValue().size());
@@ -104,7 +105,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 	
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		FeatureTokenSpanFnDataVocabTrie<T, Boolean> binaryFeatureTokenSpanFnDataVocabTrie = (FeatureTokenSpanFnDataVocabTrie<T, Boolean>)super.makeBinaryHelper(context, labelIndicator, binaryFeature);
 		binaryFeatureTokenSpanFnDataVocabTrie.forwardTrie = this.forwardTrie;
@@ -146,7 +147,7 @@ public class FeatureTokenSpanFnDataVocabTrie<D extends Datum<L>, L> extends Feat
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureTokenSpanFnDataVocabTrie<D, L>(context);	
 	}
 

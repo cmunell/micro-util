@@ -48,13 +48,13 @@ public class FnSplit extends Fn<String, String> {
 	private From from = From.FIRST;
 	private int limit = 0;
 	
-	private Context<?, ?> context;
+	private Context context;
 
 	public FnSplit() {
 		
 	}
 	
-	public FnSplit(Context<?, ?> context) {
+	public FnSplit(Context context) {
 		this.context = context;
 	}
 	
@@ -125,7 +125,7 @@ public class FnSplit extends Fn<String, String> {
 	}
 
 	@Override
-	public Fn<String, String> makeInstance(Context<?, ?> context) {
+	public Fn<String, String> makeInstance(Context context) {
 		return new FnSplit(context);
 	}
 

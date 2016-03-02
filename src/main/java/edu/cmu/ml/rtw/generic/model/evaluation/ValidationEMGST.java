@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
@@ -44,7 +44,7 @@ public class ValidationEMGST<D extends Datum<L>, L> extends Validation<D, L> {
 	private FeaturizedDataSet<D, L> testData;
 	
 	public ValidationEMGST(ValidationGST<D, L> validationGST,
-			Context<D, L> context,
+			DatumContext<D, L> context,
 			DataSet<D, L> trainData, 
 			DataSet<D, L> devData,
 			DataSet<D, L> testData,
@@ -117,7 +117,7 @@ public class ValidationEMGST<D extends Datum<L>, L> extends Validation<D, L> {
 				new ThreadMapper.Fn<SupervisedModelEvaluation<D, L>, Double>() {
 					@Override
 					public Double apply(SupervisedModelEvaluation<D, L> evaluation) {
-						return evaluation.evaluate(null, unlabeledEvaluationDataOnlyLabeled, classifiedDataOnlyLabeled);
+						return evaluation.evaluate(null, unlabeledEvaluationDataOnlyLabeled.toDataFeatureMatrix(model.getContext()), classifiedDataOnlyLabeled);
 					}
 				});
 		this.evaluationValues = threadMapper.run(this.unlabeledEvaluations, this.maxThreads);
@@ -140,19 +140,19 @@ public class ValidationEMGST<D extends Datum<L>, L> extends Validation<D, L> {
 		
 			// Unlabeled evaluations
 			final FeaturizedDataSet<D, L> unlabeledEvaluationData = this.testData;
-			final Map<D, L> classifiedData = this.validationGST.getModel().classify(unlabeledEvaluationData);
+			final Map<D, L> classifiedData = this.validationGST.getModel().classify(unlabeledEvaluationData.toDataFeatureMatrix(this.model.getContext()));
 			threadMapper = new ThreadMapper<SupervisedModelEvaluation<D, L>, Double>(
 					new ThreadMapper.Fn<SupervisedModelEvaluation<D, L>, Double>() {
 						@Override
 						public Double apply(SupervisedModelEvaluation<D, L> evaluation) {
-							return evaluation.evaluate(validationGST.getModel(), unlabeledEvaluationData, classifiedData);
+							return evaluation.evaluate(validationGST.getModel(), unlabeledEvaluationData.toDataFeatureMatrix(model.getContext()), classifiedData);
 						}
 					});
 			this.evaluationValues = threadMapper.run(this.unlabeledEvaluations, this.maxThreads);
 			
 			// Relabel training data
-			Map<D, Map<L, Double>> trainP = this.validationGST.getModel().posterior(this.trainData);
-			Map<D, L> trainC = this.validationGST.getModel().classify(this.trainData);
+			Map<D, Map<L, Double>> trainP = this.validationGST.getModel().posterior(this.trainData.toDataFeatureMatrix(this.model.getContext()));
+			Map<D, L> trainC = this.validationGST.getModel().classify(this.trainData.toDataFeatureMatrix(this.model.getContext()));
 			for (Entry<D, Map<L, Double>> entry : trainP.entrySet()) {
 				if (!this.relabelLabeledData && labeledTrainData.contains(entry.getKey())) {
 					continue;

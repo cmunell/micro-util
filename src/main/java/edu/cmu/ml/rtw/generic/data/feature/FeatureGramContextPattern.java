@@ -7,9 +7,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.Gazetteer;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTagClass;
@@ -99,7 +99,7 @@ public class FeatureGramContextPattern<D extends Datum<L>, L> extends FeatureGra
 		
 	}
 	
-	public FeatureGramContextPattern(Context<D, L> context) {
+	public FeatureGramContextPattern(DatumContext<D, L> context) {
 		super(context);
 		
 		this.beforePattern = "";
@@ -321,7 +321,7 @@ public class FeatureGramContextPattern<D extends Datum<L>, L> extends FeatureGra
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureGramContextPattern<D, L>(context);
 	}
 }

@@ -22,13 +22,13 @@ public class FnClean extends Fn<String, String> {
 	private DataTools.StringTransform cleanFn;
 	private String[] parameterNames = { "cleanFn" };
 	
-	private Context<?, ?> context;
+	private Context context;
 	
 	public FnClean() {
 		
 	}
 	
-	public FnClean(Context<?, ?> context) {
+	public FnClean(Context context) {
 		this.context = context;
 	}
 	
@@ -48,7 +48,7 @@ public class FnClean extends Fn<String, String> {
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("cleanFn"))
-			this.cleanFn = this.context.getDatumTools().getDataTools().getCleanFn(this.context.getMatchValue(parameterValue));
+			this.cleanFn = this.context.getDataTools().getCleanFn(this.context.getMatchValue(parameterValue));
 		else 
 			return false;
 		
@@ -65,7 +65,7 @@ public class FnClean extends Fn<String, String> {
 	}
 
 	@Override
-	public Fn<String, String> makeInstance(Context<?, ?> context) {
+	public Fn<String, String> makeInstance(Context context) {
 		return new FnClean(context);
 	}
 

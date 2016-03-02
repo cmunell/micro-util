@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -35,9 +35,9 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	private List<SupervisedModel<T, Boolean>> binaryModels;
 	private List<LabelIndicator<L>> labelIndicators;
 	private Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator;
-	private Context<T, Boolean> binaryContext;
+	private DatumContext<T, Boolean> binaryContext;
 	
-	public SupervisedModelCompositeBinary(List<SupervisedModel<T, Boolean>> binaryModels, List<LabelIndicator<L>> labelIndicators, Context<T, Boolean> binaryContext, Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator) {
+	public SupervisedModelCompositeBinary(List<SupervisedModel<T, Boolean>> binaryModels, List<LabelIndicator<L>> labelIndicators, DatumContext<T, Boolean> binaryContext, Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator) {
 		this.binaryModels = binaryModels;
 		this.labelIndicators = labelIndicators;
 		this.binaryContext = binaryContext;
@@ -54,24 +54,24 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	}
 
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data,
-			FeaturizedDataSet<D, L> testData,
+	public boolean train(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
 			List<SupervisedModelEvaluation<D, L>> evaluations) {
 		return true;
 	}
 
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		Map<D, Map<L, Double>> p = new HashMap<D, Map<L, Double>>();
-		final FeaturizedDataSet<T, Boolean> binaryData = (FeaturizedDataSet<T, Boolean>)data.makeBinary(this.binaryContext);
-		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, data.getMaxThreads());
+		final DataFeatureMatrix<T, Boolean> binaryData = (DataFeatureMatrix<T, Boolean>)data.makeBinary(null, this.binaryContext);
+		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.context.getMaxThreads());
 		
 		// Generate label for each datum (in parallel)
-		binaryData.map(new Fn<T, T>() {
+		binaryData.getData().map(new Fn<T, T>() {
 			@Override
 			public T apply(T datum) {
 				L label = computeLabel(binaryP, datum);
-				D unlabeledDatum = data.getDatumById(datum.getId());
+				D unlabeledDatum = data.getData().getDatumById(datum.getId());
 				Map<L, Double> datumP = new HashMap<L, Double>();
 				datumP.put(label, 1.0);
 				synchronized (p) {
@@ -80,23 +80,23 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 				
 				return datum;
 			}
-		}, data.getMaxThreads());
+		}, this.context.getMaxThreads());
 		
 		return p;
 	}
 	
 	@Override
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> classifications = new HashMap<D, L>();
-		final FeaturizedDataSet<T, Boolean> binaryData = (FeaturizedDataSet<T, Boolean>)data.makeBinary(this.binaryContext);
-		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, data.getMaxThreads());
+		final DataFeatureMatrix<T, Boolean> binaryData = (DataFeatureMatrix<T, Boolean>)data.makeBinary(null, this.binaryContext);
+		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.context.getMaxThreads());
 			
 		// Generate label for each datum (in parallel)
-		binaryData.map(new Fn<T, T>() {
+		binaryData.getData().map(new Fn<T, T>() {
 			@Override
 			public T apply(T datum) {
 				L label = computeLabel(binaryP, datum);
-				D unlabeledDatum = data.getDatumById(datum.getId());
+				D unlabeledDatum = data.getData().getDatumById(datum.getId());
 				
 				synchronized (classifications) {
 					classifications.put(unlabeledDatum, label);
@@ -104,7 +104,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 				
 				return datum;
 			}
-		}, data.getMaxThreads());
+		}, this.context.getMaxThreads());
 		
 		return classifications;
 	}
@@ -123,7 +123,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 		return this.inverseLabelIndicator.label(indicatorWeights, positiveIndicators);
 	}
 	
-	private List<Map<T, Map<Boolean, Double>>> computeBinaryModelPosteriors(FeaturizedDataSet<T, Boolean> binaryData, int maxThreads) {
+	private List<Map<T, Map<Boolean, Double>>> computeBinaryModelPosteriors(DataFeatureMatrix<T, Boolean> binaryData, int maxThreads) {
 		ThreadMapper<SupervisedModel<T, Boolean>, Map<T, Map<Boolean, Double>>> pThreads 
 		= new ThreadMapper<SupervisedModel<T, Boolean>, Map<T, Map<Boolean, Double>>>(
 				new Fn<SupervisedModel<T, Boolean>, Map<T, Map<Boolean, Double>>>() {
@@ -154,7 +154,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return null;
 	}
 
@@ -176,7 +176,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 
 	@Override
 	protected <U extends Datum<Boolean>> SupervisedModel<U, Boolean> makeBinaryHelper(
-			Context<U, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<U, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<U, Boolean> binaryModel) {
 		return binaryModel; // TODO Implement later if necessary
 	}

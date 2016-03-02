@@ -17,10 +17,11 @@ import YADLL.FunctionGraphs.FunctionGraph;
 import YADLL.FunctionGraphs.Functions.Function;
 import YADLL.FunctionGraphs.Functions.Variable;
 import YADLL.Optimizers.GradOpt;
-import edu.cmu.ml.rtw.generic.data.Context;
+
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
@@ -29,6 +30,7 @@ import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedModel<D, L> {
@@ -108,9 +110,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		private YADLLFunctionPrototype fnType;
 		private Map<String, String> parameterValues;
 		
-		private Context<?, ?> context;
+		private DatumContext<?, ?> context;
 		
-		public YADLLFunction(Context<?, ?> context) {
+		public YADLLFunction(DatumContext<?, ?> context) {
 			this.parameterValues = new HashMap<String, String>();
 			this.context = context;
 		}
@@ -193,9 +195,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		private String[] parameterNames = { "size", "fn" };
 		
-		private Context<?, ?> context;
+		private DatumContext<?, ?> context;
 		
-		public YADLLFunctionNode(Context<?,?> context) {
+		public YADLLFunctionNode(DatumContext<?,?> context) {
 			this.context = context;
 		}
 		
@@ -267,9 +269,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		private String[] parameterNames = { "initFn" };
 		
-		private Context<?, ?> context;
+		private DatumContext<?, ?> context;
 		
-		public YADLLParameter(Context<?,?> context) {
+		public YADLLParameter(DatumContext<?,?> context) {
 			this.context = context;
 		}
 		
@@ -349,7 +351,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		this(null);
 	}
 	
-	public SupervisedModelYADLL(Context<D, L> context) {
+	public SupervisedModelYADLL(DatumContext<D, L> context) {
 		this.context = context;
 		this.fnNodes = new ArrayList<String>();
 		this.fnParameters = new ArrayList<String>();
@@ -368,10 +370,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	}
 	
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 		
-		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 				return false;
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false);
@@ -415,19 +417,19 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		return true;
 	}
 	
-	private Pair<Matrix, Matrix> buildMatricesFromData(FeaturizedDataSet<D, L> data, boolean onlyX) {
+	private Pair<Matrix, Matrix> buildMatricesFromData(DataFeatureMatrix<D, L> data, boolean onlyX) {
 		Map<L, Integer> labelMap = getLabelIndices();
 		
-		int datumFeatureCount = data.getFeatureVocabularySize();
-		int datumCount = data.size();
+		int datumFeatureCount = data.getFeatures().getFeatureVocabularySize();
+		int datumCount = data.getData().size();
 		int labelCount = labelMap.size();
 		
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
 		int numNonZeroFeatures = 0;
-		for (D datum : data) {
-			Map<Integer, Double> datumFeatureMap = data.getFeatureVocabularyValuesAsMap(datum);
+		for (D datum : data.getData()) {
+			Map<Integer, Double> datumFeatureMap = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 			featureMaps.add(datumFeatureMap);
 			numNonZeroFeatures += datumFeatureMap.size();
 			
@@ -547,8 +549,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
-		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
+		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 			return null;
 	
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
@@ -563,7 +565,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		int i = 0;
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
 			for (int j = 0; j < labels.length; j++) {
@@ -586,8 +588,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
-		if (this.model == null && !buildModelFromParameters(data.getFeatureVocabularySize()))
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
+		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 				return null;
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
@@ -602,7 +604,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		Map<D, L> classifications = new HashMap<D, L>();
 		int i = 0;
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			double maxValue = 0.0;
 			int maxIndex = 0;
 			for (int j = 0; j < labels.length; j++) {
@@ -693,7 +695,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelYADLL<D, L>(context);
 	}
 
@@ -718,7 +720,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}

@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.TokenSpanExtractor;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
@@ -36,7 +36,7 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 	protected GridSearch<D, L> gridSearch;
 	protected boolean trainOnDev;
 	
-	public ValidationGST(String name, Context<D, L> context) {
+	public ValidationGST(String name, DatumContext<D, L> context) {
 		super(name, context);
 		
 		this.gridSearch = context.getGridSearches().get(0);
@@ -90,14 +90,14 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 			addFeature(feature);
 		
 		OutputWriter output = this.datumTools.getDataTools().getOutputWriter();
-		Context<D, L> featureContext = new Context<D, L>(this.datumTools, features);
+		DatumContext<D, L> featureContext = new DatumContext<D, L>(this.datumTools, features);
 		output.debugWriteln(this.name + " serializing features");
 		output.modelWriteln(featureContext.toString()); 
 		output.debugWriteln(this.name + " finished serializing features");
 	}
 	
 	public ValidationGST(String name, 
-						 Context<D, L> context, 
+						 DatumContext<D, L> context, 
 						 DataSet<D, L> trainData, 
 						 DataSet<D, L> devData, 
 						 DataSet<D, L> testData) {
@@ -115,7 +115,7 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 	}
 	
 	public ValidationGST(String name, 
-			 Context<D, L> context, 
+			 DatumContext<D, L> context, 
 			 FeaturizedDataSet<D, L> trainData, 
 			 FeaturizedDataSet<D, L> devData, 
 			 FeaturizedDataSet<D, L> testData) {

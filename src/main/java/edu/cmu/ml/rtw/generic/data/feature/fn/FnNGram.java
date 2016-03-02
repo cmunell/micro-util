@@ -22,13 +22,13 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 public abstract class FnNGram extends Fn<TokenSpan, TokenSpan> {
 	protected String[] parameterNames = { "n" };
 	protected int n = 1;
-	protected Context<?, ?> context;
+	protected Context context;
 
 	public FnNGram() {
 		
 	}
 	
-	public FnNGram(Context<?, ?> context) {
+	public FnNGram(Context context) {
 		this.context = context;
 	}
 

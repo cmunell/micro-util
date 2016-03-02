@@ -2,9 +2,10 @@ package edu.cmu.ml.rtw.generic.data.feature;
 
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -34,12 +35,12 @@ public class FeatureTokenCount<D extends Datum<L>, L> extends Feature<D, L> {
 		
 	}
 	
-	public FeatureTokenCount(Context<D, L> context) {
+	public FeatureTokenCount(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		return true;
 	}
 
@@ -107,13 +108,13 @@ public class FeatureTokenCount<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureTokenCount<D, L>(context);
 	}
 
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		return binaryFeature;
 	}

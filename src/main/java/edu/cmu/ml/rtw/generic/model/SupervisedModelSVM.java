@@ -12,13 +12,15 @@ import java.util.Random;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 
 /**
  * SupervisedModelSVM represents a multi-class SVM trained with
@@ -64,7 +66,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		this.featureNames = new HashMap<Integer, String>();
 	}
 	
-	public SupervisedModelSVM(Context<D, L> context) {
+	public SupervisedModelSVM(DatumContext<D, L> context) {
 		this();
 		this.context = context;
 	}
@@ -80,8 +82,8 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	}
 
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 		
 		if (!initializeTraining(data))
 			return false;
@@ -138,19 +140,19 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		return true;
 	}
 	
-	protected boolean initializeTraining(FeaturizedDataSet<D, L> data) {
+	protected boolean initializeTraining(DataFeatureMatrix<D, L> data) {
 		if (this.feature_w == null) {
 			this.t = 1;
 			
 			this.bias_b = new double[this.validLabels.size()];
-			this.numFeatures = data.getFeatureVocabularySize();
+			this.numFeatures = data.getFeatures().getFeatureVocabularySize();
 			this.feature_w = new HashMap<Integer, Double>(); 	
 	
 			this.bias_G = new double[this.bias_b.length];
 			this.feature_G = new HashMap<Integer, Double>();
 		}
 		
-		this.random = data.getDatumTools().getDataTools().makeLocalRandom();
+		this.random = data.getData().getDatumTools().getDataTools().makeLocalRandom();
 		
 		return true;
 	}
@@ -161,11 +163,11 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	 * @return true if the model has been trained for a full pass over the
 	 * training data set
 	 */
-	protected boolean trainOneIteration(int iteration, FeaturizedDataSet<D, L> data) {
-		List<Integer> dataPermutation = data.constructRandomDataPermutation(this.random);
+	protected boolean trainOneIteration(int iteration, DataFeatureMatrix<D, L> data) {
+		List<Integer> dataPermutation = data.getData().constructRandomDataPermutation(this.random);
 		
 		for (Integer datumId : dataPermutation) {
-			D datum = data.getDatumById(datumId);
+			D datum = data.getData().getDatumById(datumId);
 			L datumLabel = this.mapValidLabel(datum.getLabel());
 			L bestLabel = argMaxScoreLabel(data, datum, true);
 
@@ -187,20 +189,20 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	 * @param data
 	 * @return true if the model has made SGD weight updates from a single datum.
 	 */
-	protected boolean trainOneDatum(D datum, L datumLabel, L bestLabel, int iteration, FeaturizedDataSet<D, L> data) {
-		int N = data.size();
+	protected boolean trainOneDatum(D datum, L datumLabel, L bestLabel, int iteration, DataFeatureMatrix<D, L> data) {
+		int N = data.getData().size();
 		double K = N/4.0;
 		boolean datumLabelBest = datumLabel.equals(bestLabel);
 		boolean regularizerUpdate = (this.t % K == 0); // for "occasionality trick"
 		
-		Map<Integer, Double> datumFeatureValues = data.getFeatureVocabularyValuesAsMap(datum);
+		Map<Integer, Double> datumFeatureValues = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 		
 		if (iteration == 0) {
 			List<Integer> missingNameKeys = new ArrayList<Integer>();
 			for (Integer key : datumFeatureValues.keySet())
 				if (!this.featureNames.containsKey(key))
 					missingNameKeys.add(key);
-			this.featureNames.putAll(data.getFeatureVocabularyNamesForIndices(missingNameKeys));
+			this.featureNames.putAll(data.getFeatures().getFeatureVocabularyNamesForIndices(missingNameKeys));
 		}
 		
 		if (datumLabelBest && !regularizerUpdate) // No update necessary
@@ -306,7 +308,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		return count;
 	}
 	
-	protected double objectiveValue(FeaturizedDataSet<D, L> data) {
+	protected double objectiveValue(DataFeatureMatrix<D, L> data) {
 		double value = 0;
 		
 		if (this.l2 > 0) {
@@ -316,7 +318,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			value += l2Norm*this.l2*.5;
 		}
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			double maxScore = maxScoreLabel(data, datum, true);
 			double datumScore = scoreLabel(data, datum, datum.getLabel(), false);
 			value += maxScore - datumScore;
@@ -325,7 +327,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		return value;
 	}
 	
-	protected double maxScoreLabel(FeaturizedDataSet<D, L> data, D datum, boolean includeCost) {
+	protected double maxScoreLabel(DataFeatureMatrix<D, L> data, D datum, boolean includeCost) {
 		double maxScore = Double.NEGATIVE_INFINITY;
 		for (L label : this.validLabels) {
 			double score = scoreLabel(data, datum, label, includeCost);
@@ -336,7 +338,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		return maxScore;
 	}
 	
-	protected L argMaxScoreLabel(FeaturizedDataSet<D, L> data, D datum, boolean includeCost) {
+	protected L argMaxScoreLabel(DataFeatureMatrix<D, L> data, D datum, boolean includeCost) {
 		double maxScore = Double.NEGATIVE_INFINITY;
 		List<L> maxLabels = null; // for breaking ties randomly
 		L maxLabel = null;
@@ -365,10 +367,10 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			return maxLabel;
 	}
 	
-	protected double scoreLabel(FeaturizedDataSet<D, L> data, D datum, L label, boolean includeCost) {
+	protected double scoreLabel(DataFeatureMatrix<D, L> data, D datum, L label, boolean includeCost) {
 		double score = 0;		
 		
-		Map<Integer, Double> featureValues = data.getFeatureVocabularyValuesAsMap(datum);
+		Map<Integer, Double> featureValues = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 		int labelIndex = this.labelIndices.get(label);
 		for (Entry<Integer, Double> entry : featureValues.entrySet()) {
 			int wIndex = this.getWeightIndex(label, entry.getKey());
@@ -428,7 +430,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelSVM<D, L>(context);
 	}
 
@@ -438,10 +440,10 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	}
 
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
-		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>(data.size());
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
+		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>(data.getData().size());
 
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			posteriors.put(datum, posteriorForDatum(data, datum));
 		}
 		
@@ -454,7 +456,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	 * @param datum
 	 * @return posterior based on softmax using scores for labels assigned to datum
 	 */
-	protected Map<L, Double> posteriorForDatum(FeaturizedDataSet<D, L> data, D datum) {
+	protected Map<L, Double> posteriorForDatum(DataFeatureMatrix<D, L> data, D datum) {
 		Map<L, Double> posterior = new HashMap<L, Double>(this.validLabels.size());
 		double[] scores = new double[this.validLabels.size()];
 		double max = Double.NEGATIVE_INFINITY;
@@ -478,10 +480,10 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	}
 	
 	@Override
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> classifiedData = new HashMap<D, L>();
 		
-		for (D datum : data) {
+		for (D datum : data.getData()) {
 			classifiedData.put(datum, argMaxScoreLabel(data, datum, false));
 		}
 	
@@ -490,7 +492,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 	
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		SupervisedModelSVM<T, Boolean> binaryModelSVM = (SupervisedModelSVM<T, Boolean>)binaryModel;
 		
@@ -560,22 +562,22 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			AssignmentList internalAssignments) {
 		
 		internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.VALUE_STR, "trainingIterations", Obj.stringValue(String.valueOf(this.trainingIterations)))
+				Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "trainingIterations", Obj.stringValue(String.valueOf(this.trainingIterations)))
 		);
 		
 		internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.VALUE_STR, "earlyStopIfNoLabelChange", Obj.stringValue(String.valueOf(this.earlyStopIfNoLabelChange)))
+				Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "earlyStopIfNoLabelChange", Obj.stringValue(String.valueOf(this.earlyStopIfNoLabelChange)))
 		);
 		
 		if (this.numFeatures == 0)
 			return internalAssignments;
 		
 		internalAssignments.add(
-			Assignment.assignmentTyped(null, Context.VALUE_STR, "t", Obj.stringValue(String.valueOf(this.t)))
+			Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "t", Obj.stringValue(String.valueOf(this.t)))
 		);
 		
 		internalAssignments.add(
-			Assignment.assignmentTyped(null, Context.VALUE_STR, "numWeights", Obj.stringValue(String.valueOf(this.labelIndices.size()*this.numFeatures)))
+			Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "numWeights", Obj.stringValue(String.valueOf(this.labelIndices.size()*this.numFeatures)))
 		);
 		 
 		for (int i = 0; i < this.labelIndices.size(); i++) {
@@ -586,7 +588,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			
 			Obj.Array biasArray = Obj.array(new String[] { label, b, G, index });
 			internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.ARRAY_STR, "b_" + index, biasArray)
+				Assignment.assignmentTyped(null, Context.ObjectType.ARRAY.toString(), "b_" + index, biasArray)
 			);
 		}
 		
@@ -619,7 +621,7 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 			
 			Obj.Array weightArray = Obj.array(new String[] { label, featureName, w, G, labelIndexStr, featureIndexStr });
 			internalAssignments.add(
-				Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + weightIndex, weightArray)
+				Assignment.assignmentTyped(null, Context.ObjectType.ARRAY.toString(), "w_" + weightIndex, weightArray)
 			);
 		}
 		

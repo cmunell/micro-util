@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -53,12 +53,12 @@ public class SupervisedModelEvaluationF<D extends Datum<L>, L> extends Supervise
 		
 	}
 	
-	public SupervisedModelEvaluationF(Context<D, L> context) {
+	public SupervisedModelEvaluationF(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	protected double compute(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	protected double compute(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		if (this.mode == Mode.MICRO)
 			return computeMicro(model, data, predictions);
 		else
@@ -66,7 +66,7 @@ public class SupervisedModelEvaluationF<D extends Datum<L>, L> extends Supervise
 	}
 
 	// Equal to micro accuracy...
-	private double computeMicro(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	private double computeMicro(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		List<Pair<L, L>> actualAndPredicted = this.getMappedActualAndPredictedLabels(predictions);
 		double tp = 0;
 		double f = 0; // fp or fn
@@ -83,7 +83,7 @@ public class SupervisedModelEvaluationF<D extends Datum<L>, L> extends Supervise
 		return pr;//2*pr*pr/(pr+pr);
 	}
 	
-	private double computeMacro(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	private double computeMacro(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		List<Pair<L, L>> actualAndPredicted = this.getMappedActualAndPredictedLabels(predictions);
 		Map<L, Double> weights = new HashMap<L, Double>();
 		Map<L, Double> tps = new HashMap<L, Double>();
@@ -104,7 +104,7 @@ public class SupervisedModelEvaluationF<D extends Datum<L>, L> extends Supervise
 			weights.put(actual, weights.get(actual) + 1.0);
 		}
 		
-		L filterLabelTyped = data.getDatumTools().labelFromString(this.filterLabel);
+		L filterLabelTyped = data.getData().getDatumTools().labelFromString(this.filterLabel);
 		for (Entry<L, Double> entry : weights.entrySet()) {
 			if (filterLabelTyped != null) {
 				if (entry.getKey().equals(filterLabelTyped))
@@ -183,7 +183,7 @@ public class SupervisedModelEvaluationF<D extends Datum<L>, L> extends Supervise
 	}
 
 	@Override
-	public SupervisedModelEvaluation<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModelEvaluation<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelEvaluationF<D, L>(context);
 	}
 }

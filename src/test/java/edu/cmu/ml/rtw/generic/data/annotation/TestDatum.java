@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.data.annotation;
 
 import java.io.File;
+
 import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
@@ -49,6 +50,8 @@ public class TestDatum<L> extends Datum<L> {
 				return str.toLowerCase().equals("true") || str.equals("1");
 			}
 		};
+		
+		tools.addGenericDataSetBuilder(new TestDataSetBuilder());
 	
 		return tools;
 	}
@@ -82,7 +85,6 @@ public class TestDatum<L> extends Datum<L> {
 					return new TokenSpan[] { testDatum.tokenSpan };
 				}
 			});
-			
 		}
 		
 		@Override

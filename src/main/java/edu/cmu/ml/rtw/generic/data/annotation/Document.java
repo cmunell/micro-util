@@ -1,7 +1,9 @@
 package edu.cmu.ml.rtw.generic.data.annotation;
 
 import java.util.Collection;
+
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 
 /**
  * Document represents a bunch of text/data
@@ -16,9 +18,25 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 public abstract class Document {
 	protected DataTools dataTools;
 	protected String name;
+	protected StoreReference storeReference;
 	
 	public Document(DataTools dataTools) {
 		this.dataTools = dataTools;
+	}
+	
+	public Document(DataTools dataTools, String name) {
+		this.dataTools = dataTools;
+		this.name = name;
+	}
+	
+	public Document(DataTools dataTools, String name, String storageName, String collectionName) {
+		this.dataTools = dataTools;
+		this.name = name;
+		this.storeReference = new StoreReference(storageName, collectionName, SerializerDocument.NAME_INDEX_FIELD, collectionName);
+	}
+	
+	public StoreReference getStoreReference() {
+		return this.storeReference;
 	}
 	
 	public String getName() {

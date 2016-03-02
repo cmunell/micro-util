@@ -3,7 +3,9 @@ package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cmu.ml.rtw.generic.data.StoredItemSetManager;
 import edu.cmu.ml.rtw.generic.data.annotation.DocumentSet;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 
 /**
  * TokenSpan represents a contiguous span of tokens in a 
@@ -22,6 +24,24 @@ public class TokenSpan {
 		EQUAL,
 		OVERLAPS,
 		NONE
+	}
+	
+	public enum SerializationType {
+		ONLY_TOKENS,
+		SENTENCE,
+		SENTENCE_AND_DOCUMENT,
+		STORE_REFERENCE;
+		
+		public static SerializationType getTypeFromJSON(JSONObject json) {
+			if (json.has("d") || json.has("document"))
+				return SerializationType.SENTENCE_AND_DOCUMENT;
+			else if (json.has("sI") || json.has("sentenceIndex"))
+				return SerializationType.SENTENCE;
+			else if (json.has("r"))
+				return SerializationType.STORE_REFERENCE;
+			else
+				return SerializationType.ONLY_TOKENS;
+		}
 	}
 	
 	private DocumentNLP document;
@@ -138,22 +158,23 @@ public class TokenSpan {
 	}
 	
 	public JSONObject toJSON() {
-		return toJSON(false);
+		return toJSON(SerializationType.ONLY_TOKENS);
 	}
 		
-	public JSONObject toJSON(boolean includeSentence) {
-		return toJSON(includeSentence, false);
-	}
-		
-	public JSONObject toJSON(boolean includeSentence, boolean includeDocument) {	
+	public JSONObject toJSON(SerializationType serializationType) {	
 		JSONObject json = new JSONObject();
 		
 		try {
-			if (includeDocument)
+			if (serializationType == SerializationType.SENTENCE_AND_DOCUMENT) {
 				json.put("d", this.document.getName());
-			
-			if (includeSentence)
 				json.put("sI", this.sentenceIndex);
+			} else if (serializationType == SerializationType.SENTENCE) {
+				json.put("sI", this.sentenceIndex);
+			} else if (serializationType == SerializationType.STORE_REFERENCE) {
+				json.put("r", this.document.getStoreReference().toJSON());
+				json.put("sI", this.sentenceIndex);
+			}
+			
 			json.put("s", this.startTokenIndex);
 			json.put("e", this.endTokenIndex);
 		} catch (JSONException e) {
@@ -197,6 +218,23 @@ public class TokenSpan {
 	
 	public static TokenSpan fromJSON(JSONObject json, DocumentNLP document) {
 		return fromJSON(json, document, -1);
+	}
+	
+	public static TokenSpan fromJSON(JSONObject json, StoredItemSetManager itemSets) {
+		StoreReference reference = new StoreReference();
+		try {
+			if (!reference.fromJSON(json.getJSONObject("r")))
+				return null;
+			
+			DocumentNLP document = itemSets.resolveStoreReference(reference, false);
+			int sentenceIndex = json.has("sI") ? json.getInt("sI") : json.getInt("sentenceIndex");
+			int startTokenIndex = json.has("s") ? json.getInt("s") : json.getInt("startTokenIndex");
+			int endTokenIndex = json.has("e") ? json.getInt("e") : json.getInt("endTokenIndex");
+			
+			return new TokenSpan(document, sentenceIndex, startTokenIndex, endTokenIndex);
+		} catch (JSONException e) {
+			return null;
+		}
 	}
 }
 

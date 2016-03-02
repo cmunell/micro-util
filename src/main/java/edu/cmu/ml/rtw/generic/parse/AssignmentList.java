@@ -1,16 +1,20 @@
 package edu.cmu.ml.rtw.generic.parse;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import java_cup.runtime.ComplexSymbolFactory;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
+import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
 /**
  * AssignmentList represents a list of assignments in 
@@ -23,8 +27,7 @@ import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
  * @author Bill McDowell
  *
  */
-
-public class AssignmentList extends Obj {
+public class AssignmentList extends Obj implements Iterable<Assignment>, StringSerializable {
 	private List<Assignment> assignments;
 	private Map<String, Assignment> assignmentMap;
 	
@@ -206,5 +209,25 @@ public class AssignmentList extends Obj {
 		for (Assignment assignment : this.assignments)
 			assignment.getValue().getCurlyBracedValueStrs(strs);
 		return strs;
+	}
+
+	@Override
+	public Iterator<Assignment> iterator() {
+		return this.assignments.iterator();
+	}
+	
+	@Override
+	public boolean fromString(String str) {
+		CtxScanner scanner = new CtxScanner(new StringReader(str));
+		CtxParser parser = new CtxParser(scanner, new ComplexSymbolFactory());
+		AssignmentList parse = null;
+		try {
+			parse = (AssignmentList)parser.parse().value;
+			for (int i = 0; i < parse.size(); i++)
+				add(parse.get(i));
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
 	}
 }

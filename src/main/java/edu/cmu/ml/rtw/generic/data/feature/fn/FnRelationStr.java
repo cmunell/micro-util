@@ -15,19 +15,19 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 			super();
 		}
 		
-		public FnRelationStrStr(Context<?, ?> context) {
+		public FnRelationStrStr(Context context) {
 			super(context);
 		}
 
 		@Override
 		public Fn<String, String> makeInstance(
-				Context<?, ?> context) {
+				Context context) {
 			return new FnRelationStrStr(context);
 		}
 		
 		@Override
 		protected Fn<String, String> constructParameterF(Obj parameterValue) {
-			return this.context.getMatchOrConstructStrFn(parameterValue);
+			return this.context.getMatchOrRunCommandStrFn(parameterValue);
 		}
 	}
 	
@@ -36,13 +36,13 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 			super();
 		}
 		
-		public FnRelationStrTokenSpan(Context<?, ?> context) {
+		public FnRelationStrTokenSpan(Context context) {
 			super(context);
 		}
 
 		@Override
 		public Fn<TokenSpan, String> makeInstance(
-				Context<?, ?> context) {
+				Context context) {
 			return new FnRelationStrTokenSpan(context);
 		}
 
@@ -56,7 +56,7 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 	protected Fn<S, String> f1;
 	protected Fn<S, String> f2;
 	protected String relationSymbol;
-	protected Context<?, ?> context;
+	protected Context context;
 	
 	protected abstract Fn<S, String> constructParameterF(Obj parameterValue);
 	
@@ -64,7 +64,7 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 		
 	}
 	
-	public FnRelationStr(Context<?, ?> context) {
+	public FnRelationStr(Context context) {
 		this.context = context;
 	}
 

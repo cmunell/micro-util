@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -37,12 +37,12 @@ public class SupervisedModelEvaluationPrecision<D extends Datum<L>, L> extends S
 		
 	}
 
-	public SupervisedModelEvaluationPrecision(Context<D, L> context) {
+	public SupervisedModelEvaluationPrecision(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	protected double compute(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	protected double compute(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		List<Pair<L, L>> actualAndPredicted = this.getMappedActualAndPredictedLabels(predictions);
 
 		Map<L, Double> weights = new HashMap<L, Double>();
@@ -62,7 +62,7 @@ public class SupervisedModelEvaluationPrecision<D extends Datum<L>, L> extends S
 			weights.put(actual, weights.get(actual) + 1.0);
 		}
 		
-		L filterLabelTyped = data.getDatumTools().labelFromString(this.filterLabel);
+		L filterLabelTyped = data.getData().getDatumTools().labelFromString(this.filterLabel);
 		for (Entry<L, Double> entry : weights.entrySet()) {
 			if (filterLabelTyped != null) {
 				if (entry.getKey().equals(filterLabelTyped))
@@ -134,7 +134,7 @@ public class SupervisedModelEvaluationPrecision<D extends Datum<L>, L> extends S
 	}
 
 	@Override
-	public SupervisedModelEvaluation<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModelEvaluation<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelEvaluationPrecision<D, L>(context);
 	}
 }

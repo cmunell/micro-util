@@ -9,8 +9,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
@@ -135,7 +137,7 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 		
 	}
 	
-	public FeatureTokenSpanFnFilteredVocab(Context<D, L> context) {
+	public FeatureTokenSpanFnFilteredVocab(DatumContext<D, L> context) {
 		this.context = context;
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		this.indexRangeStarts = new TreeSet<Integer>();
@@ -170,7 +172,7 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 		if (parameter.equals("vocabFeature"))
 			this.vocabFeature = (FeatureTokenSpanFnDataVocabTrie<D, L>)this.context.getMatchFeature(parameterValue);
 		else if (parameter.equals("vocabFilterFn"))
-			this.vocabFilterFn = this.context.getMatchOrConstructStrFn(parameterValue);
+			this.vocabFilterFn = this.context.getMatchOrRunCommandStrFn(parameterValue);
 		else if (parameter.equals("vocabFilterInit"))
 			this.vocabFilterInit = VocabFilterInit.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("vocabFilterInitArg"))
@@ -185,7 +187,7 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 	}
 
 	@Override
-	public boolean init(FeaturizedDataSet<D, L> dataSet) {
+	public boolean init(DataSet<D, L> dataSet) {
 		Set<String> initVocab = null;
 		if (this.vocabFilterInit == VocabFilterInit.SUFFIX) {
 			initVocab = this.vocabFeature.getVocabularyTermsSuffixedBy(this.vocabFilterInitArg);
@@ -275,7 +277,7 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 	
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
 		
 		FeatureTokenSpanFnFilteredVocab<T, Boolean> binaryFeatureTokenSpanFnFilteredVocab = (FeatureTokenSpanFnFilteredVocab<T, Boolean>)binaryFeature;
@@ -324,11 +326,11 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 		
 		if (vocabulary.size() > 0) {
 			internalAssignments.add(
-					Assignment.assignmentTyped(new ArrayList<String>(), Context.ARRAY_STR, "vocabulary", vocabulary)
+					Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.ARRAY.toString(), "vocabulary", vocabulary)
 			);
 			
 			internalAssignments.add(
-					Assignment.assignmentTyped(new ArrayList<String>(), Context.ARRAY_STR, "indices", indices)
+					Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.ARRAY.toString(), "indices", indices)
 			);
 		}
 		
@@ -353,13 +355,13 @@ public class FeatureTokenSpanFnFilteredVocab<D extends Datum<L>, L> extends Feat
 		if (internalAssignments == null)
 			return null;
 		
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "merged", Obj.stringValue(String.valueOf(this.merged))));
+		internalAssignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "merged", Obj.stringValue(String.valueOf(this.merged))));
 		
 		return internalAssignments;
 	}
 
 	@Override
-	public Feature<D, L> makeInstance(Context<D, L> context) {
+	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
 		return new FeatureTokenSpanFnFilteredVocab<D, L>(context);
 	}
 

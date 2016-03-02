@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.Feature;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
-import edu.cmu.ml.rtw.generic.model.constraint.Constraint;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -37,27 +34,27 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * @param <L> datum label type
  */
 public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedModel<D, L> {
-	private L defaultLabel;
+	// FIXME Refactor private L defaultLabel;
 	private String[] hyperParameterNames = { "defaultLabel" };
 	
 	// List of partition model names in the order in which they should
 	// run.  If a model occurs prior to another in this list, then its
 	// predictions take precedence (especially when structured prediction is involved)
-	private List<String> orderedModels;
+	// FIXME Refactor private List<String> orderedModels;
 	
 	/// Map model names to constraints, models, and feature sets
-	private Map<String, Constraint<D, L>> constraints;
+	/* FIXME Refactor private Map<String, Constraint<D, L>> constraints;
 	private Map<String, SupervisedModel<D, L>> models;
-	private Map<String, List<Feature<D, L>>> features;
+	private Map<String, List<Feature<D, L>>> features; */
 	
 	public SupervisedModelPartition() {
-		this.orderedModels = new ArrayList<String>();
-		this.constraints = new HashMap<String, Constraint<D, L>>();
+		// FIXME Refactor this.orderedModels = new ArrayList<String>();
+		/* FIXME Refactor this.constraints = new HashMap<String, Constraint<D, L>>();
 		this.models = new HashMap<String, SupervisedModel<D, L>>();
-		this.features = new HashMap<String, List<Feature<D, L>>>();
+		this.features = new HashMap<String, List<Feature<D, L>>>(); */
 	}
 	
-	public SupervisedModelPartition(Context<D, L> context) {
+	public SupervisedModelPartition(DatumContext<D, L> context) {
 		this();
 		this.context = context;
 	}
@@ -72,12 +69,12 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 	 * when the later models are structured and the structures overlap. 
 	 */
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		Map<D, L> fixedLabels = new HashMap<D, L>();
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		/* FIXME Refactor Map<D, L> fixedLabels = new HashMap<D, L>();
 		for (int i = 0; i < this.orderedModels.size(); i++) {
 			String modelName = this.orderedModels.get(i);
-			FeaturizedDataSet<D, L> modelData = this.constraints.get(modelName).getSatisfyingSubset(data, this.labelMapping);
-			FeaturizedDataSet<D, L> modelTestData = this.constraints.get(modelName).getSatisfyingSubset(testData, this.labelMapping);
+			DataFeatureMatrix<D, L> modelData = this.constraints.get(modelName).getSatisfyingSubset(data, this.labelMapping);
+			DataFeatureMatrix<D, L> modelTestData = this.constraints.get(modelName).getSatisfyingSubset(testData, this.labelMapping);
 		
 			for (Feature<D, L> feature : this.features.get(modelName)) {
 				if (!feature.init(modelData) || !modelData.addFeature(feature))
@@ -91,7 +88,7 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 			for (int j = i + 1; j < this.orderedModels.size(); j++)
 				this.models.get(this.orderedModels.get(j)).fixDatumLabels(fixedLabels);
 		}
-		
+		*/
 		return true;
 	}
 
@@ -105,12 +102,12 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 	 * models.
 	 */
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		Map<D, Map<L, Double>> posterior = new HashMap<D, Map<L, Double>>();
-		Map<D, L> fixedLabels = new HashMap<D, L>(); // Labels that are fixed by the first models for later models
+		/* FIXME Refactor Map<D, L> fixedLabels = new HashMap<D, L>(); // Labels that are fixed by the first models for later models
 		for (int i = 0; i < this.orderedModels.size(); i++) {
 			String modelName = this.orderedModels.get(i);
-			FeaturizedDataSet<D, L> modelData = this.constraints.get(modelName).getSatisfyingSubset(data, this.labelMapping);
+			DataFeatureMatrix<D, L> modelData = this.constraints.get(modelName).getSatisfyingSubset(data, this.labelMapping);
 			for (Feature<D, L> feature : this.features.get(modelName))
 				if (!modelData.addFeature(feature))
 					return null;
@@ -151,7 +148,7 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 			
 			if (!posterior.containsKey(datum))
 				posterior.put(datum, p);
-		}
+		}*/
 		
 		return posterior;
 	}
@@ -291,7 +288,7 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 		for (String parameterName : this.hyperParameterNames) {
 			hyperParameterNames.add(parameterName);
 		}
-		
+		/* FIXME Refactor
 		if (this.models != null) {
 			for (SupervisedModel<D, L> model : this.models.values()) {
 				String[] modelParameterNames = model.getParameterNames();
@@ -299,13 +296,13 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 					hyperParameterNames.add(model.getReferenceName() + "_" + parameterName);
 				}
 			}
-		}
+		}*/
 		
 		return this.hyperParameterNames;
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelPartition<D, L>(context);
 	}
 
@@ -324,7 +321,7 @@ public class SupervisedModelPartition<D extends Datum<L>, L> extends SupervisedM
 
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		// TODO Auto-generated method stub
 		return null;

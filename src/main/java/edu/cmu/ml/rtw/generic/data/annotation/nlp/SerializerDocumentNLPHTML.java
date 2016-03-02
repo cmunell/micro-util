@@ -7,6 +7,7 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SerializerDocumentNLPHTML extends SerializerDocument<DocumentNLPMutable, String> {		
@@ -139,7 +140,7 @@ public class SerializerDocumentNLPHTML extends SerializerDocument<DocumentNLPMut
 	}
 
 	@Override
-	public DocumentNLPMutable deserialize(String object) {
+	public DocumentNLPMutable deserialize(String object, StoreReference storeReference) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -191,8 +192,8 @@ public class SerializerDocumentNLPHTML extends SerializerDocument<DocumentNLPMut
 	}
 
 	@Override
-	public DocumentNLPMutable deserializeFromString(String str) {
-		return deserialize(str);
+	public DocumentNLPMutable deserializeFromString(String str, StoreReference storeReference) {
+		return deserialize(str, storeReference);
 	}
 
 	@Override

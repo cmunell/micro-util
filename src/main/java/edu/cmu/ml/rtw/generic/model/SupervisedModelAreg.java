@@ -22,13 +22,15 @@ import org.platanios.learn.math.matrix.VectorNorm;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 
 /**
  * SupervisedModelAreg is a wrapper around Platanios'
@@ -91,20 +93,21 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 	}
 	
-	public SupervisedModelAreg(Context<D, L> context) {
+	public SupervisedModelAreg(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	public boolean train(FeaturizedDataSet<D, L> data, FeaturizedDataSet<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 		
 		if (this.validLabels.size() > 2 || !this.validLabels.contains(true)) {
 			output.debugWriteln("ERROR: Areg only supports binary classification.");
 			return false;
 		}
 		
-		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = data.makePlataniosDataSet(this.weightedLabels, 1.0/5.0, true, false);
+		@SuppressWarnings("unchecked")
+		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = PlataniosUtil.makePlataniosDataSet((DataFeatureMatrix<Datum<Boolean>, Boolean>)data, this.weightedLabels, 1.0/5.0, true, false);
 		
 		List<Double> initEvaluationValues = new ArrayList<Double>();
 		for (int i = 0; i < evaluations.size(); i++) {
@@ -152,7 +155,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 							
 							String amountDoneStr = format.format(this.iterations/(double)maximumIterations);
 							String pointChangeStr = format.format(pointChange);
-							String statusStr = data.getName() + " (l1=" + l1 + ", l2=" + l2 + ") #" + iterations + 
+							String statusStr = data.getReferenceName() + " (l1=" + l1 + ", l2=" + l2 + ") #" + iterations + 
 									" [" + amountDoneStr + "] -- point-change: " + pointChangeStr + " ";
 							
 							if (!computeTestEvaluations) {
@@ -220,10 +223,10 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 						
 					})
 					.loggingLevel(0)
-					.random(data.getDatumTools().getDataTools().makeLocalRandom())
+					.random(data.getData().getDatumTools().getDataTools().makeLocalRandom())
 					.build();
 
-		output.debugWriteln(data.getName() + " training for at most " + maximumIterations + 
+		output.debugWriteln(data.getReferenceName() + " training for at most " + maximumIterations + 
 				" iterations (maximum " + this.maxTrainingExamples + " examples over size " + this.batchSize + " batches from " + plataniosData.size() + " examples)");
 		
 		if (!this.classifier.train(plataniosData)) {
@@ -239,7 +242,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 			}
 		}
 		
-		this.nonZeroFeatureNames = data.getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
+		this.nonZeroFeatureNames = data.getFeatures().getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
 		
 		output.debugWriteln("Areg finished training platanios model."); 
 		
@@ -248,15 +251,15 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<D, Map<L, Double>> posterior(FeaturizedDataSet<D, L> data) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 
 		if (this.validLabels.size() > 2 || !this.validLabels.contains(true)) {
 			output.debugWriteln("ERROR: Areg only supports binary classification.");
 			return null;
 		}
 		
-		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = data.makePlataniosDataSet(this.weightedLabels, 0.0, false, false);
+		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = PlataniosUtil.makePlataniosDataSet((DataFeatureMatrix<Datum<Boolean>, Boolean>)data, this.weightedLabels, 0.0, false, false);
 
 		plataniosData = this.classifier.predict(plataniosData);
 		if (plataniosData == null) {
@@ -267,7 +270,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		for (PredictedDataInstance<Vector, Double> prediction : plataniosData) {
 			int datumId = Integer.parseInt(prediction.name());
-			D datum = data.getDatumById(datumId);
+			D datum = data.getData().getDatumById(datumId);
 			
 			Map<L, Double> posterior = new HashMap<L, Double>();
 			double p = (prediction.label() == 1) ? prediction.probability() : 1.0 - prediction.probability();
@@ -288,15 +291,15 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<D, L> classify(FeaturizedDataSet<D, L> data) {
-		OutputWriter output = data.getDatumTools().getDataTools().getOutputWriter();
+	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
 
 		if (this.validLabels.size() > 2 || !this.validLabels.contains(true)) {
 			output.debugWriteln("ERROR: Areg only supports binary classification.");
 			return null;
 		}
 		
-		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = data.makePlataniosDataSet(this.weightedLabels, 0.0, false, false);
+		DataSet<PredictedDataInstance<Vector, Double>> plataniosData = PlataniosUtil.makePlataniosDataSet((DataFeatureMatrix<Datum<Boolean>, Boolean>)data, this.weightedLabels, 0.0, false, false);
 
 		plataniosData = this.classifier.predict(plataniosData);
 		if (plataniosData == null) {
@@ -307,7 +310,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		Map<D, Boolean> predictions = new HashMap<D, Boolean>();
 		for (PredictedDataInstance<Vector, Double> prediction : plataniosData) {
 			int datumId = Integer.parseInt(prediction.name());
-			D datum = data.getDatumById(datumId);
+			D datum = data.getData().getDatumById(datumId);
 		
 			if (this.fixedDatumLabels.containsKey(datum)) {
 				predictions.put(datum, (Boolean)this.fixedDatumLabels.get(datum));
@@ -387,7 +390,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 	}
 
 	@Override
-	public SupervisedModel<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModel<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelAreg<D, L>(context);
 	}
 
@@ -402,23 +405,24 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		double bias = Double.valueOf(((Obj.Value)internalAssignments.get("bias").getValue()).getStr());
 		
 		TreeMap<Integer, Double> nonZeroWeights = new TreeMap<Integer, Double>();
-		
+		this.nonZeroFeatureNames = new HashMap<Integer, String>();
 		for (int i = 0; i < internalAssignments.size(); i++) {
 			Assignment assignment = internalAssignments.get(i);
 			if (assignment.getName().startsWith("w_")) {
 				Obj.Array wArray = (Obj.Array)assignment.getValue();
+				String name = wArray.getStr(0);
 				int index = Integer.valueOf(wArray.getStr(2));
 				double w = Double.valueOf(wArray.getStr(1));
 				
+				this.nonZeroFeatureNames.put(index, name);
 				nonZeroWeights.put(index, w);
 			}
 		} 
 		
 		nonZeroWeights.put(weightVectorSize-1, bias);
 		
-		Vector weights = new SparseVector(weightVectorSize, nonZeroWeights);
-		
-		this.classifier = new LogisticRegressionAdaGrad.Builder(weightVectorSize - 1, weights)
+		this.classifierWeights = new SparseVector(weightVectorSize, nonZeroWeights);
+		this.classifier = new LogisticRegressionAdaGrad.Builder(weightVectorSize - 1, this.classifierWeights)
 			.sparse(true)
 			.useBiasTerm(true)
 			.build();
@@ -433,14 +437,14 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 			return internalAssignments;
 		
 		double[] weightArray = this.classifierWeights.getDenseArray(); 
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "featureVocabularySize", Obj.stringValue(String.valueOf(weightArray.length))));
+		internalAssignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "featureVocabularySize", Obj.stringValue(String.valueOf(weightArray.length))));
 		
 		List<Pair<Integer, Double>> sortedWeights = new ArrayList<Pair<Integer, Double>>();
 		for (Integer index : this.nonZeroFeatureNames.keySet()) {
 			sortedWeights.add(new Pair<Integer, Double>(index, weightArray[index]));
 		}
 		
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "nonZeroWeights", Obj.stringValue(String.valueOf(this.nonZeroFeatureNames.size()))));
+		internalAssignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "nonZeroWeights", Obj.stringValue(String.valueOf(this.nonZeroFeatureNames.size()))));
 		
 		Collections.sort(sortedWeights, new Comparator<Pair<Integer, Double>>() {
 			@Override
@@ -454,14 +458,14 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 					return 0;
 			} });
 		
-		internalAssignments.add(Assignment.assignmentTyped(null, Context.VALUE_STR, "bias", Obj.stringValue(String.valueOf(weightArray[weightArray.length - 1]))));
+		internalAssignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "bias", Obj.stringValue(String.valueOf(weightArray[weightArray.length - 1]))));
 		
 		for (Pair<Integer, Double> weight : sortedWeights) {
 			double w = weight.getSecond();
 			int index = weight.getFirst();
 			String featureName = this.nonZeroFeatureNames.get(index);
 			Obj.Array weightArr = Obj.array(new String[]{ featureName, String.valueOf(w), String.valueOf(index) });
-			internalAssignments.add(Assignment.assignmentTyped(null, Context.ARRAY_STR, "w_" + index, weightArr));
+			internalAssignments.add(Assignment.assignmentTyped(null, Context.ObjectType.ARRAY.toString(), "w_" + index, weightArr));
 		}
 		
 		// this.nonZeroFeatureNames = null; Assumes convert toParse only once... add back in if memory issues
@@ -471,7 +475,7 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 	
 	@Override
 	protected <T extends Datum<Boolean>> SupervisedModel<T, Boolean> makeBinaryHelper(
-			Context<T, Boolean> context, LabelIndicator<L> labelIndicator,
+			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}

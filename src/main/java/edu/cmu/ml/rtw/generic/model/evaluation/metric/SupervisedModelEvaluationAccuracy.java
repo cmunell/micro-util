@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
-import edu.cmu.ml.rtw.generic.data.feature.FeaturizedDataSet;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -32,12 +32,12 @@ public class SupervisedModelEvaluationAccuracy<D extends Datum<L>, L> extends Su
 		
 	}
 	
-	public SupervisedModelEvaluationAccuracy(Context<D, L> context) {
+	public SupervisedModelEvaluationAccuracy(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
 	@Override
-	protected double compute(SupervisedModel<D, L> model, FeaturizedDataSet<D, L> data, Map<D, L> predictions) {
+	protected double compute(SupervisedModel<D, L> model, DataFeatureMatrix<D, L> data, Map<D, L> predictions) {
 		List<Pair<L, L>> actualAndPredicted = getMappedActualAndPredictedLabels(predictions);
 		Map<L, Integer> actualLabelCounts = new HashMap<L, Integer>();
 		double total = actualAndPredicted.size();
@@ -68,7 +68,7 @@ public class SupervisedModelEvaluationAccuracy<D extends Datum<L>, L> extends Su
 	}
 
 	@Override
-	public SupervisedModelEvaluation<D, L> makeInstance(Context<D, L> context) {
+	public SupervisedModelEvaluation<D, L> makeInstance(DatumContext<D, L> context) {
 		return new SupervisedModelEvaluationAccuracy<D, L>(context);
 	}
 

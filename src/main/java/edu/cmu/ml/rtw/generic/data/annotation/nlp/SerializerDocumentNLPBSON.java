@@ -16,6 +16,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType.SerializationType;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -96,8 +97,12 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public DocumentNLPMutable deserialize(Document bson) {
-		DocumentNLPMutable document = this.genericDocument.makeInstance(bson.getString("name"));
+	public DocumentNLPMutable deserialize(Document bson, StoreReference storeReference) {
+		DocumentNLPMutable document = null;
+		if (storeReference != null)
+			document = this.genericDocument.makeInstance(storeReference);
+		else
+			document = this.genericDocument.makeInstance(bson.getString("name"));
 		
 		Collection<AnnotationType<?>> annotationTypes = null;
 		if (this.annotationTypes == null) {
@@ -277,7 +282,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 		for (Object tokenSpanAnnotationObj : tokenSpanAnnotations) {
 			Triple<TokenSpan, ?, Double> annotation = (Triple<TokenSpan, ?, Double>)tokenSpanAnnotationObj;
 			Document bsonAnnotation = new Document();
-			bsonAnnotation.append("span", convertJSONToBSON(annotation.getFirst().toJSON(false, false)));
+			bsonAnnotation.append("span", convertJSONToBSON(annotation.getFirst().toJSON()));
 			bsonAnnotation.append(annotationType.getType(), serializeAnnotation(annotationType, annotation.getSecond()));
 			
 			if (annotation.getThird() != null)
@@ -440,8 +445,8 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 	}
 
 	@Override
-	public DocumentNLPMutable deserializeFromString(String str) {
-		return deserialize(Document.parse(str));
+	public DocumentNLPMutable deserializeFromString(String str, StoreReference storeReference) {
+		return deserialize(Document.parse(str), storeReference);
 	}
 
 	@Override

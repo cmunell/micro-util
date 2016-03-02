@@ -1,9 +1,10 @@
 package edu.cmu.ml.rtw.generic.model.evaluation;
 
 import java.util.List;
-import edu.cmu.ml.rtw.generic.data.Context;
+
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.TokenSpanExtractor;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
@@ -31,7 +32,7 @@ public abstract class Validation<D extends Datum<L>, L> {
 	protected ConfusionMatrix<D, L> confusionMatrix;
 	protected List<Double> evaluationValues;
 	
-	public Validation(String name, Context<D, L> context) {
+	public Validation(String name, DatumContext<D, L> context) {
 		this.name = name;
 		this.datumTools = context.getDatumTools();
 		this.maxThreads = context.getIntValue("maxThreads");

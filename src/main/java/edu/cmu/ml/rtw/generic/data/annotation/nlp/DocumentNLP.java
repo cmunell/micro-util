@@ -32,6 +32,14 @@ public abstract class DocumentNLP extends Document {
 		super(dataTools);
 	}
 	
+	public DocumentNLP(DataTools dataTools, String name) {
+		super(dataTools, name);
+	}
+	
+	public DocumentNLP(DataTools dataTools, String name, String storageName, String collectionName) {
+		super(dataTools, name, storageName, collectionName);
+	}
+	
 	public List<String> getSentenceTokenStrs(int sentenceIndex) {
 		int sentenceTokenCount = getSentenceTokenCount(sentenceIndex);
 		List<String> sentenceTokens = new ArrayList<String>(sentenceTokenCount);

@@ -44,7 +44,10 @@ public class JSONTokenizer implements Annotator {
 		try {
 			DocumentNLPMutable document = new DocumentNLPInMemory(this.dataTools);
 			SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
-			document = serializer.deserialize(new JSONObject(annotation.toString()));
+			JSONObject json = new JSONObject(annotation.toString());
+			if (!json.has("name"))
+				json.put("name", "");
+			document = serializer.deserialize(json);
 			List<CoreMap> sentences = new ArrayList<CoreMap>();
 			int tokenOffset = 0;
 			List<CoreLabel> allTokens = new ArrayList<CoreLabel>();

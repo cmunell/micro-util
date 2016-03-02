@@ -1,18 +1,79 @@
 package edu.cmu.ml.rtw.generic.data;
 
-/*
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.io.StringReader;
 
-import org.junit.Assert;
 import org.junit.Test;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum;
-import edu.cmu.ml.rtw.generic.data.annotation.TestDatum.Tools;
-import edu.cmu.ml.rtw.generic.util.OutputWriter;*/
+import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.Properties;
+
 
 public class ContextTest {
+	@Test
+	public void testContext() {
+		DataTools dataTools = new DataTools(new OutputWriter(), 
+				new Properties(new StringReader(
+						"debug_dir=\n" +
+						"storage_fs_bson_testBson=/test/bson\n" +
+						"storage_fs_str_testStr=/test/str"
+						)));
+		
+
+		dataTools.addGenericContext(new DatumContext<TestDatum<Boolean>, Boolean>(TestDatum.getBooleanTools(dataTools), "TestBoolean"));
+		Context.run("test", dataTools, makeContextString());
+		
+		/*StoredItemSet<?, String> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
+		StoredItemSet<?, String> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
+		System.out.println(outputEvals.getStoredItems().toString());
+		System.out.println(outputParses.getStoredItems().toString());*/
+		
+	}
+	
+	private String makeContextString() {
+		String contextStr = "value maxThreads=\"2\";\n";
+		contextStr +=       "value debug=Debug();\n";
+		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"1\");\n";
+		contextStr +=       "context testBooleanCtx=TestBoolean() {\n";
+		contextStr +=       	"data trainData = Test(storage=\"BSONMemory\", collection=\"TrainDocuments\");\n";
+		contextStr +=       	"data devData = Test(storage=\"BSONMemory\", collection=\"DevDocuments\");\n";
+		contextStr +=       	"data testData = Test(storage=\"BSONMemory\", collection=\"TestDocuments\");\n";
+		contextStr +=           "ts_fn doc1=NGramDocument(n=\"1\", noSentence=\"false\");\n";
+		contextStr +=           "ts_str_fn strDef=String(cleanFn=\"DefaultCleanFn\");\n";
+		contextStr +=           "feature fdoc1=TokenSpanFnDataVocab(scale=\"INDICATOR\", minFeatureOccurrence=\"2\", tokenExtractor=\"TokenSpan\", fn=(${strDef} o ${doc1}));\n";
+		contextStr +=           "feature_set f = FeatureSet(features=(${fdoc1}), initData=(${trainData}));\n";
+		contextStr +=           "data_features trainMatrix = DataFeatureMatrix(data=${trainData}, features=${f});\n";
+		contextStr +=           "data_features devMatrix = DataFeatureMatrix(data=${devData}, features=${f});\n";
+		contextStr +=           "data_features testMatrix = DataFeatureMatrix(data=${testData}, features=${f});\n";
+		contextStr +=           "model lr=Areg(l1=\"0\", l2=\"0\", convergenceEpsilon=\".00001\", maxTrainingExamples=\"1000001\", batchSize=\"200\", evaluationIterations=\"200\", maxEvaluationConstantIterations=\"500\", weightedLabels=\"false\", computeTestEvaluations=\"false\")\n";
+		contextStr +=           "{\n";
+		contextStr +=                "array validLabels=(\"true\", \"false\");\n";
+		contextStr +=           "};\n";
+		contextStr +=           "evaluation modelF1=F(filterLabel=\"true\", Beta=\"1\");\n";
+		contextStr +=           "classify_method lrMethod = SupervisedModel(model=${lr}, data=${trainMatrix}, trainEvaluation=${modelF1});";
+		contextStr +=           "search l2=Grid() {\n";
+		contextStr +=                "dimension l2=Enumerated(values=(\"0\", \".0000001\"), stageIndex=\"0\");\n";
+		contextStr +=                "dimension classificationThreshold=Enumerated(values=(\".5\", \".6\"), stageIndex=\"1\");\n";
+		contextStr +=           "};\n";
+		contextStr +=           "classify_task devTask = Classification(data=${devMatrix});\n";
+		contextStr +=           "classify_eval devEval = F(task=${devTask}, method=${lrMethod}, Beta=\"1\", filterLabel=\"true\");\n";
+		contextStr +=           "classify_method bestLrMethod = RunClassifyMethodSearch(fn=${devEval}, search=${l2});\n";
+		contextStr +=           "classify_task testTask = Classification(data=${testMatrix});\n";
+	    contextStr +=           "classify_eval testAccuracy = Accuracy(task=${testTask}, method=${bestLrMethod});\n";       
+		contextStr +=           "classify_eval testF = F(task=${testTask}, method=${bestLrMethod}, Beta=\"1\", filterLabel=\"true\");\n";
+		contextStr +=           "classify_eval testPrecision = Precision(task=${testTask}, method=${bestLrMethod}, filterLabel=\"true\");\n";
+		contextStr +=           "classify_eval testRecall = Recall(task=${testTask}, method=${bestLrMethod}, filterLabel=\"true\");\n";
+		contextStr +=           "classify_eval testConfusionMatrix = ConfusionMatrix(task=${testTask}, method=${bestLrMethod});\n";
+		contextStr +=           "classify_eval testConfusionData = ConfusionData(task=${testTask}, method=${bestLrMethod});\n";
+		contextStr +=           "value strEvals = OutputStrings(id=\"TestEvals\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", fns=(${testAccuracy}, ${testF}, ${testPrecision}, ${testRecall}, ${testConfusionMatrix}, ${l2}));";
+		contextStr +=           "value strData = OutputStrings(id=\"TestEvalData\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", fns=(${testConfusionData}));";
+		contextStr +=           "value parseFeatures = OutputParses(id=\"TestFeatures\", storage=\"StringMemory\", collection=\"ExperimentParseOutput\", types=(\"features\"), fns=(${f}));";
+		contextStr +=           "value parseModel = OutputParses(id=\"TestModel\", storage=\"StringMemory\", collection=\"ExperimentParseOutput\", types=(\"model\"), fns=(${bestLrMethod}), params=(\"modelInternal\"));";
+		contextStr +=       "};\n";
+		return contextStr;
+	}
+	
 	/* FIXME Needs refactored @Test
 	public void testContextSerializationSelfValue() {
 		testContextSerializationSelf("value x=\"1\";\n");

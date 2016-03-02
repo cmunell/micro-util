@@ -24,14 +24,14 @@ public abstract class FnCompositeAppend<S> extends Fn<S, S> {
 			super();
 		}
 		
-		public FnCompositeAppendTokenSpan(Context<?, ?> context) {
+		public FnCompositeAppendTokenSpan(Context context) {
 			super(context);
 			this.compositeFn = new FnCompositeTokenSpan(context);
 		}
 
 		@Override
 		public Fn<TokenSpan, TokenSpan> makeInstance(
-				Context<?, ?> context) {
+				Context context) {
 			return new FnCompositeAppendTokenSpan(context);
 		}
 	}
@@ -41,27 +41,27 @@ public abstract class FnCompositeAppend<S> extends Fn<S, S> {
 			super();
 		}
 		
-		public FnCompositeAppendStr(Context<?, ?> context) {
+		public FnCompositeAppendStr(Context context) {
 			super(context);
 			this.compositeFn = new FnCompositeStr(context);
 		}
 
 		@Override
 		public Fn<String, String> makeInstance(
-				Context<?, ?> context) {
+				Context context) {
 			return new FnCompositeAppendStr(context);
 		}
 	}
 	
 	private String[] parameterNames = { "f", "g" };
 	protected FnComposite<S, S, S> compositeFn;
-	protected Context<?, ?> context;
+	protected Context context;
 	
 	public FnCompositeAppend() {
 		
 	}
 	
-	public FnCompositeAppend(Context<?, ?> context) {
+	public FnCompositeAppend(Context context) {
 		this.context = context;
 	}
 	

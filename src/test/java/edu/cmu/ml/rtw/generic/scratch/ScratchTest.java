@@ -29,5 +29,9 @@ public class ScratchTest {
 			System.out.println(e.index() + ", " + e.value());
 			Assert.assertEquals(e.value(), v1.get(e.index()), .0001);
 		}
+		
+		String s = "asdf.asdf.dkfdk";
+		String[] sp = s.split("\\.");
+		System.out.println(sp.length);
 	}
 }

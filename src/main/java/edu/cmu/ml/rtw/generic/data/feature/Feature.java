@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -26,13 +28,13 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  * @param <L> datum label type
  */
 public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction {
-	protected Context<D, L> context;
+	protected DatumContext<D, L> context;
 	
 	/**
 	 * @param dataSet
 	 * @return true if the feature has been initialized for the dataSet
 	 */
-	public abstract boolean init(FeaturizedDataSet<D, L> dataSet);
+	public abstract boolean init(DataSet<D, L> dataSet);
 	
 	/**
 	 * @param datum
@@ -67,7 +69,7 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 	 */
 	protected abstract boolean setVocabularyTerm(int index, String term);
 	
-	protected abstract <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(Context<T, Boolean> context, LabelIndicator<L> labelIndicator, Feature<T, Boolean> binaryFeature);
+	protected abstract <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator, Feature<T, Boolean> binaryFeature);
 	
 	protected abstract boolean cloneHelper(Feature<D, L> clone);
 	
@@ -79,7 +81,7 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 	 * @return a generic instance of the feature.  This is used when deserializing
 	 * the parameters for the feature from a configuration file
 	 */
-	public abstract Feature<D, L> makeInstance(Context<D, L> context);
+	public abstract Feature<D, L> makeInstance(DatumContext<D, L> context);
 	
 	
 	public Map<Integer, Double> computeVector(D datum) {
@@ -145,7 +147,7 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 		return clone;
 	}
 	
-	public <T extends Datum<Boolean>> Feature<T, Boolean> makeBinary(Context<T, Boolean> context, LabelIndicator<L> labelIndicator) {
+	public <T extends Datum<Boolean>> Feature<T, Boolean> makeBinary(DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator) {
 		Feature<T, Boolean> binaryFeature = context.getDatumTools().makeFeatureInstance(getGenericName(), context);
 		
 		binaryFeature.referenceName = this.referenceName;
@@ -185,7 +187,7 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 		
 		if (vocabulary.size() > 0) {
 			internalAssignments.add(
-					Assignment.assignmentTyped(new ArrayList<String>(), Context.ARRAY_STR, "vocabulary", vocabulary)
+					Assignment.assignmentTyped(new ArrayList<String>(), Context.ObjectType.ARRAY.toString(), "vocabulary", vocabulary)
 			);
 		}
 		

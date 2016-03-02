@@ -21,7 +21,7 @@ public class FnHead extends Fn<TokenSpan, TokenSpan> {
 		
 	}
 	
-	public FnHead(Context<?, ?> context) {
+	public FnHead(Context context) {
 		
 	}
 	
@@ -52,7 +52,7 @@ public class FnHead extends Fn<TokenSpan, TokenSpan> {
 
 	@Override
 	public Fn<TokenSpan, TokenSpan> makeInstance(
-			Context<?, ?> context) {
+			Context context) {
 		return new FnHead(context);
 	}
 

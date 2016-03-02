@@ -59,7 +59,8 @@ public class OutputWriter {
 			if (this.debugWriter != null)
 				this.debugWriter.close();
 			this.debugFile = debugFile;
-			this.debugWriter = new BufferedWriter(new FileWriter(debugFile.getAbsolutePath(), append));
+			if (debugFile != null)
+				this.debugWriter = new BufferedWriter(new FileWriter(debugFile.getAbsolutePath(), append));
 		} catch (IOException e) {
 			return false;
 		}
@@ -72,7 +73,8 @@ public class OutputWriter {
 			if (this.resultsWriter != null)
 				this.resultsWriter.close();
 			this.resultsFile = resultsFile;
-			this.resultsWriter = new BufferedWriter(new FileWriter(resultsFile.getAbsolutePath(), append));
+			if (resultsFile != null)
+				this.resultsWriter = new BufferedWriter(new FileWriter(resultsFile.getAbsolutePath(), append));
 		} catch (IOException e) {
 			return false;
 		}
@@ -85,7 +87,8 @@ public class OutputWriter {
 			if (this.dataWriter != null)
 				this.dataWriter.close();
 			this.dataFile = dataFile;
-			this.dataWriter = new BufferedWriter(new FileWriter(dataFile.getAbsolutePath(), append));
+			if (dataFile != null)
+				this.dataWriter = new BufferedWriter(new FileWriter(dataFile.getAbsolutePath(), append));
 		} catch (IOException e) {
 			return false;
 		}
@@ -98,7 +101,8 @@ public class OutputWriter {
 			if (this.modelWriter != null)
 				this.modelWriter.close();
 			this.modelFile = modelFile;
-			this.modelWriter = new BufferedWriter(new FileWriter(modelFile.getAbsolutePath(), append));
+			if (modelFile != null)
+				this.modelWriter = new BufferedWriter(new FileWriter(modelFile.getAbsolutePath(), append));
 		} catch (IOException e) {
 			return false;
 		}
