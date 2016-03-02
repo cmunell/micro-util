@@ -337,15 +337,16 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		if (anno != null)
 			return anno;
 		if (this.otherTokenSpanAnnotations != null && this.otherTokenSpanAnnotations.containsKey(annotationType)) {
-                        List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
-                        if (tokenSpanAnnotation == null) return Collections.EMPTY_LIST;
-                        anno = new ArrayList<Pair<TokenSpan, T>>();
-                        for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
-	        		anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
-                        return anno;
-                } else {
-                        return Collections.EMPTY_LIST;
-                }
+			List<Triple<TokenSpan, ?, Double>> tokenSpanAnnotation = this.otherTokenSpanAnnotations.get(annotationType).get(tokenSpan.getSentenceIndex());
+			if (tokenSpanAnnotation == null) 
+				return Collections.emptyList();
+			anno = new ArrayList<Pair<TokenSpan, T>>();
+			for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
+				anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
+			return anno;
+		} else {
+			return Collections.emptyList();
+		}
 	}
 	
 	@Override
