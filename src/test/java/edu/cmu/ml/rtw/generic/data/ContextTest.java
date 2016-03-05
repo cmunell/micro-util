@@ -24,8 +24,8 @@ public class ContextTest {
 		dataTools.addGenericContext(new DatumContext<TestDatum<Boolean>, Boolean>(TestDatum.getBooleanTools(dataTools), "TestBoolean"));
 		Context.run("test", dataTools, makeContextString());
 		
-		StoredItemSet<?, String> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
-		StoredItemSet<?, String> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
+		StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
+		StoredItemSet<?, ?> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
 		System.out.println(outputEvals.getStoredItems().toString());
 		System.out.println(outputParses.getStoredItems().toString());
 		
