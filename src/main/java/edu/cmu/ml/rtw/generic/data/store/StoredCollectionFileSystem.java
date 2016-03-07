@@ -194,8 +194,11 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 	private StoreReference getStoreReference(File file) {
 		List<String> fields = new ArrayList<String>();
 		List<Object> values = new ArrayList<Object>();
-		String[] indexValues = file.getAbsolutePath().substring(this.directory.getAbsolutePath().length()).split("/");
+		String indicesStr = file.getAbsolutePath().substring(this.directory.getAbsolutePath().length());
+		if (indicesStr.startsWith("/"))
+			indicesStr = indicesStr.substring(1);
 		
+		String[] indexValues = indicesStr.split("/");
 		for (int i = 0; i < indexValues.length; i++) {
 			fields.add(getSerializer().getIndices().get(i).getField());
 			values.add(indexValues[i]);
