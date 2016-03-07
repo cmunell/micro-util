@@ -92,7 +92,7 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 	@Override
 	protected AssignmentList toParseInternalHelper(AssignmentList internalAssignments) {
 		if (this.classifier == null) 
-			return null;
+			return internalAssignments;
 		
 		try {
 			String classifier = StringUtil.serializeToBase64String(this.classifier);
@@ -202,7 +202,7 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 		attrs.add(outputClass);
 		
 		Instances dataSet = new Instances("data", attrs, 10);
-		dataSet.setClassIndex(2);
+		dataSet.setClassIndex(featureNames.size());
 		
 		for (D datum : data.getData()) {
 			Vector v = data.getFeatureVocabularyValues(datum, false);

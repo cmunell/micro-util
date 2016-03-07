@@ -53,16 +53,21 @@ public class ContextTest {
 		contextStr +=           "data_features trainMatrix = DataFeatureMatrix(data=${trainData}, features=${f});\n";
 		contextStr +=           "data_features devMatrix = DataFeatureMatrix(data=${devData}, features=${f});\n";
 		contextStr +=           "data_features testMatrix = DataFeatureMatrix(data=${testData}, features=${f});\n";
-		contextStr +=           "model lr=Areg(l1=\"0\", l2=\"0\", convergenceEpsilon=\".00001\", maxTrainingExamples=\"1000001\", batchSize=\"200\", evaluationIterations=\"200\", maxEvaluationConstantIterations=\"500\", weightedLabels=\"false\", computeTestEvaluations=\"false\")\n";
+		contextStr +=           "model lr=WekaOneClass(targetRejectionRate=\".1\", targetLabel=\"true\", defaultOutlierLabel=\"false\")\n";
+		//contextStr +=           "model lr=Areg(l1=\"0\", l2=\"0\", convergenceEpsilon=\".00001\", maxTrainingExamples=\"1000001\", batchSize=\"200\", evaluationIterations=\"200\", maxEvaluationConstantIterations=\"500\", weightedLabels=\"false\", computeTestEvaluations=\"false\")\n";
 		contextStr +=           "{\n";
 		contextStr +=                "array validLabels=(\"true\", \"false\");\n";
 		contextStr +=           "};\n";
 		contextStr +=           "evaluation modelF1=F(filterLabel=\"true\", Beta=\"1\");\n";
 		contextStr +=           "classify_method lrMethod = SupervisedModel(model=${lr}, data=${trainMatrix}, trainEvaluation=${modelF1});";
+		
 		contextStr +=           "search l2=Grid() {\n";
-		contextStr +=                "dimension l2=Enumerated(values=(\"0\", \".0000001\"), stageIndex=\"0\");\n";
-		contextStr +=                "dimension classificationThreshold=Enumerated(values=(\".5\", \".6\"), stageIndex=\"1\");\n";
+		contextStr +=                "dimension targetRejectionRate=Enumerated(values=(\".1\", \".3\", \".5\", \".7\", \".9\"), stageIndex=\"0\");\n";
 		contextStr +=           "};\n";
+		//contextStr +=           "search l2=Grid() {\n";
+		//contextStr +=                "dimension l2=Enumerated(values=(\"0\", \".0000001\"), stageIndex=\"0\");\n";
+		//contextStr +=                "dimension classificationThreshold=Enumerated(values=(\".5\", \".6\"), stageIndex=\"1\");\n";
+		//contextStr +=           "};\n";
 		contextStr +=           "classify_task devTask = Classification(data=${devMatrix});\n";
 		contextStr +=           "classify_eval devEval = F(task=${devTask}, method=${lrMethod}, Beta=\"1\", filterLabel=\"true\");\n";
 		contextStr +=           "classify_method bestLrMethod = RunClassifyMethodSearch(fn=${devEval}, search=${l2});\n";

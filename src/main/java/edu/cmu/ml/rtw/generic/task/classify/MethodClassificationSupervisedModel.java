@@ -58,9 +58,9 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("data"))
 			this.data = (parameterValue == null) ? null : this.context.getMatchDataFeatures(parameterValue);
-		else if (parameter.equals("model"))
+		else if (parameter.equals("model")) {
 			this.model = (parameterValue == null) ? null : this.context.getMatchModel(parameterValue);
-		else if (parameter.equals("trainEvaluation"))
+		} else if (parameter.equals("trainEvaluation"))
 			this.trainEvaluation = (parameterValue == null) ? null : this.context.getMatchEvaluation(parameterValue);
 		else if (this.model != null)
 			return this.model.setParameterValue(parameter, parameterValue);
