@@ -87,7 +87,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 		return this.precomputed;
 	}
 	
-	public boolean precompute() {
+	public synchronized boolean precompute() {
 		if (this.precomputed)
 			return true;
 		
