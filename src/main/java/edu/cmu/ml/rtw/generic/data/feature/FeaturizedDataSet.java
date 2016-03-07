@@ -63,7 +63,7 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 	}
 	
 	public FeaturizedDataSet(String name, List<Feature<D, L>> features, int maxThreads, Datum.Tools<D, L> datumTools, Datum.Tools.LabelMapping<L> labelMapping) {
-		super(datumTools, labelMapping);
+		super(null, datumTools, labelMapping);
 		this.name = name;
 		this.referencedFeatures = new HashMap<String, Feature<D, L>>();
 		this.features = new TreeMap<Integer, Feature<D, L>>();

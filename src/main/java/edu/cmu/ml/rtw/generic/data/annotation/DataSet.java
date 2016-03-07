@@ -117,8 +117,11 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 	};
 	
 	public DataSet(Datum.Tools<D, L> datumTools) {
-		clear();
-		this.datumTools = datumTools;
+		this((String)null, datumTools);
+	}
+	
+	public DataSet(String referenceName, Datum.Tools<D, L> datumTools) {
+		this(referenceName, datumTools, null);
 	}
 	
 	public DataSet(Datum.Tools.DataSetBuilder<D, L> builder, Datum.Tools<D, L> datumTools) {
@@ -128,10 +131,14 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		this.datumTools = datumTools;
 	}
 	
+	public DataSet(Datum.Tools<D, L> datumTools, Datum.Tools.LabelMapping<L> labelMapping) { 
+		this(null, datumTools, labelMapping);
+	}
+	
 	// FIXME Remove this constructor and labelMapping at some point
-	public DataSet(Datum.Tools<D, L> datumTools, Datum.Tools.LabelMapping<L> labelMapping) {
+	public DataSet(String referenceName, Datum.Tools<D, L> datumTools, Datum.Tools.LabelMapping<L> labelMapping) {
 		clear();
-		
+		this.referenceName = referenceName;
 		this.labelMapping = labelMapping;
 		this.datumTools = datumTools;
 	}
@@ -258,6 +265,9 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 				part.add(this.data.get(dataPermutation.get(j)));
 			}
 			
+			if (this.referenceName != null)
+				part.referenceName = this.referenceName + "_" + i;
+			
 			offset += partSize;
 			partition.add(part);
 		}
@@ -280,6 +290,9 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 			for (int j = offset; j < offset + partSize; j++) {
 				part.addAll(clusters.get(clusterList.get(j)));
 			}
+			
+			if (this.referenceName != null)
+				part.referenceName = this.referenceName + "_" + i;
 			
 			offset += partSize;
 			partition.add(part);

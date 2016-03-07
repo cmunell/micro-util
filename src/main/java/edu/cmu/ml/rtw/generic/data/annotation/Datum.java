@@ -343,6 +343,64 @@ public abstract class Datum<L> {
 					return evaluation.getMethod();
 				}
 			});
+			
+			addCommand("PartitionData", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					List<String> distributionStr = context.getMatchArray(parameters.get("distribution").getValue());
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					if (data.isBuildable() && !data.isBuilt() && !data.build())
+						return String.valueOf("false");
+					
+					double[] distribution = new double[distributionStr.size()];
+					for (int i = 0; i < distribution.length; i++)
+						distribution[i] = Double.valueOf(distributionStr.get(i));
+					List<DataSet<D, L>> parts = data.makePartition(distribution, context.getDataTools().getGlobalRandom());
+					
+					for (int i = 0; i < parts.size(); i++) {
+						datumContext.addDataSet(parts.get(i));
+					}
+					
+					return String.valueOf(true);
+				}
+			});
+			
+			addCommand("UnionData", new Command<DataSet<D, L>>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public DataSet<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					Obj.Array dataSets = (Obj.Array)parameters.get("data").getValue();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DataSet<D, L> unionedData = new DataSet<D, L>(referenceName, Tools.this, null);
+					for (int i = 0; i < dataSets.size(); i++) {
+						DataSet<D, L> data = datumContext.getMatchDataSet(dataSets.get(i));
+						if (data.isBuildable() && !data.isBuilt() && !data.build())
+							return null;
+						
+						unionedData.addAll(data);
+					}
+					
+					return unionedData;
+				}
+			});
+			
+			addCommand("SizeData", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					if (data.isBuildable() && !data.isBuilt() && !data.build())
+						return String.valueOf("-1");
+					return String.valueOf(data.size());
+					
+				}
+			});
 		}
 		
 		public DataTools getDataTools() {

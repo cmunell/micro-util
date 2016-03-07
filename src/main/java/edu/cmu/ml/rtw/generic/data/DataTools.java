@@ -25,9 +25,11 @@ import edu.cmu.ml.rtw.generic.cluster.ClustererString;
 import edu.cmu.ml.rtw.generic.cluster.ClustererTokenSpanPoSTag;
 import edu.cmu.ml.rtw.generic.data.Gazetteer;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
+import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPBSON;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
@@ -281,6 +283,8 @@ public class DataTools {
 		
 		this.addGenericSearch(new SearchGrid());
 		
+		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
+		
 		this.addCommand("SetRandomSeed", new Command<String>() {
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
@@ -355,14 +359,13 @@ public class DataTools {
 				String collectionName = context.getMatchValue(parameters.get("collection").getValue());
 				String id = context.getMatchValue(parameters.get("id").getValue());
 				
-				Obj.Array objRefs = (Obj.Array)parameters.get("fns").getValue();
+				Obj.Array objRefs = (Obj.Array)parameters.get("refs").getValue();
 				
 				SerializerNamedIterableToString serializer = new SerializerNamedIterableToString();
 				List<Object> list = new ArrayList<Object>();
 				for (int i = 0; i < objRefs.size(); i++) {
 					List<?> objs = context.getAssignedMatches(objRefs.get(i));
-					CtxParsableFunction ctxObj = (CtxParsableFunction)objs.get(0);
-					list.add(ctxObj);
+					list.add(objs.get(0));
 				}
 				
 				return String.valueOf(
@@ -370,6 +373,21 @@ public class DataTools {
 						.getItemSet(storageName, collectionName, true, serializer)
 						.addItem(new NamedIterable<List<Object>, Object>(id, list)
 					));
+			}
+		});
+		
+		this.addCommand("OutputDebug", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				Obj.Array objRefs = (Obj.Array)parameters.get("refs").getValue();
+
+				for (int i = 0; i < objRefs.size(); i++) {
+					List<?> objs = context.getAssignedMatches(objRefs.get(i));
+					context.getDataTools().getOutputWriter().debugWriteln(objRefs.getStr(i) + ": " + objs.get(0).toString());
+				}
+				
+				return String.valueOf("true");
 			}
 		});
 	}

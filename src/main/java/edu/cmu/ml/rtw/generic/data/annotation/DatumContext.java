@@ -238,6 +238,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 			return matches;
 		
 		Map<String, Obj> ctx = ((Obj.Function)(except(Context.ObjectType.CONTEXT.toString())
+												.except(ObjectType.DATA.toString())
 												.except(ObjectType.FEATURE.toString())
 												.except(ObjectType.MODEL.toString())
 												.except(ObjectType.FEATURE_SET.toString())
@@ -453,6 +454,12 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 	}
 	
 	/* Other stuff */
+	
+	public boolean addDataSet(DataSet<D, L> dataSet) {
+		this.objNameOrdering.add(new Pair<String, String>(ObjectType.DATA.toString(), dataSet.getReferenceName()));
+		this.data.put(dataSet.getReferenceName(), dataSet);
+		return true;
+	}
 	
 	public Datum.Tools<D, L> getDatumTools() {
 		return this.datumTools;

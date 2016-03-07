@@ -39,6 +39,13 @@ public class ContextTest {
 		contextStr +=       	"data trainData = Test(storage=\"BSONMemory\", collection=\"TrainDocuments\");\n";
 		contextStr +=       	"data devData = Test(storage=\"BSONMemory\", collection=\"DevDocuments\");\n";
 		contextStr +=       	"data testData = Test(storage=\"BSONMemory\", collection=\"TestDocuments\");\n";
+		contextStr +=           "value trainPartitioned = PartitionData(data=${trainData}, distribution=(\".8\", \".1\", \".1\"));\n";
+		contextStr +=           "data unionedData = UnionData(data=(${trainData_0}, ${trainData_1}, ${trainData_2}));";
+		contextStr +=           "value trainSize = SizeData(data=${trainData});\n";
+		contextStr +=           "value trainSize0 = SizeData(data=${trainData_0});\n";
+		contextStr +=           "value trainSize1 = SizeData(data=${trainData_1});\n";
+		contextStr +=           "value trainSize2 = SizeData(data=${trainData_2});\n";
+		contextStr +=           "value unionedSize = SizeData(data=${unionedData});\n";
 		contextStr +=           "ts_fn doc1=NGramDocument(n=\"1\", noSentence=\"false\");\n";
 		contextStr +=           "ts_str_fn strDef=String(cleanFn=\"DefaultCleanFn\");\n";
 		contextStr +=           "feature fdoc1=TokenSpanFnDataVocab(scale=\"INDICATOR\", minFeatureOccurrence=\"2\", tokenExtractor=\"TokenSpan\", fn=(${strDef} o ${doc1}));\n";
@@ -66,10 +73,15 @@ public class ContextTest {
 		contextStr +=           "classify_eval testRecall = Recall(task=${testTask}, method=${bestLrMethod}, filterLabel=\"true\");\n";
 		contextStr +=           "classify_eval testConfusionMatrix = ConfusionMatrix(task=${testTask}, method=${bestLrMethod});\n";
 		contextStr +=           "classify_eval testConfusionData = ConfusionData(task=${testTask}, method=${bestLrMethod});\n";
-		contextStr +=           "value strEvals = OutputStrings(id=\"TestEvals\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", fns=(${testAccuracy}, ${testF}, ${testPrecision}, ${testRecall}, ${testConfusionMatrix}, ${l2}));";
-		contextStr +=           "value strData = OutputStrings(id=\"TestEvalData\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", fns=(${testConfusionData}));";
+		contextStr +=           "value strEvals = OutputStrings(id=\"TestEvals\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", refs=(${testAccuracy}, ${testF}, ${testPrecision}, ${testRecall}, ${testConfusionMatrix}, ${l2}));";
+		contextStr +=           "value strData = OutputStrings(id=\"TestEvalData\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", refs=(${testConfusionData}));";
 		contextStr +=           "value parseFeatures = OutputParses(id=\"TestFeatures\", storage=\"StringMemory\", collection=\"ExperimentParseOutput\", types=(\"features\"), fns=(${f}));";
 		contextStr +=           "value parseModel = OutputParses(id=\"TestModel\", storage=\"StringMemory\", collection=\"ExperimentParseOutput\", types=(\"model\"), fns=(${bestLrMethod}), params=(\"modelInternal\"));";
+		contextStr +=           "value ut=OutputDebug(refs=(${trainSize}));";
+		contextStr +=           "value ut0=OutputDebug(refs=(${trainSize0}));";
+		contextStr +=           "value ut1=OutputDebug(refs=(${trainSize1}));";
+		contextStr +=           "value ut2=OutputDebug(refs=(${trainSize2}));";
+		contextStr +=           "value ut3=OutputDebug(refs=(${unionedSize}));";
 		contextStr +=       "};\n";
 		return contextStr;
 	}
