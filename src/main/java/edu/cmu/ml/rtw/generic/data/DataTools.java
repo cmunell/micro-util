@@ -305,9 +305,9 @@ public class DataTools {
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 				File outputFile = null;
-				if (fnObj.getParameters().contains("output"))
+				if (fnObj.getParameters().contains("file"))
 					outputFile = new File(DataTools.this.properties.getDebugDirectory(),
-						context.getMatchValue(fnObj.getParameters().get("output").getValue()));
+						context.getMatchValue(fnObj.getParameters().get("file").getValue()));
 				
 				return String.valueOf( 
 					DataTools.this.outputWriter.setDebugFile(outputFile, false));
