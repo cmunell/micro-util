@@ -121,8 +121,9 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 	@Override
 	public boolean train(DataFeatureMatrix<D, L> data,
 			DataFeatureMatrix<D, L> testData,
-			List<SupervisedModelEvaluation<D, L>> evaluations) {
-		
+			List<SupervisedModelEvaluation<D, L>> evaluations) {		
+		this.context.getDataTools().getOutputWriter().debugWriteln("WekaOneClass constructing data set... ");
+
 		Instances instances = constructInstances(data, true);
 		
 		this.classifier = new OneClassClassifier();
@@ -131,6 +132,7 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 		this.classifier.setTargetClassLabel("target");
 		
 		try {
+			this.context.getDataTools().getOutputWriter().debugWriteln("WekaOneClass training model... ");
 			this.classifier.buildClassifier(instances);
 		} catch (Exception e) {
 			this.context.getDataTools().getOutputWriter().debugWriteln(e.getMessage());
