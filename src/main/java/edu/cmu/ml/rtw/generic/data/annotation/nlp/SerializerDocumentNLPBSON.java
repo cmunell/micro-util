@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
@@ -17,6 +15,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.SerializerDocument;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType.SerializationType;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.store.StoreReference;
+import edu.cmu.ml.rtw.generic.util.JSONUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -282,7 +281,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 		for (Object tokenSpanAnnotationObj : tokenSpanAnnotations) {
 			Triple<TokenSpan, ?, Double> annotation = (Triple<TokenSpan, ?, Double>)tokenSpanAnnotationObj;
 			Document bsonAnnotation = new Document();
-			bsonAnnotation.append("span", convertJSONToBSON(annotation.getFirst().toJSON()));
+			bsonAnnotation.append("span", JSONUtil.convertJSONToBSON(annotation.getFirst().toJSON()));
 			bsonAnnotation.append(annotationType.getType(), serializeAnnotation(annotationType, annotation.getSecond()));
 			
 			if (annotation.getThird() != null)
@@ -304,7 +303,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 		Integer sentenceIndex = bson.getInteger("sent");
 		
 		for (Document bsonAnnotation : bsonAnnotations) {		
-			TokenSpan span = TokenSpan.fromJSON(convertBSONToJSON((Document)bsonAnnotation.get("span")), document, sentenceIndex);
+			TokenSpan span = TokenSpan.fromJSON(JSONUtil.convertBSONToJSON((Document)bsonAnnotation.get("span")), document, sentenceIndex);
 			Object annotation = deserializeAnnotation(annotationType, document, bsonAnnotation.get(annotationType.getType()), sentenceIndex);
 			
 			Double confidence = null;
@@ -366,7 +365,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 	
 	private Object serializeAnnotation(AnnotationTypeNLP<?> annotationType, Object object) {
 		if (annotationType.getSerializationType() == SerializationType.JSON) {
-			return convertJSONToBSON((JSONObject)annotationType.serialize(object));
+			return JSONUtil.convertJSONToBSON((JSONObject)annotationType.serialize(object));
 		} else {
 			return annotationType.serialize(object);
 		}
@@ -379,9 +378,9 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 			throw new UnsupportedOperationException("Missing annotation of " + annotationType.getType() + " in document " + document.getName() + " during BSON deserialization.");
 		} else if (annotationType.getSerializationType() == SerializationType.JSON) {
 			if (annotationType.getTarget() == Target.SENTENCE)
-				annotation = annotationType.deserialize(document, sentenceIndex, convertBSONToJSON((Document)bsonAnnotation));
+				annotation = annotationType.deserialize(document, sentenceIndex, JSONUtil.convertBSONToJSON((Document)bsonAnnotation));
 			else
-				annotation = annotationType.deserialize(document, convertBSONToJSON((Document)bsonAnnotation));
+				annotation = annotationType.deserialize(document, JSONUtil.convertBSONToJSON((Document)bsonAnnotation));
 		} else {
 			if (annotationType.getTarget() == Target.SENTENCE)
 				annotation = annotationType.deserialize(document, sentenceIndex, bsonAnnotation);				
@@ -390,48 +389,6 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 		}
 		
 		return annotation;
-	}
-	
-	private JSONObject convertBSONToJSON(Document bson) {
-		try {
-			return new JSONObject(bson.toJson());
-		} catch (JSONException e) {
-			throw new UnsupportedOperationException("Failed to convert BSON to JSON object during BSON deserialization");
-		}
-	}
-	
-	private Document convertJSONToBSON(JSONObject json) {
-		String[] names = JSONObject.getNames(json);
-		Document document = new Document();
-		try {
-			for (String name : names) {
-				if (json.optJSONObject(name) != null) {
-					document.append(name, convertJSONToBSON(json.getJSONObject(name)));
-				} else if (json.optJSONArray(name) != null) {
-					document.append(name, convertJSONArrayToBSONList(json.getJSONArray(name)));
-				} else {
-					document.append(name, json.get(name));
-				}
-			}
-		} catch (JSONException e) {
-			return null;
-		}
-			
-		return document;
-	}
-	
-	private List<Object> convertJSONArrayToBSONList(JSONArray json) throws JSONException {
-		List<Object> bsonList = new ArrayList<Object>();
-		for (int i = 0; i < json.length(); i++) {
-			if (json.optJSONObject(i) != null) {
-				bsonList.add(convertJSONToBSON(json.getJSONObject(i)));
-			} else if (json.optJSONArray(i) != null) {
-				bsonList.add(convertJSONArrayToBSONList(json.getJSONArray(i)));
-			} else {
-				bsonList.add(json.get(i));
-			}
-		}
-		return bsonList;
 	}
 
 	@Override
