@@ -29,7 +29,8 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 	private double targetRejectionRate = .1;
 	private L targetLabel;
 	private L defaultOutlierLabel;
-	private String[] parameterNames = { "targetRejectionRate", "targetLabel", "defaultOutlierLabel" };
+	private boolean densityOnly = false;
+	private String[] parameterNames = { "targetRejectionRate", "targetLabel", "defaultOutlierLabel", "densityOnly" };
 	
 	private OneClassClassifier classifier;
 	
@@ -54,6 +55,8 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 			return Obj.stringValue(String.valueOf(this.targetLabel.toString()));
 		else if (parameter.equals("defaultOutlierLabel"))
 			return Obj.stringValue(String.valueOf(this.defaultOutlierLabel.toString()));
+		else if (parameter.equals("densityOnly"))
+			return Obj.stringValue(String.valueOf(this.densityOnly));
 		else
 			return null;
 	}
@@ -66,6 +69,8 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 			this.targetLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("defaultOutlierLabel"))
 			this.defaultOutlierLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("densityOnly"))
+			this.densityOnly = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -130,9 +135,11 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 		this.classifier.setSeed(1);
 		this.classifier.setTargetRejectionRate(this.targetRejectionRate);
 		this.classifier.setTargetClassLabel("target");
+		this.classifier.setDensityOnly(this.densityOnly);
 		
 		try {
 			this.context.getDataTools().getOutputWriter().debugWriteln("WekaOneClass training model... ");
+
 			this.classifier.buildClassifier(instances);
 		} catch (Exception e) {
 			this.context.getDataTools().getOutputWriter().debugWriteln(e.getMessage());

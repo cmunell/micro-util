@@ -110,6 +110,21 @@
 		<artifactId>mongo-java-driver</artifactId>
 		<version>3.2.1</version>
 	</dependency>
+	<dependency>
+		<groupId>nz.ac.waikato.cms.weka</groupId>
+		<artifactId>weka-dev</artifactId>
+		<version>3.7.13</version>
+	</dependency> 
+	<dependency>
+		<groupId>nz.ac.waikato.cms.weka</groupId>
+		<artifactId>oneClassClassifier</artifactId>
+		<version>1.0.4</version>
+	</dependency>
+	<dependency>
+		<groupId>nz.ac.waikato.cms.weka</groupId>
+		<artifactId>LibSVM</artifactId>
+		<version>1.0.4</version>
+	</dependency>
 	<!--  YADLL Deps -->
 	<dependency>
          <groupId>yadll</groupId>
@@ -161,16 +176,6 @@
          <artifactId>BIDMat</artifactId>
          <version>BIDMat</version>
     </dependency>
-    <dependency>
-		<groupId>nz.ac.waikato.cms.weka</groupId>
-		<artifactId>weka-dev</artifactId>
-		<version>3.7.13</version>
-	</dependency> 
-	<dependency>
-		<groupId>nz.ac.waikato.cms.weka</groupId>
-		<artifactId>oneClassClassifier</artifactId>
-		<version>1.0.4</version>
-	</dependency>
   </dependencies>
   <repositories>      
   	<repository>

@@ -21,8 +21,10 @@ import weka.classifiers.meta.OneClassClassifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 import weka.core.SerializationHelper;
-import weka.core.SparseInstance;*/
+import weka.core.SparseInstance;
+import weka.classifiers.functions.LibSVM;*/
 
 public class ScratchTest {
 	/*@Test
@@ -87,7 +89,10 @@ public class ScratchTest {
 		testSet.add(testInstance);
 		testInstance.setDataset(testSet);
 		
+		//LibSVM svm = new LibSVM();
+		//svm.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
 		OneClassClassifier x = new OneClassClassifier();
+		
 		x.setSeed(1);
 		x.setTargetClassLabel("target");
 		try {

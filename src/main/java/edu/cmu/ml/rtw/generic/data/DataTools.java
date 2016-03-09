@@ -380,11 +380,19 @@ public class DataTools {
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 				AssignmentList parameters = fnObj.getParameters();
-				Obj.Array objRefs = (Obj.Array)parameters.get("refs").getValue();
-
-				for (int i = 0; i < objRefs.size(); i++) {
-					List<?> objs = context.getAssignedMatches(objRefs.get(i));
-					context.getDataTools().getOutputWriter().debugWriteln(objRefs.getStr(i) + ": " + objs.get(0).toString());
+				
+				if (parameters.contains("refs")) {
+					Obj.Array objRefs = (Obj.Array)parameters.get("refs").getValue();
+	
+					for (int i = 0; i < objRefs.size(); i++) {
+						List<?> objs = context.getAssignedMatches(objRefs.get(i));
+						context.getDataTools().getOutputWriter().debugWriteln(objRefs.getStr(i) + ": " + objs.get(0).toString());
+					}
+				} else if (parameters.contains("str")) {
+					context.getDataTools().getOutputWriter().debugWriteln(
+							context.getMatchValue(parameters.get("str").getValue()));
+				} else {
+					return String.valueOf("false");
 				}
 				
 				return String.valueOf("true");
