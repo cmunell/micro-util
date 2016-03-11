@@ -52,6 +52,10 @@ public class StoreReference implements JSONSerializable {
 		return this.indexValues;
 	}
 	
+	public Object getIndexValue(int index) {
+		return this.indexValues.get(index);
+	}
+	
 	@Override
 	public boolean fromJSON(JSONObject json) {
 		try {
