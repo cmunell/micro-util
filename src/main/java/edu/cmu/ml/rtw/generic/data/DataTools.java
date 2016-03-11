@@ -402,14 +402,7 @@ public class DataTools {
 	
 	public StoredItemSetManager getStoredItemSetManager() {
 		if (this.storedItemSetManager == null) {	
-			Map<String, Serializer<?, ?>> serializers = new HashMap<String, Serializer<?, ?>>();
-			serializers.putAll(this.documentSerializers);
-			
-			SerializerAssignmentListString aListSerializer = new SerializerAssignmentListString(this);
-			serializers.put(aListSerializer.getName(), aListSerializer);
-			SerializerNamedIterableToString nIterSerializer = new SerializerNamedIterableToString();
-			serializers.put(nIterSerializer.getName(), nIterSerializer);
-			
+			Map<String, Serializer<?, ?>> serializers = getSerializers();
 			this.storedItemSetManager = new StoredItemSetManager(this.properties, serializers);
 		}
 		
@@ -460,6 +453,18 @@ public class DataTools {
 		return map;
 	}
 
+	public Map<String, Serializer<?, ?>> getSerializers() {
+		Map<String, Serializer<?, ?>> serializers = new HashMap<String, Serializer<?, ?>>();
+		serializers.putAll(this.documentSerializers);
+		
+		SerializerAssignmentListString aListSerializer = new SerializerAssignmentListString(this);
+		serializers.put(aListSerializer.getName(), aListSerializer);
+		SerializerNamedIterableToString nIterSerializer = new SerializerNamedIterableToString();
+		serializers.put(nIterSerializer.getName(), nIterSerializer);
+		
+		return serializers;
+	}
+	
 	public OutputWriter getOutputWriter() {
 		return this.outputWriter;
 	}

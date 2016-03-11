@@ -90,4 +90,8 @@ public class StoredItemSetManager {
 		
 		return itemSet;
 	}
+	
+	public Storage<?, ?> getStorage(String storageName) {
+		return this.storages.get(storageName);
+	}
 }

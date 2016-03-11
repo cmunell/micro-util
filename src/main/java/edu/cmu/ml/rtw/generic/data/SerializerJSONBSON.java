@@ -14,11 +14,13 @@ import edu.cmu.ml.rtw.generic.util.StoredJSONSerializable;
 public class SerializerJSONBSON<E extends StoredJSONSerializable> extends Serializer<StoredJSONSerializable, Document> {
 	public static final String ID_INDEX_FIELD = "id";
 	
+	protected String name;
 	protected List<Index<StoredJSONSerializable>> indices;
 	protected Collection<AnnotationType<?>> annotationTypes;
 	protected StoredJSONSerializable genericObj;
 	
-	public SerializerJSONBSON(StoredJSONSerializable genericObj) {
+	public SerializerJSONBSON(String name, StoredJSONSerializable genericObj) {
+		this.name = name;
 		this.genericObj = genericObj;
 		this.indices = new ArrayList<Serializer.Index<StoredJSONSerializable>>();
 		this.indices.add(new Serializer.Index<StoredJSONSerializable>() {
@@ -41,7 +43,7 @@ public class SerializerJSONBSON<E extends StoredJSONSerializable> extends Serial
 
 	@Override
 	public String getName() {
-		return "JSONBSON";
+		return "JSONBSON" + this.name;
 	}
 
 	@Override

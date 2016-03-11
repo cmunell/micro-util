@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 
 public class StoreReference implements JSONSerializable {
@@ -88,5 +89,18 @@ public class StoreReference implements JSONSerializable {
 		}
 		
 		return json;
+	}
+	
+	public static StoreReference makeFromJSON(JSONObject json) {
+		StoreReference ref = new StoreReference();
+		if (!ref.fromJSON(json))
+			return null;
+		else
+			return ref;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T resolve(DataTools dataTools, boolean keepInMemory) {
+		return (T)dataTools.getStoredItemSetManager().resolveStoreReference(this, keepInMemory);
 	}
 }
