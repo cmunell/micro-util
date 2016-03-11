@@ -48,7 +48,6 @@ public class ScratchTest {
 			Assert.assertEquals(e.value(), v1.get(e.index()), .0001);
 		}
 	}*/
-	
 	/*
 	@Test
 	public void wekaTest() {
@@ -59,7 +58,7 @@ public class ScratchTest {
 		// Declare the class attribute along with its values
 		ArrayList<String> outputClassValues = new ArrayList<String>();
 		outputClassValues.add("target");
-		outputClassValues.add("outlier");
+		//outputClassValues.add("outlier");
 		Attribute outputClass = new Attribute("output", outputClassValues);
 		
 		ArrayList<Attribute> attrs = new ArrayList<Attribute>();
@@ -89,26 +88,26 @@ public class ScratchTest {
 		testSet.add(testInstance);
 		testInstance.setDataset(testSet);
 		
-		//LibSVM svm = new LibSVM();
-		//svm.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
-		OneClassClassifier x = new OneClassClassifier();
+		LibSVM svm = new LibSVM();
+		svm.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
+		//OneClassClassifier x = new OneClassClassifier();
 		
-		x.setSeed(1);
-		x.setTargetClassLabel("target");
+		//x.setSeed(1);
+		//x.setTargetClassLabel("target");
 		try {
-			x.buildClassifier(dataSet);
-			double[][] p = x.distributionsForInstances(testSet);
-			System.out.println(p[0][0] + " " + p[0][1]);
-			System.out.println(x.classifyInstance(testInstance));
+			svm.buildClassifier(dataSet);
+			double[][] p = svm.distributionsForInstances(testSet);
+			System.out.println(p[0][0]);// + " " + p[0][1]);
+			System.out.println(Double.compare(svm.classifyInstance(testInstance), 0.0));
 		
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println("ERROR: " + e.getMessage());
 		}
 		
 		String os = null;
 		try {
-			os = StringUtil.serializeToBase64String(x);
-			OneClassClassifier cls = (OneClassClassifier)StringUtil.deserializeFromBase64String(os);
+			os = StringUtil.serializeToBase64String(svm);
+			LibSVM cls = (LibSVM)StringUtil.deserializeFromBase64String(os);
 			double[][] p = cls.distributionsForInstances(testSet);
 			System.out.println(p[0][0] + " " + p[0][1]);
 		} catch (Exception e) {
