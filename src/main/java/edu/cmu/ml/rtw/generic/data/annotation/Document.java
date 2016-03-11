@@ -32,7 +32,7 @@ public abstract class Document {
 	public Document(DataTools dataTools, String name, String storageName, String collectionName) {
 		this.dataTools = dataTools;
 		this.name = name;
-		this.storeReference = new StoreReference(storageName, collectionName, SerializerDocument.NAME_INDEX_FIELD, collectionName);
+		this.storeReference = new StoreReference(storageName, collectionName, SerializerDocument.NAME_INDEX_FIELD, name);
 	}
 	
 	public StoreReference getStoreReference() {
