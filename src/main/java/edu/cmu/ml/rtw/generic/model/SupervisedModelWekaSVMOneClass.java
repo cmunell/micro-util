@@ -13,6 +13,7 @@ import weka.classifiers.functions.LibSVM;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 import weka.core.SparseInstance;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -122,6 +123,7 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		Instances instances = constructInstances(data, true);
 		
 		this.classifier = new LibSVM();
+		this.classifier.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
 		
 		try {
 			this.context.getDataTools().getOutputWriter().debugWriteln("WekaSVMOneClass training model... ");
