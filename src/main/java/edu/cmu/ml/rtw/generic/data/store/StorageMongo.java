@@ -85,7 +85,7 @@ public class StorageMongo implements Storage<StoredCollectionMongo<?>, Document>
 		MongoCollection<Document> metaCollection = this.database.getCollection(META_COLLECTION);
 		metaCollection.insertOne((new Document()).append("collection", name).append("serializer", serializer.getName()));
 		
-		return new StoredCollectionMongo<I>(name, collection, this);
+		return new StoredCollectionMongo<I>(name, collection, this, serializer);
 	}
 
 	@SuppressWarnings("unchecked")

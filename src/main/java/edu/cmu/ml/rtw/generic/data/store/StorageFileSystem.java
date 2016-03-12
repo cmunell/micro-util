@@ -72,7 +72,7 @@ public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<
 			return null;
 		}
 		
-		return new StoredCollectionFileSystem<I, S>(name, new File(this.rootDirectory, name), this);
+		return new StoredCollectionFileSystem<I, S>(name, new File(this.rootDirectory, name), this, serializer);
 	}
 
 	@SuppressWarnings("unchecked")

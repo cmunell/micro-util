@@ -59,6 +59,13 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		this.collection = collection;
 		this.serializer = serializer;
 	}	
+	
+	public StoredCollectionMongo(String name, MongoCollection<Document> collection, StorageMongo storage, Serializer<I, Document> serializer) {
+		super(name);
+		this.collection = collection;
+		this.serializer = serializer;
+		this.storage = storage;
+	}
 
 	@Override
 	public Iterator<I> iterator() {

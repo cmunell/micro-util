@@ -39,6 +39,13 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 		this.serializer = serializer;
 	}
 	
+	public StoredCollectionFileSystem(String name, File directory, StorageFileSystem<S> storage, Serializer<I,S> serializer) {
+		super(name);
+		this.directory = directory;
+		this.storage = storage;
+		this.serializer = serializer;
+	}
+	
 	@Override
 	public Iterator<I> iterator() {
 		return Files.fileTreeTraverser()
