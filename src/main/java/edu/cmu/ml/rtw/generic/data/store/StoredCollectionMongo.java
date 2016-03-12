@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.data.store;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -161,5 +162,19 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		} else {
 			return new StoreReference(this.storage.getName(), this.name, fields, values);
 		}
+	}
+
+	@Override
+	public List<BufferedReader> getReadersByIndex(String indexField,
+			Object indexValue) {
+		// FIXME Implement
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<BufferedReader> getReadersByIndices(List<String> indexFields,
+			List<Object> indexValues) {
+		// FIXME Implement
+		throw new UnsupportedOperationException();
 	}
 }

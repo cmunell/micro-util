@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 import edu.cmu.ml.rtw.generic.util.CommandRunner;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
@@ -36,7 +36,7 @@ public class ClustererStringBrown extends ClustererString {
 	
 	private Map<String, String> wordsToClusters;
 	
-	public ClustererStringBrown(String name, String cmdPath, File sourceDocument, int numClusters, OutputWriter output, DataTools.StringTransform cleanFn) {
+	public ClustererStringBrown(String name, String cmdPath, File sourceDocument, int numClusters, OutputWriter output, StringTransform cleanFn) {
 		super(cleanFn);
 		this.name = name;
 		this.sourceDocument = sourceDocument;

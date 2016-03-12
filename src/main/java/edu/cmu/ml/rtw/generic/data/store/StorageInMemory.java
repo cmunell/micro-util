@@ -49,6 +49,12 @@ public class StorageInMemory<S> implements Storage<StoredCollectionInMemory<?, S
 	}
 
 	@Override
+	public <I> StoredCollectionInMemory<?, S> getCollection(String name,
+			Serializer<I, S> serializer) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
 	public <I> StoredCollectionInMemory<?, S> createCollection(String name,
 			Serializer<I, S> serializer) {
 		if (hasCollection(name))
@@ -66,5 +72,4 @@ public class StorageInMemory<S> implements Storage<StoredCollectionInMemory<?, S
 			return null;
 		return (Serializer<I, S>)this.collections.get(name).getSerializer();
 	}
-
 }

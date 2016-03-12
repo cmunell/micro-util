@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.data.store;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -150,4 +151,17 @@ public class StoredCollectionInMemory<I, S> extends StoredCollection<I, S> {
 		return str.toString();
 	}
 
+	@Override
+	public List<BufferedReader> getReadersByIndex(String indexField,
+			Object indexValue) {
+		// FIXME Implement
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<BufferedReader> getReadersByIndices(List<String> indexFields,
+			List<Object> indexValues) {
+		// FIXME Implement
+		throw new UnsupportedOperationException();
+	}
 }

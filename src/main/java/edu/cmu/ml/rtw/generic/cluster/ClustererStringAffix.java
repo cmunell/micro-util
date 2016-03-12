@@ -3,7 +3,7 @@ package edu.cmu.ml.rtw.generic.cluster;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 
 /**
  * ClustererAffix clusters strings by their
@@ -20,7 +20,7 @@ public class ClustererStringAffix extends ClustererString {
 		this(name, maxAffixLength, null);
 	}
 	
-	public ClustererStringAffix(String name, int maxAffixLength, DataTools.StringTransform cleanFn) {
+	public ClustererStringAffix(String name, int maxAffixLength, StringTransform cleanFn) {
 		super(cleanFn);
 		this.name = name;
 		this.maxAffixLength = maxAffixLength;

@@ -44,6 +44,14 @@ public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<
 		
 		return new StoredCollectionFileSystem<I, S>(name, new File(this.rootDirectory, name), this);	
 	}
+	
+	@Override
+	public <I> StoredCollectionFileSystem<?, S> getCollection(String name, Serializer<I, S> serializer) {
+		if (!hasCollection(name))
+			return null;
+		
+		return new StoredCollectionFileSystem<I, S>(name, new File(this.rootDirectory, name), serializer);
+	}
 
 	@Override
 	public <I> StoredCollectionFileSystem<I, S> createCollection(String name, Serializer<I, S> serializer) {

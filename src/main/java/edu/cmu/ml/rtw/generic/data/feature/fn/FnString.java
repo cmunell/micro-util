@@ -3,11 +3,11 @@ package edu.cmu.ml.rtw.generic.data.feature.fn;
 import java.util.Collection;
 
 import edu.cmu.ml.rtw.generic.data.Context;
-import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 
 /**
  * FnString takes a collection of token spans
@@ -27,7 +27,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  *
  */
 public class FnString extends Fn<TokenSpan, String> {
-	private DataTools.StringTransform cleanFn;
+	private StringTransform cleanFn;
 	private boolean splitTokens = true;
 	private String[] parameterNames = { "cleanFn", "splitTokens" };
 	

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
@@ -31,23 +33,27 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 public class Gazetteer {
 	private HashMap<String, List<Pair<String, Double>>> gazetteer;
 	private String name;
-	private DataTools.StringTransform cleanFn;
+	private StringTransform cleanFn;
 	
 	public Gazetteer(String name, String sourceFilePath) {
 		this(name, sourceFilePath, null);
 	}
 	
-	public Gazetteer(String name, String sourceFilePath, DataTools.StringTransform cleanFn) {
+	public Gazetteer(String name, String sourceFilePath, StringTransform cleanFn) {
 		this(name, sourceFilePath, cleanFn, false);
 	}
 	
-	public Gazetteer(String name, String sourceFilePath, DataTools.StringTransform cleanFn, boolean hasWeights) {
+	public Gazetteer(String name, String sourceFilePath, StringTransform cleanFn, boolean hasWeights) {
+		this(name, FileUtil.getFileReader(sourceFilePath), cleanFn, hasWeights);
+	}
+		
+	public Gazetteer(String name, BufferedReader sourceFileReader, StringTransform cleanFn, boolean hasWeights) {	
 		this.cleanFn = cleanFn;
 		this.gazetteer = new HashMap<String, List<Pair<String, Double>>>();
 		this.name = name;
 		
 		try {
-			BufferedReader br = FileUtil.getFileReader(sourceFilePath);
+			BufferedReader br = sourceFileReader;
 			String line = null;
 			while ((line = br.readLine()) != null) {
 				String[] lineValues = line.trim().split("\\t");

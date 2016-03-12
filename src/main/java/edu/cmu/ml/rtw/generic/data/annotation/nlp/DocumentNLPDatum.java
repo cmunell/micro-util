@@ -12,6 +12,7 @@ import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.WeightedStringList;
@@ -139,12 +140,10 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 		@Override
 		public DocumentNLPDatum<L> datumFromJSON(JSONObject json) {
 			try {
-				int id = json.getInt("id");
+				int id = Integer.valueOf(json.getString("id"));
 				L label = (json.has("label")) ? labelFromString(json.getString("label")) : null;
-				DocumentNLPMutable document = new DocumentNLPInMemory(this.dataTools);
-				SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
-				
-				return new DocumentNLPDatum<L>(id, serializer.deserialize(json.getJSONObject("document")), label);
+				DocumentNLP document = this.dataTools.getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON(json.getJSONObject("document")), true);
+				return new DocumentNLPDatum<L>(id, document, label);
 			} catch (JSONException e) {
 				e.printStackTrace();
 				return null;
@@ -156,12 +155,10 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 			JSONObject json = new JSONObject();
 			
 			try {
-				json.put("id", datum.id);
+				json.put("id", String.valueOf(datum.id));
 				if (datum.label != null)
 					json.put("label", datum.label.toString());
-				DocumentNLPInMemory document = new DocumentNLPInMemory(datum.document);
-				SerializerDocumentNLPJSONLegacy serializer = new SerializerDocumentNLPJSONLegacy(document);
-				json.put("document", serializer.serialize(document));
+				json.put("document", datum.document.getStoreReference().toJSON());
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}

@@ -8,10 +8,10 @@ import java.util.Map.Entry;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.data.Context;
-import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
@@ -63,7 +63,7 @@ public abstract class FeatureGram<D extends Datum<L>, L> extends Feature<D, L> {
 	protected Map<Integer, Double> idfs; // maps vocabulary term indices to idf values to use in tfidf scale function
 	
 	protected int minFeatureOccurrence;
-	protected DataTools.StringTransform cleanFn;
+	protected StringTransform cleanFn;
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
 	protected Scale scale;
 	protected String[] parameterNames = {"minFeatureOccurrence", "cleanFn", "tokenExtractor", "scale"};

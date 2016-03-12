@@ -305,6 +305,8 @@ public abstract class Datum<L> {
 			addGenericClassifyEval(new EvaluationClassificationMeasureRecall<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureF<D, L>());
 			
+			addGenericDataSetBuilder(new DataSetBuilderStored<D, L>());
+			
 			addConstructionCommand(new RuleSet<D, L>(null), new MakeInstanceFn<RuleSet<D, L>>() {
 					@SuppressWarnings("unchecked")
 					public RuleSet<D, L> make(String name, Context parentContext) {
@@ -346,6 +348,23 @@ public abstract class Datum<L> {
 				}
 			});
 			
+			addCommand("StoreData", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					if (data.isBuildable() && !data.isBuilt() && !data.build())
+						return String.valueOf(false);
+					
+					return String.valueOf(
+							data.store(datumContext.getMatchValue(parameters.get("storage").getValue()), 
+							   datumContext.getMatchValue(parameters.get("collection").getValue()), 
+							   context.getMaxThreads()));
+				}
+			});
+			
 			addCommand("PartitionData", new Command<String>() {
 				@SuppressWarnings("unchecked")
 				@Override
@@ -355,7 +374,7 @@ public abstract class Datum<L> {
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
 					if (data.isBuildable() && !data.isBuilt() && !data.build())
-						return String.valueOf("false");
+						return String.valueOf(false);
 					
 					double[] distribution = new double[distributionStr.size()];
 					for (int i = 0; i < distribution.length; i++)
@@ -400,6 +419,20 @@ public abstract class Datum<L> {
 					if (data.isBuildable() && !data.isBuilt() && !data.build())
 						return String.valueOf("-1");
 					return String.valueOf(data.size());
+					
+				}
+			});
+			
+			addCommand("SizeFeatures", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					FeatureSet<D, L> features = datumContext.getMatchFeatureSet(parameters.get("features").getValue());
+					if (!features.isInitialized() && !features.init())
+						return String.valueOf("-1");
+					return String.valueOf(features.getFeatureVocabularySize());
 					
 				}
 			});

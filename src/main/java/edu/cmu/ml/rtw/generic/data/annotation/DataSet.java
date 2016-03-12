@@ -23,12 +23,15 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DataSetBuilder;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.store.Storage;
+import edu.cmu.ml.rtw.generic.data.store.StoredCollection;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
 /**
  * DataSet represents a collection of labeled and/or unlabeled 'datums'
@@ -558,5 +561,24 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 	@Override
 	public String getGenericName() {
 		return this.builder.getGenericName();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean store(String storageName, String collectionName, int maxThreads) {
+		Storage<?, org.bson.Document> storage = (Storage<?, org.bson.Document>)this.datumTools.getDataTools().getStoredItemSetManager().getStorage(storageName);
+		
+		if (storage.hasCollection(collectionName))
+			storage.deleteCollection(collectionName);
+		StoredCollection<D, ?> storedData = (StoredCollection<D, ?>)storage.createCollection(collectionName, new SerializerDatumBSON<D, L>(this.datumTools));
+		
+		this.map(new Fn<D, Boolean>() {
+			@Override
+			public Boolean apply(D item) {
+				return storedData.addItem(item);
+			}
+			
+		}, maxThreads);
+		
+		return true;
 	}
 }

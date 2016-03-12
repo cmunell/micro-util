@@ -3,9 +3,9 @@ package edu.cmu.ml.rtw.generic.data.feature.fn;
 import java.util.Collection;
 
 import edu.cmu.ml.rtw.generic.data.Context;
-import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
 
 /**
  * FnClean computes a list of cleaned strings from
@@ -19,7 +19,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  *
  */
 public class FnClean extends Fn<String, String> {
-	private DataTools.StringTransform cleanFn;
+	private StringTransform cleanFn;
 	private String[] parameterNames = { "cleanFn" };
 	
 	private Context context;

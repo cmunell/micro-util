@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.data;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +16,15 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.parse.Obj.Function;
+import edu.cmu.ml.rtw.generic.str.StringTransform;
+import edu.cmu.ml.rtw.generic.str.StringTransformRemoveLongTokens;
+import edu.cmu.ml.rtw.generic.str.StringTransformRemoveSymbols;
+import edu.cmu.ml.rtw.generic.str.StringTransformReplaceNumbers;
+import edu.cmu.ml.rtw.generic.str.StringTransformSpaceToUnderscore;
+import edu.cmu.ml.rtw.generic.str.StringTransformStem;
+import edu.cmu.ml.rtw.generic.str.StringTransformToLowerCase;
+import edu.cmu.ml.rtw.generic.str.StringTransformTrim;
+import edu.cmu.ml.rtw.generic.str.StringTransformUnderscoreToSpace;
 import edu.cmu.ml.rtw.generic.util.NamedIterable;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
@@ -84,19 +94,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
  * @author Bill McDowell
  *
  */
-public class DataTools {
-	/**
-	 * Interface for a function that maps a string to another string--for
-	 * example, for cleaning out garbage text before processing by features
-	 * or models.
-	 *
-	 */
-	public interface StringTransform {
-		String transform(String str);
-		// Return constant name for this transformation (used for deserializing features)
-		String toString(); 
-	}
-	
+public class DataTools {	
 	/**
 	 * Interface for a function that maps a pair of strings to a real number--
 	 * for example, as a measure of their similarity.
@@ -149,7 +147,7 @@ public class DataTools {
 	}
 	
 	protected Map<String, Gazetteer> gazetteers;
-	protected Map<String, DataTools.StringTransform> cleanFns;
+	protected Map<String, StringTransform> cleanFns;
 	protected Map<String, DataTools.StringCollectionTransform> collectionFns;
 	protected Map<String, Clusterer<String>> stringClusterers;
 	protected Map<String, Clusterer<TokenSpan>> tokenSpanClusterers;
@@ -186,7 +184,7 @@ public class DataTools {
 	
 	public DataTools(OutputWriter outputWriter, Properties properties) {
 		this.gazetteers = new HashMap<String, Gazetteer>();
-		this.cleanFns = new HashMap<String, DataTools.StringTransform>();
+		this.cleanFns = new HashMap<String, StringTransform>();
 		this.collectionFns = new HashMap<String, DataTools.StringCollectionTransform>();
 		this.stringClusterers = new HashMap<String, Clusterer<String>>();
 		this.tokenSpanClusterers = new HashMap<String, Clusterer<TokenSpan>>();
@@ -208,7 +206,7 @@ public class DataTools {
 		
 		this.outputWriter = outputWriter;
 		
-		this.cleanFns.put("DefaultCleanFn", new DataTools.StringTransform() {
+		this.addCleanFn(new StringTransform() {
 			public String toString() {
 				return "DefaultCleanFn";
 			}
@@ -217,6 +215,15 @@ public class DataTools {
 				return StringUtil.clean(str);
 			}
 		});
+		
+		this.addCleanFn(new StringTransformRemoveLongTokens());
+		this.addCleanFn(new StringTransformRemoveSymbols());
+		this.addCleanFn(new StringTransformReplaceNumbers());
+		this.addCleanFn(new StringTransformSpaceToUnderscore());
+		this.addCleanFn(new StringTransformStem());
+		this.addCleanFn(new StringTransformToLowerCase());
+		this.addCleanFn(new StringTransformTrim());
+		this.addCleanFn(new StringTransformUnderscoreToSpace());
 		
 		this.collectionFns.put("Prefixes", new DataTools.StringCollectionTransform() {
 			public String toString() {
@@ -284,6 +291,48 @@ public class DataTools {
 		this.addGenericSearch(new SearchGrid());
 		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
+		
+		this.addCommand("BuildCleanFn", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				String name = context.getMatchValue(fnObj.getParameters().get("name").getValue());
+				List<String> fns = context.getMatchArray(fnObj.getParameters().get("fns").getValue());
+				
+				return String.valueOf(context.getDataTools().addCleanFn(new StringTransform() {
+					@Override
+					public String toString() {
+						return name;
+					}
+					
+					@Override
+					public String transform(String str) {
+						for (String fn : fns) {
+							str = context.getDataTools().getCleanFn(fn).transform(str);
+						}
+						
+						return str;
+					}
+				}));
+			}
+		});
+		
+		this.addCommand("LoadGazetteer", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				String name = context.getMatchValue(fnObj.getParameters().get("name").getValue());
+				String storageName = context.getMatchValue(fnObj.getParameters().get("storageName").getValue());
+				String collectionName = context.getMatchValue(fnObj.getParameters().get("collectionName").getValue());
+				
+				BufferedReader reader = 
+					context.getDataTools().getStoredItemSetManager().getItemSet(storageName, collectionName)
+					.getStoredItems()
+					.getFirstReaderByIndex(SerializerGazetteerString.NAME_INDEX_FIELD, name);
+				
+				StringTransform cleanFn = context.getDataTools().getCleanFn(context.getMatchValue(fnObj.getParameters().get("cleanFn").getValue()));
+				boolean hasWeights = Boolean.valueOf(context.getMatchValue(fnObj.getParameters().get("hasWeights").getValue()));
+				return String.valueOf(context.getDataTools().addGazetteer(new Gazetteer(name, reader, cleanFn, hasWeights)));
+			}
+		});
 		
 		this.addCommand("SetRandomSeed", new Command<String>() {
 			@Override
@@ -413,7 +462,7 @@ public class DataTools {
 		return this.gazetteers.get(name);
 	}
 	
-	public DataTools.StringTransform getCleanFn(String name) {
+	public StringTransform getCleanFn(String name) {
 		return this.cleanFns.get(name);
 	}
 	
@@ -461,6 +510,8 @@ public class DataTools {
 		serializers.put(aListSerializer.getName(), aListSerializer);
 		SerializerNamedIterableToString nIterSerializer = new SerializerNamedIterableToString();
 		serializers.put(nIterSerializer.getName(), nIterSerializer);
+		SerializerGazetteerString gSerializer = new SerializerGazetteerString();
+		serializers.put(gSerializer.getName(), gSerializer);
 		
 		return serializers;
 	}
@@ -560,14 +611,14 @@ public class DataTools {
 		return true;
 	}
 	
-	public boolean addCleanFn(DataTools.StringTransform cleanFn) {
+	public boolean addCleanFn(StringTransform cleanFn) {
 		this.cleanFns.put(cleanFn.toString(), cleanFn);
 		return true;
 	}
 	
 	public boolean addStopWordsCleanFn(final Gazetteer stopWords) {
 		this.cleanFns.put("StopWordsCleanFn_" + stopWords.getName(), 
-			new DataTools.StringTransform() {
+			new StringTransform() {
 				public String toString() {
 					return "StopWordsCleanFn_" + stopWords.getName();
 				}

@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.data.store;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -143,6 +144,53 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 		return items;
 	}
 
+	@Override
+	public List<BufferedReader> getReadersByIndex(String indexField,
+			Object indexValue) {
+		List<String> indexFields = new ArrayList<String>();
+		List<Object> indexValues = new ArrayList<Object>();
+		indexFields.add(indexField);
+		indexValues.add(indexValue);
+		return getReadersByIndices(indexFields, indexValues);
+	}
+
+	@Override
+	public List<BufferedReader> getReadersByIndices(List<String> indexFields,
+			List<Object> indexValues) {
+		if (indexFields.size() != indexValues.size())
+			return null;
+		
+		TreeMap<Integer, String> constrainedIndices = new TreeMap<Integer, String>();
+		for (int i = 0; i < indexFields.size(); i++) {
+			constrainedIndices.put(getIndexNumber(indexFields.get(i)), transformIndexValue(indexValues.get(i)));
+		}
+	
+		return getReadersByIndices(this.directory, 0, constrainedIndices, new ArrayList<BufferedReader>());
+	}
+	
+	private List<BufferedReader> getReadersByIndices(File curIndexDir, int curIndexNum, TreeMap<Integer, String> constrainedIndices, List<BufferedReader> readers) {
+		File[] constrainedIndex = null;
+		if (constrainedIndices.containsKey(curIndexNum)) {
+			File constrainedIndexFile = new File(curIndexDir.getAbsolutePath(), constrainedIndices.get(curIndexNum));
+			if (!constrainedIndexFile.exists())
+				return readers;
+			else 
+				constrainedIndex = new File[] { constrainedIndexFile };
+		} else {
+			constrainedIndex = curIndexDir.listFiles();
+		}
+		
+		for (File file : constrainedIndex) {
+			if (file.isDirectory()) {
+				getReadersByIndices(file, curIndexNum + 1, constrainedIndices, readers);
+			} else if (file.isFile() && (constrainedIndices.size() == 0 || curIndexNum >= constrainedIndices.lastKey())) {
+				readers.add(FileUtil.getFileReader(file.getAbsolutePath()));
+			}
+		}
+		
+		return readers;
+	}
+	
 	@Override
 	public boolean addItem(I item) {
 		Serializer<I, S> serializer = getSerializer();

@@ -9,6 +9,7 @@ public interface Storage<C extends StoredCollection<?, S>, S> {
 	boolean deleteCollection(String name);
 	
 	<I> C getCollection(String name);
+	<I> C getCollection(String name, Serializer<I, S> serializer);
 	<I> C createCollection(String name, Serializer<I, S> serializer);
 	<I> Serializer<I, S> getCollectionSerializer(String name);
 }

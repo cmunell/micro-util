@@ -78,7 +78,7 @@ public class StoredItemSetManager {
 			if (collection == null)
 				return null;
 		} else {
-			collection = (StoredCollection<I, ?>)storage.getCollection(collectionName);
+			collection = (StoredCollection<I, ?>)storage.getCollection(collectionName, (Serializer)serializer);
 		}
 		
 		StoredItemSetInMemoryLazy<E, I> itemSet = new StoredItemSetInMemoryLazy<E, I>(collection);

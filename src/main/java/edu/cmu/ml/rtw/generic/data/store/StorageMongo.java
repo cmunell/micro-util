@@ -53,6 +53,15 @@ public class StorageMongo implements Storage<StoredCollectionMongo<?>, Document>
 		
 		return new StoredCollectionMongo<I>(name, this.database.getCollection(name), this);	
 	}
+	
+	@Override
+	public <I> StoredCollectionMongo<?> getCollection(String name,
+			Serializer<I, Document> serializer) {
+		if (!hasCollection(name))
+			return null;
+		
+		return new StoredCollectionMongo<I>(name, this.database.getCollection(name), serializer);	
+	}
 
 	@Override
 	public <I> StoredCollectionMongo<I> createCollection(String name, Serializer<I, Document> serializer) {
