@@ -1,7 +1,5 @@
 package edu.cmu.ml.rtw.generic.str;
 
-import edu.cmu.ml.rtw.generic.util.Stemmer;
-
 public class StringTransformRemoveLongTokens implements StringTransform {
 
 	public StringTransformRemoveLongTokens() {
@@ -15,8 +13,6 @@ public class StringTransformRemoveLongTokens implements StringTransform {
 		for (int i = 0; i < parts.length; i++) {
 			if (parts[i].length() > 30) // remove long tokens
 				continue;
-
-			parts[i] = Stemmer.stem(parts[i]);
 			retStr = retStr.append(parts[i]).append(" ");
 		}
 		
