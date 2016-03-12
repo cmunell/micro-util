@@ -141,6 +141,7 @@ public class DocumentNLPDatum<L> extends Datum<L> {
 		public DocumentNLPDatum<L> datumFromJSON(JSONObject json) {
 			try {
 				int id = Integer.valueOf(json.getString("id"));
+				
 				L label = (json.has("label")) ? labelFromString(json.getString("label")) : null;
 				DocumentNLP document = this.dataTools.getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON(json.getJSONObject("document")), true);
 				return new DocumentNLPDatum<L>(id, document, label);

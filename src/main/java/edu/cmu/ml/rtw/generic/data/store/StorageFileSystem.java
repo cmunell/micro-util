@@ -23,6 +23,7 @@ public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<
 	private Map<String, Serializer<?, ?>> serializers;
 	
 	public StorageFileSystem(String name, String rootDirectory, Map<String, Serializer<?, ?>> serializers) {
+		this.name = name;
 		this.rootDirectory = rootDirectory;
 		this.serializers = serializers;
 	}
