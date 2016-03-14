@@ -17,6 +17,7 @@ import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConjunction;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyPath;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPathType;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerContains;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerEditDistance;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerInitialism;
@@ -278,6 +279,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureTokenSpanFnDataVocab<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnFilteredVocab<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnDataVocabTrie<D, L>());
+			addGenericFeature(new FeatureDependencyPathType<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());

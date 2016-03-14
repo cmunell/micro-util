@@ -124,7 +124,7 @@ public abstract class Obj extends Serializable {
 				if (!this.internalAssignments.serialize(writer))
 					return false;
 				writer.write("}");
-			};
+			}
 			
 			return true;
 		}

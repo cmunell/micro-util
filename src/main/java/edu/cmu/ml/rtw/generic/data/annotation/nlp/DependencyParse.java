@@ -29,6 +29,12 @@ import edu.cmu.ml.rtw.generic.util.StringSerializable;
 public class DependencyParse implements StringSerializable {
 	private static Pattern dependencyPattern = Pattern.compile("(.+)\\((.+)\\-([0-9']+), (.+)\\-([0-9']+)\\)");
 	
+	public enum PathType {
+		DOMINATING,
+		DOMINATED,
+		NONE
+	}
+	
 	public class Node {
 		private int tokenIndex;
 		private Dependency[] governors;
@@ -183,6 +189,15 @@ public class DependencyParse implements StringSerializable {
 				if (isDependencyGoverningNext(i))
 					return false;
 			return true;
+		}
+		
+		public PathType getType() {
+			if (isAllGoverning())
+				return PathType.DOMINATING;
+			else if (isAllGovernedBy())
+				return PathType.DOMINATED;
+			else
+				return PathType.NONE;
 		}
 		
 		public String toString() {

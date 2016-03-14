@@ -27,9 +27,38 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 
 public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends SupervisedModel<D, L> {
+	public enum KernelType {
+		LINEAR(0),
+		POLYNOMIAL(1),
+		RBF(2),
+		SIGMOID(3);
+
+		private int index;
+		
+		KernelType(int index) {
+			this.index = index;
+		}
+		
+		public int getIndex() {
+			return this.index;
+		}
+		
+		public static KernelType fromIndex(int index) {
+			if (index == 0)
+				return LINEAR;
+			else if (index == 1)
+				return POLYNOMIAL;
+			else if (index == 2)
+				return RBF;
+			else 
+				return SIGMOID;
+		}
+	}
+	
 	private L targetLabel;
 	private L defaultOutlierLabel;
-	private String[] parameterNames = { "targetLabel", "defaultOutlierLabel" };
+	private KernelType kernelType = KernelType.RBF;
+	private String[] parameterNames = { "targetLabel", "defaultOutlierLabel", "kernelType" };
 	
 	private LibSVM classifier;
 	
@@ -52,6 +81,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 			return Obj.stringValue(String.valueOf(this.targetLabel.toString()));
 		else if (parameter.equals("defaultOutlierLabel"))
 			return Obj.stringValue(String.valueOf(this.defaultOutlierLabel.toString()));
+		else if (parameter.equals("kernelType"))
+			return Obj.stringValue(this.kernelType.toString());
 		else
 			return null;
 	}
@@ -62,6 +93,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 			this.targetLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("defaultOutlierLabel"))
 			this.defaultOutlierLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("kernelType"))
+			this.kernelType = KernelType.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -124,6 +157,7 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		
 		this.classifier = new LibSVM();
 		this.classifier.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
+		this.classifier.setKernelType(new SelectedTag(this.kernelType.getIndex(), LibSVM.TAGS_KERNELTYPE));
 		
 		try {
 			this.context.getDataTools().getOutputWriter().debugWriteln("WekaSVMOneClass training model... ");

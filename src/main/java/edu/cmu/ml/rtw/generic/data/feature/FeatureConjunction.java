@@ -23,11 +23,7 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  *  minFeatureOccurrence - the minimum number of times a conjunction must occur to 
  *  be included in the vector
  *
- *  referencedFeatures - referenced features given by a '/' separated list of 
- *  feature 'referenceNames' used within the FeaturizedDataSet given to initialize
- *  FeatureConjunction.
- * 
- * FIXME Change the '/' separated feature list to be an edu.cmu.ml.rtw.generic.parse.Obj.Array
+ *  features - referenced features used to initialize the feature conjunction 
  * 
  * @author Bill McDowell
  *
@@ -37,8 +33,8 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	private BidirectionalLookupTable<String, Integer> vocabulary;
 	private int minFeatureOccurrence;
-	private String[] featureReferences;
-	private String[] parameterNames = {"minFeatureOccurrence", "featureReferences"};
+	private Obj.Array features;
+	private String[] parameterNames = {"minFeatureOccurrence", "features"};
 	
 	public FeatureConjunction() {
 		
@@ -82,8 +78,8 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	private Map<String, Double> conjunctionForDatum(D datum) {
 		Map<String, Double> conjunction = new HashMap<String, Double>();
 		conjunction.put("", 1.0);
-		for (int i = 0; i < this.featureReferences.length; i++) {
-			Feature<D, L> feature = this.context.getMatchFeature(Obj.curlyBracedValue(this.featureReferences[i])); // FIXME These should be stored as an Obj.Array
+		for (int i = 0; i < this.features.size(); i++) {
+			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
 			Map<Integer, Double> values = feature.computeVector(datum, 0, new HashMap<Integer, Double>());
 			Map<Integer, String> vocab = feature.getVocabularyForIndices(values.keySet());
 			Map<String, Double> nextConjunction = new HashMap<String, Double>();
@@ -131,14 +127,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		if (parameter.equals("minFeatureOccurrence"))
 			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
 		else if (parameter.equals("featureReferences")) {
-			if (this.featureReferences == null)
-				return Obj.stringValue("");
-			StringBuilder featureReferences = new StringBuilder();
-			for (int i = 0; i < this.featureReferences.length; i++)
-				featureReferences = featureReferences.append(this.featureReferences[i]).append("/");
-			if (featureReferences.length() > 0)
-				featureReferences = featureReferences.delete(featureReferences.length() - 1, featureReferences.length());
-			return Obj.stringValue(featureReferences.toString());
+			return this.features;		
 		}
 
 		return null;
@@ -150,7 +139,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		if (parameter.equals("minFeatureOccurrence")) {
 		 	this.minFeatureOccurrence = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("featureReferences")) {
-			this.featureReferences = this.context.getMatchValue(parameterValue).split("/");
+			this.features = (Obj.Array)parameterValue;
 		} else {
 			return false;
 		}

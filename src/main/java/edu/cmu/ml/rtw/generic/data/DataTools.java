@@ -63,8 +63,10 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenAnnotation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
 
 /**
@@ -276,7 +278,9 @@ public class DataTools {
 		this.addGenericTokenSpanStrFn(new FnPoS());
 		this.addGenericTokenSpanStrFn(new FnString());
 		this.addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
-
+		this.addGenericTokenSpanStrFn(new FnTokenAnnotation());
+		this.addGenericTokenSpanStrFn(new FnSentencePosition());
+		
 		this.addGenericStrFn(new FnComposite.FnCompositeStr());
 		this.addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
 		this.addGenericStrFn(new FnRelationStr.FnRelationStrStr());
