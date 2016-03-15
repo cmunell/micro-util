@@ -11,9 +11,15 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.task.classify.TaskClassification.Stat;
 
 public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> extends EvaluationClassificationMeasure<D, L> {
-	private boolean weighted;
+	public enum Mode {
+		MACRO,
+		MACRO_WEIGHTED,
+		MICRO
+	}
+	
+	private Mode mode = Mode.MACRO_WEIGHTED;
 	private L filterLabel; 
-	private String[] parameterNames = { "weighted", "filterLabel" };
+	private String[] parameterNames = { "weighted", "mode" };
 	
 	public EvaluationClassificationMeasurePrecision() {
 		this(null);
@@ -28,8 +34,10 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method);
 		
 		double p = 0.0;
+		double num = 0.0;
+		double den = 0.0;
 		for (Entry<L, Map<Stat, Integer>> entry : stats.entrySet()) {
-			if (this.filterLabel != null && !entry.getKey().equals(this.filterLabel))
+			if (this.filterLabel != null && !this.filterLabel.equals(entry.getKey()))
 				continue;
 			
 			double tp = entry.getValue().get(Stat.TRUE_POSITIVE);
@@ -37,25 +45,35 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 			double tn = entry.getValue().get(Stat.TRUE_NEGATIVE);
 			double fn = entry.getValue().get(Stat.FALSE_NEGATIVE);
 			
-			double weight = 0.0;
-			if (this.filterLabel != null) {
-				weight = 1.0;
-			} else if (this.weighted) {
-				if (Double.compare(tp + fp + tn + fn, 0.0) == 0)
-					weight = 1.0;
-				else
-					weight = (tp+fn)/(tp+fp+tn+fn);
+			if (this.mode.equals(Mode.MICRO)) {
+				num += tp;
+				den += (tp + fp);
 			} else {
-				weight = 1.0/stats.size();
+				double weight = 0.0;
+				if (this.filterLabel != null) {
+					weight = 1.0;
+				} else if (this.mode == Mode.MACRO_WEIGHTED) {
+					if (Double.compare(tp + fp + tn + fn, 0.0) == 0)
+						weight = 1.0;
+					else
+						weight = (tp+fn)/(tp+fp+tn+fn);
+				} else {
+					weight = 1.0/stats.size();
+				}
+				
+				if (Double.compare(tp + fp, 0.0) == 0)
+					p += weight;
+				else
+					p += weight * tp/(tp+fp);
 			}
-			
-			if (Double.compare(tp + fp, 0.0) == 0)
-				p += weight;
-			else
-				p += weight * tp/(tp+fp);
 		}
 		
-		return p;
+		if (den == 0.0) {
+			num = 1.0;
+			den = 1.0;
+		}
+		
+		return (this.mode == Mode.MICRO) ? num/den : p;
 	}
 
 	@Override
@@ -69,8 +87,8 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("weighted"))
-			return Obj.stringValue(String.valueOf(this.weighted));
+		if (parameter.equals("mode"))
+			return Obj.stringValue(this.mode.toString());
 		else if (parameter.equals("filterLabel"))
 			return (this.filterLabel == null) ? null : Obj.stringValue(this.filterLabel.toString());
 		else
@@ -79,8 +97,8 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("weighted"))
-			this.weighted = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		if (parameter.equals("mode"))
+			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("filterLabel"))
 			this.filterLabel = (parameterValue == null) ? null : this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
 		else

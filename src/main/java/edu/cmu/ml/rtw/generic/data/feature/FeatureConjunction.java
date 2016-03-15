@@ -126,7 +126,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("minFeatureOccurrence"))
 			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
-		else if (parameter.equals("featureReferences")) {
+		else if (parameter.equals("features")) {
 			return this.features;		
 		}
 
@@ -138,7 +138,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 			Obj parameterValue) {
 		if (parameter.equals("minFeatureOccurrence")) {
 		 	this.minFeatureOccurrence = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		} else if (parameter.equals("featureReferences")) {
+		} else if (parameter.equals("features")) {
 			this.features = (Obj.Array)parameterValue;
 		} else {
 			return false;

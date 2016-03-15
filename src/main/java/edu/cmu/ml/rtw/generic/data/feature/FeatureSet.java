@@ -96,8 +96,6 @@ public class FeatureSet<D extends Datum<L>, L> extends CtxParsableFunction {
 			this.featureVocabularySize += feature.getVocabularySize();
 		}
 		
-		this.featureVocabularySize += feature.getVocabularySize();
-		
 		return true;
 	}
 	

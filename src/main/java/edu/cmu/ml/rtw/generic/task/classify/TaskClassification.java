@@ -62,15 +62,15 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 		Map<L, Map<L, List<D>>> actualToPredicted = new HashMap<L, Map<L, List<D>>>();
 		Map<D, L> predictions = method.classify(getData());
 		
-		for (Entry<D, L> entry : predictions.entrySet()) {
-			L actual = entry.getKey().getLabel();
-			L predicted = entry.getValue();
+		for (D datum : this.data.getData()) {
+			L actual = datum.getLabel();
+			L predicted = predictions.get(datum);
 			
 			if (!actualToPredicted.containsKey(actual))
 				actualToPredicted.put(actual, new HashMap<L, List<D>>());
 			if (!actualToPredicted.get(actual).containsKey(predicted))
 				actualToPredicted.get(actual).put(predicted, new ArrayList<D>());
-			actualToPredicted.get(actual).get(predicted).add(entry.getKey());
+			actualToPredicted.get(actual).get(predicted).add(datum);
 		}
 		
 		this.methodsActualToPredicted.put(method, actualToPredicted);

@@ -44,7 +44,7 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 		double falseCount = 0.0;
 		double Beta2 = this.Beta*this.Beta;
 		for (Entry<L, Map<Stat, Integer>> entry : stats.entrySet()) {
-			if (this.filterLabel != null && !entry.getKey().equals(this.filterLabel))
+			if (this.filterLabel != null && !this.filterLabel.equals(entry.getKey()))
 				continue;
 			
 			double tp = entry.getValue().get(Stat.TRUE_POSITIVE);
