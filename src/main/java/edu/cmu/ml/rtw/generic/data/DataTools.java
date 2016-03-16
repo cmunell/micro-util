@@ -777,7 +777,13 @@ public class DataTools {
 	
 	@SuppressWarnings("unchecked")
 	public <T> T runCommand(Context context, List<String> modifiers, String referenceName, Obj.Function fnObj) {
-		for (Command<?> command : this.commands.get(fnObj.getName())) {
+		List<Command<?>> commands = this.commands.get(fnObj.getName());
+		if (commands == null) {
+			this.outputWriter.debugWriteln("ERROR: Command not found: " + fnObj.getName());
+			throw new NullPointerException();
+		}
+			
+		for (Command<?> command : commands) {
 			Object obj = command.run(context, modifiers, referenceName, fnObj);
 			if (obj != null) {
 				return (T)obj;
