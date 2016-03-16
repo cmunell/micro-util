@@ -81,7 +81,7 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 
 	@Override
 	public String getGenericName() {
-		return "PoS";
+		return "SentencePosition";
 	}
 
 }
