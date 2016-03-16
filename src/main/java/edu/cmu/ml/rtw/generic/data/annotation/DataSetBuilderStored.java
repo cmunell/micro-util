@@ -61,7 +61,6 @@ public class DataSetBuilderStored<D extends Datum<L>, L> extends DataSetBuilder<
 			@Override
 			public Boolean apply(D datum) {
 				synchronized (data) {
-					context.getDataTools().getOutputWriter().debugWriteln(referenceName + " loaded " + datum.getId() + ".");
 					data.add(datum);
 				}
 	
@@ -69,8 +68,6 @@ public class DataSetBuilderStored<D extends Datum<L>, L> extends DataSetBuilder<
 			}
 			
 		}, this.context.getMaxThreads(), this.context.getDataTools().getGlobalRandom());
-		
-		this.context.getDataTools().getOutputWriter().debugWriteln(this.referenceName + " finished loading.");
 		
 		return data;
 	}
