@@ -17,7 +17,7 @@ public class EvaluationClassificationMeasureRecall<D extends Datum<L> , L> exten
 		MICRO
 	}
 	
-	private Mode mode;
+	private Mode mode = Mode.MACRO_WEIGHTED;
 	private L filterLabel; 
 	private String[] parameterNames = { "mode", "filterLabel" };
 	
