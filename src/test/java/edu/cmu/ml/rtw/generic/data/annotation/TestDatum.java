@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationTernaryTest;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 
 public class TestDatum<L> extends Datum<L> {
@@ -52,6 +53,22 @@ public class TestDatum<L> extends Datum<L> {
 		};
 		
 		tools.addGenericDataSetBuilder(new TestDataSetBuilder());
+	
+		return tools;
+	}
+	
+	public static Tools<TernaryLabel> getTernaryTools(DataTools dataTools) {
+		Tools<TernaryLabel> tools =  new Tools<TernaryLabel>(dataTools) {
+			@Override
+			public TernaryLabel labelFromString(String str) {
+				if (str == null)
+					return null;
+				return TernaryLabel.valueOf(str);
+			}
+		};
+		
+		tools.addGenericDataSetBuilder(new TernaryDataSetBuilder());
+		tools.addGenericClassifyMethod(new MethodClassificationTernaryTest<>());
 	
 		return tools;
 	}

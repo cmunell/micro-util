@@ -80,6 +80,7 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	public Map<L, Map<Stat, Integer>> computeStats(MethodClassification<D, L> method) {
 		Map<L, Map<L, List<D>>> actualToPredicted = computeActualToPredictedData(method);
 		Map<L, Map<Stat, Integer>> stats = new HashMap<L, Map<Stat, Integer>>();
+
 		for (Entry<L, Map<L, List<D>>> entry : actualToPredicted.entrySet()) {
 			L actual = entry.getKey();
 			
@@ -99,7 +100,7 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 				}
 			}
 		}
-		
+
 		return stats;
 	}
 	

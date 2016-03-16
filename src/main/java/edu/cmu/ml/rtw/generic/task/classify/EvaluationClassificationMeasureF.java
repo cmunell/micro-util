@@ -43,7 +43,6 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 
 		double totalTp = 0.0;
 		double totalFp = 0.0;
-		double totalTn = 0.0;
 		double totalFn = 0.0;
 		
 		double Beta2 = this.Beta*this.Beta;
@@ -71,7 +70,6 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 			if (this.mode == Mode.MICRO) {
 				totalTp += tp;
 				totalFp += fp;
-				totalTn += tn;
 				totalFn += fn;
 			} else {
 				if (Double.compare(tp + fn + fp, 0.0) == 0)

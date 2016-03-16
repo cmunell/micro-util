@@ -5,6 +5,7 @@ import java.io.StringReader;
 import org.junit.Test;
 
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.data.annotation.TernaryLabel;
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
@@ -12,7 +13,7 @@ import edu.cmu.ml.rtw.generic.util.Properties;
 
 public class ContextTest {
 	@Test
-	public void testContext() {
+	public void testTernaryContext() {
 		DataTools dataTools = new DataTools(new OutputWriter(), 
 				new Properties(new StringReader(
 						"debug_dir=\n" +
@@ -21,24 +22,24 @@ public class ContextTest {
 						)));
 		
 
-		dataTools.addGenericContext(new DatumContext<TestDatum<Boolean>, Boolean>(TestDatum.getBooleanTools(dataTools), "TestBoolean"));
+		dataTools.addGenericContext(new DatumContext<TestDatum<TernaryLabel>, TernaryLabel>(TestDatum.getTernaryTools(dataTools), "TestTernary"));
 		Context.run("test", dataTools, makeContextString());
 		
 		StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
-		StoredItemSet<?, ?> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
+		//StoredItemSet<?, ?> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
 		System.out.println(outputEvals.getStoredItems().toString());
-		System.out.println(outputParses.getStoredItems().toString());
+		//System.out.println(outputParses.getStoredItems().toString());
 		
 	}
 	
 	private String makeContextString() {
 		String contextStr = "value maxThreads=\"2\";\n";
 		contextStr +=       "value debug=Debug();\n";
-		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"1\");\n";
-		contextStr +=       "context testBooleanCtx=TestBoolean() {\n";
-		contextStr +=       	"data trainData = Test(storage=\"BSONMemory\", collection=\"TrainDocuments\");\n";
-		contextStr +=       	"data devData = Test(storage=\"BSONMemory\", collection=\"DevDocuments\");\n";
-		contextStr +=       	"data testData = Test(storage=\"BSONMemory\", collection=\"TestDocuments\");\n";
+		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"6\");\n";
+		contextStr +=       "context testTernaryCtx=TestTernary() {\n";
+		contextStr +=       	"data trainData = Ternary(storage=\"BSONMemory\", collection=\"TrainDocuments\");\n";
+		contextStr +=       	"data devData = Ternary(storage=\"BSONMemory\", collection=\"DevDocuments\");\n";
+		contextStr +=       	"data testData = Ternary(storage=\"BSONMemory\", collection=\"TestDocuments\");\n";
 		contextStr +=           "value trainPartitioned = PartitionData(data=${trainData}, distribution=(\".8\", \".1\", \".1\"));\n";
 		contextStr +=           "data unionedData = UnionData(data=(${trainData_0}, ${trainData_1}, ${trainData_2}));";
 		contextStr +=           "value trainSize = SizeData(data=${trainData});\n";
@@ -46,6 +47,8 @@ public class ContextTest {
 		contextStr +=           "value trainSize1 = SizeData(data=${trainData_1});\n";
 		contextStr +=           "value trainSize2 = SizeData(data=${trainData_2});\n";
 		contextStr +=           "value unionedSize = SizeData(data=${unionedData});\n";
+		contextStr +=           "value testSize = SizeData(data=${testData});\n";
+		contextStr +=           "value sizeDataDebug = OutputDebug(refs=(${testSize}));\n";
 		contextStr +=           "ts_fn doc1=NGramDocument(n=\"1\", noSentence=\"false\");\n";
 		contextStr +=           "ts_str_fn strDef=String(cleanFn=\"DefaultCleanFn\");\n";
 		contextStr +=           "feature fdoc1=TokenSpanFnDataVocab(scale=\"INDICATOR\", minFeatureOccurrence=\"2\", tokenExtractor=\"TokenSpan\", fn=(${strDef} o ${doc1}));\n";
@@ -53,7 +56,15 @@ public class ContextTest {
 		contextStr +=           "data_features trainMatrix = DataFeatureMatrix(data=${trainData}, features=${f});\n";
 		contextStr +=           "data_features devMatrix = DataFeatureMatrix(data=${devData}, features=${f});\n";
 		contextStr +=           "data_features testMatrix = DataFeatureMatrix(data=${testData}, features=${f});\n";
-		contextStr +=           "model lr=WekaOneClass(targetRejectionRate=\".1\", targetLabel=\"true\", defaultOutlierLabel=\"false\")\n";
+		contextStr +=           "classify_method testMethod = TernaryTest(incorrect=\".2\", correct=\".2\");";
+		contextStr +=           "classify_task testTask = Classification(data=${testMatrix});\n";
+		contextStr +=           "classify_eval testF = F(task=${testTask}, method=${testMethod}, Beta=\"1\", mode=\"MICRO\");\n";
+		contextStr +=           "classify_eval testPrecision = Precision(task=${testTask}, method=${testMethod}, mode=\"MICRO\");\n";
+		contextStr +=           "classify_eval testRecall = Recall(task=${testTask}, method=${testMethod}, mode=\"MICRO\");\n";
+		contextStr +=           "value strEvals = OutputStrings(id=\"TestEvals\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", refs=(${testF}, ${testPrecision}, ${testRecall}));\n";
+		contextStr +=       "};\n";
+		
+		/*contextStr +=           "model lr=WekaOneClass(targetRejectionRate=\".1\", targetLabel=\"true\", defaultOutlierLabel=\"false\")\n";
 		//contextStr +=           "model lr=Areg(l1=\"0\", l2=\"0\", convergenceEpsilon=\".00001\", maxTrainingExamples=\"1000001\", batchSize=\"200\", evaluationIterations=\"200\", maxEvaluationConstantIterations=\"500\", weightedLabels=\"false\", computeTestEvaluations=\"false\")\n";
 		contextStr +=           "{\n";
 		contextStr +=                "array validLabels=(\"true\", \"false\");\n";
@@ -87,7 +98,7 @@ public class ContextTest {
 		contextStr +=           "value ut1=OutputDebug(refs=(${trainSize1}));";
 		contextStr +=           "value ut2=OutputDebug(refs=(${trainSize2}));";
 		contextStr +=           "value ut3=OutputDebug(refs=(${unionedSize}));";
-		contextStr +=       "};\n";
+		contextStr +=       "};\n";*/
 		return contextStr;
 	}
 	
