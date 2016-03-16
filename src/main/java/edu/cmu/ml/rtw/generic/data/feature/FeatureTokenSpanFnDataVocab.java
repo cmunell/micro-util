@@ -248,7 +248,6 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 		if (parameter.equals("minFeatureOccurrence")) 
 			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
 		else if (parameter.equals("fn")) {
-			System.out.println(this.referenceName);
 			return this.fn.toParse();
 		} else if (parameter.equals("tokenExtractor"))
 			return Obj.stringValue((this.tokenExtractor == null) ? "" : this.tokenExtractor.toString());
