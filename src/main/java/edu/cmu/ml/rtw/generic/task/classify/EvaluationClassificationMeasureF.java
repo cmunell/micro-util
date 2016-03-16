@@ -40,8 +40,12 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method);
 		
 		double F = 0.0;
-		double trueCount = 0.0;
-		double falseCount = 0.0;
+
+		double totalTp = 0.0;
+		double totalFp = 0.0;
+		double totalTn = 0.0;
+		double totalFn = 0.0;
+		
 		double Beta2 = this.Beta*this.Beta;
 		for (Entry<L, Map<Stat, Integer>> entry : stats.entrySet()) {
 			if (this.filterLabel != null && !this.filterLabel.equals(entry.getKey()))
@@ -65,13 +69,10 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 			}
 			
 			if (this.mode == Mode.MICRO) {
-				if (this.filterLabel == null) {
-					trueCount += tp;
-					falseCount += fp;
-				} else {
-					trueCount += tp + tn;
-					falseCount += fp + fn;
-				}
+				totalTp += tp;
+				totalFp += fp;
+				totalTn += tn;
+				totalFn += fn;
 			} else {
 				if (Double.compare(tp + fn + fp, 0.0) == 0)
 					F += weight;
@@ -81,10 +82,10 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 		}
 		
 		if (this.mode == Mode.MICRO) {
-			if (Double.compare(trueCount + falseCount, 0.0) == 0)
+			if (Double.compare(totalTp + totalFp, 0.0) == 0 || Double.compare(totalTp + totalFn, 0.0) == 0)
 				return 1.0;
 			else
-				return trueCount/(falseCount + trueCount);
+				return (1.0+Beta2)*totalTp/((1.0+Beta2)*totalTp + Beta2*totalFp + totalFn);
 		} else 
 			return F;
 	}
