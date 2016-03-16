@@ -4,6 +4,7 @@ import edu.cmu.ml.rtw.generic.data.StoredItemSetInMemoryLazy;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DataSetBuilder;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper.Fn;
 
 public class DataSetBuilderStored<D extends Datum<L>, L> extends DataSetBuilder<D, L> {
 	private String storage;
@@ -55,9 +56,21 @@ public class DataSetBuilderStored<D extends Datum<L>, L> extends DataSetBuilder<
 				.getItemSet(this.storage, this.collection, false, new SerializerDatumBSON<D, L>(this.context.getDatumTools()));
 		
 		DataSet<D, L> data = new DataSet<D, L>(this.context.getDatumTools());
-
-		for (D datum : storedData)
-			data.add(datum);
+		
+		storedData.map(new Fn<D, Boolean>() {
+			@Override
+			public Boolean apply(D datum) {
+				synchronized (data) {
+					context.getDataTools().getOutputWriter().debugWriteln(referenceName + " loaded " + datum.getId() + ".");
+					data.add(datum);
+				}
+	
+				return true;
+			}
+			
+		}, this.context.getMaxThreads(), this.context.getDataTools().getGlobalRandom());
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln(this.referenceName + " finished loading.");
 		
 		return data;
 	}
