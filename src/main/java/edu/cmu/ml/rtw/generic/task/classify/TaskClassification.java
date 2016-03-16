@@ -89,11 +89,9 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 				
 				if (actual.equals(predicted)) {
 					incrementStat(stats, predicted, Stat.TRUE_POSITIVE, count);
-					if (predicted != null) {
-						for (L label : actualToPredicted.keySet())
-							if (!label.equals(predicted))
-								incrementStat(stats, label, Stat.TRUE_NEGATIVE, count);
-					}
+					for (L label : actualToPredicted.keySet())
+						if (!label.equals(predicted))
+							incrementStat(stats, label, Stat.TRUE_NEGATIVE, count);
 				} else {
 					if (predicted != null)
 						incrementStat(stats, predicted, Stat.FALSE_POSITIVE, count);
