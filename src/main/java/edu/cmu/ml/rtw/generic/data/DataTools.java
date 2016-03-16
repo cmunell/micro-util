@@ -53,6 +53,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCoref;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnDependencyRelation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilter;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnFilterPoSTagClass;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteer;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnGazetteerFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnHead;
@@ -271,6 +272,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnIdentity<TokenSpan>());
 		this.addGenericTokenSpanFn(new FnCoref());
 		this.addGenericTokenSpanFn(new FnDependencyRelation());
+		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
