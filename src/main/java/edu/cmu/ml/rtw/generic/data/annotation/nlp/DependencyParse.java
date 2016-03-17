@@ -269,6 +269,16 @@ public class DependencyParse implements StringSerializable {
 		return null;
 	}
 	
+	public boolean isDirectlyGoverning(int sourceTokenIndex, int targetTokenIndex) {
+		DependencyPath path = getPath(sourceTokenIndex, targetTokenIndex);
+		return path != null && path.getDependencyLength() == 1 && path.isAllGoverning();
+	}
+	
+	public boolean isGoverning(int sourceTokenIndex, int targetTokenIndex) {
+		DependencyPath path = getPath(sourceTokenIndex, targetTokenIndex);
+		return path != null && path.isAllGoverning();
+	}
+	
 	public DependencyPath getPath(int sourceTokenIndex, int targetTokenIndex) {
 		
 		Node source = getNode(sourceTokenIndex);

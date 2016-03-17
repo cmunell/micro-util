@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
@@ -187,6 +188,11 @@ public class ConstituencyParse implements StringSerializable {
 		
 		return null;
 		
+	}
+	
+	public boolean isDominating(int sourceTokenIndex, int targetTokenIndex) {
+		Constituent cons1 = getTokenConstituent(sourceTokenIndex).getParent();
+		return cons1 != null && cons1.getTokenSpan().containsToken(this.sentenceIndex, targetTokenIndex);
 	}
 	
 	public ConstituentPath getPath(int sourceTokenIndex, int targetTokenIndex) {
