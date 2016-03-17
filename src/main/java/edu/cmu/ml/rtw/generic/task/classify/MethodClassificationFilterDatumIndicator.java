@@ -37,7 +37,7 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	@Override
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("datumIndicator"))
-			return (this.datumIndicator == null) ? null : Obj.curlyBracedValue(this.datumIndicator.toString());
+			return (this.datumIndicator == null) ? null : Obj.stringValue(this.datumIndicator.toString());
 		else if (parameter.equals("method"))
 			return (this.method == null) ? null :  Obj.curlyBracedValue(this.method.getReferenceName());
 		else if (this.method != null)
@@ -48,9 +48,9 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("datumIndicator"))
+		if (parameter.equals("datumIndicator")) {
 			this.datumIndicator = (parameterValue == null) ? null : this.context.getDatumTools().getDatumIndicator(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("method"))
+		} else if (parameter.equals("method"))
 			this.method = (parameterValue == null) ? null : this.context.getMatchClassifyMethod(parameterValue);
 		else if (this.method != null)
 			return this.method.setParameterValue(parameter, parameterValue);
