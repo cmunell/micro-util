@@ -22,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DataSetBuilder;
+import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DatumIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.store.Storage;
 import edu.cmu.ml.rtw.generic.data.store.StoredCollection;
@@ -580,5 +581,32 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		}, maxThreads);
 		
 		return true;
+	}
+	
+	public DataSet<D, L> filter(DatumIndicator<D> indicator, int maxThreads) {
+		return filter(this.referenceName + "_" + indicator.toString(), indicator, maxThreads);
+	}
+	
+	public DataSet<D, L> filter(String referenceName, DatumIndicator<D> indicator, int maxThreads) {
+		if (isBuildable() && !isBuilt() && !build())
+			return null;
+		
+		DataSet<D, L> filtered = new DataSet<D, L>(this.referenceName, this.datumTools);
+		
+		this.map(new Fn<D, Boolean>() {
+			@Override
+			public Boolean apply(D item) {
+				if (!indicator.indicator(item))
+					return true;
+				
+				synchronized (filtered) {
+					filtered.add(item);
+				}
+				return true;
+			}
+			
+		}, maxThreads);
+		
+		return filtered;
 	}
 }

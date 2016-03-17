@@ -16,6 +16,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.structure.DatumStructureCollection
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConjunction;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyParseRelation;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPathType;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerContains;
@@ -69,6 +70,7 @@ import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasurePreci
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureRecall;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationConstant;
+import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationFilterDatumIndicator;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationLabelMapping;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationSupervisedModel;
 import edu.cmu.ml.rtw.generic.task.classify.TaskClassification;
@@ -289,6 +291,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureTokenSpanFnFilteredVocab<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnDataVocabTrie<D, L>());
 			addGenericFeature(new FeatureDependencyPathType<D, L>());
+			addGenericFeature(new FeatureConstituencyParseRelation<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());
@@ -310,6 +313,7 @@ public abstract class Datum<L> {
 			addGenericClassifyMethod(new MethodClassificationSupervisedModel<D, L>());
 			addGenericClassifyMethod(new MethodClassificationConstant<D, L>());
 			addGenericClassifyMethod(new MethodClassificationLabelMapping<D, L>());
+			addGenericClassifyMethod(new MethodClassificationFilterDatumIndicator<D, L>());
 			
 			addGenericClassifyEval(new EvaluationClassificationConfusionData<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationConfusionMatrix<D, L>());
@@ -402,6 +406,21 @@ public abstract class Datum<L> {
 				}
 			});
 			
+			addCommand("FilterData", new Command<DataSet<D, L>>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public DataSet<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DatumIndicator<D> datumIndicator = datumContext.getDatumTools().getDatumIndicator(
+							datumContext.getMatchValue(parameters.get("datumIndicator").getValue()));
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					if (data.isBuildable() && !data.isBuilt() && !data.build())
+						return null;
+					return data.filter(referenceName, datumIndicator, context.getMaxThreads());
+				}
+			});
+			
 			addCommand("UnionData", new Command<DataSet<D, L>>() {
 				@SuppressWarnings("unchecked")
 				@Override
@@ -447,6 +466,32 @@ public abstract class Datum<L> {
 						return String.valueOf("-1");
 					return String.valueOf(features.getFeatureVocabularySize());
 					
+				}
+			});
+			
+			this.addCommand("ConjoinDatumIndicators", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					String name = context.getMatchValue(fnObj.getParameters().get("name").getValue());
+					List<String> fns = context.getMatchArray(fnObj.getParameters().get("fns").getValue());
+					
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					return String.valueOf(datumContext.getDatumTools().addDatumIndicator(new DatumIndicator<D>() {
+						@Override
+						public String toString() {
+							return name;
+						}
+						
+						@Override
+						public boolean indicator(D datum) {
+							for (String fn : fns) {
+								if (!datumContext.getDatumTools().getDatumIndicator(fn).indicator(datum))
+									return false;
+							}
+							return true;
+						}
+					}));
 				}
 			});
 		}

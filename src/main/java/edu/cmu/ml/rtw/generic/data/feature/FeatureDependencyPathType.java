@@ -70,9 +70,9 @@ public class FeatureDependencyPathType<D extends Datum<L>, L> extends Feature<D,
 			}
 		}
 	
-		if (pathType == DependencyParse.PathType.DOMINATING)
+		if (pathType == DependencyParse.PathType.GOVERNING)
 			vector.put(offset, 1.0);
-		else if (pathType == DependencyParse.PathType.DOMINATED)
+		else if (pathType == DependencyParse.PathType.GOVERNED_BY)
 			vector.put(offset + 1, 1.0);
 		
 		return vector;
@@ -87,9 +87,9 @@ public class FeatureDependencyPathType<D extends Datum<L>, L> extends Feature<D,
 	@Override
 	public String getVocabularyTerm(int index) {
 		if (index == 0) {
-			return DependencyParse.PathType.DOMINATING.toString();
+			return DependencyParse.PathType.GOVERNING.toString();
 		} else if (index == 1) {
-			return DependencyParse.PathType.DOMINATED.toString();
+			return DependencyParse.PathType.GOVERNED_BY.toString();
 		} else {
 			return null;
 		}

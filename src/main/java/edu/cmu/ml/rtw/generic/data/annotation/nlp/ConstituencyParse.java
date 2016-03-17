@@ -19,6 +19,12 @@ import edu.cmu.ml.rtw.generic.util.StringSerializable;
  * 
  */
 public class ConstituencyParse implements StringSerializable {
+	public enum Relation {
+		DOMINATING,
+		DOMINATED,
+		NONE
+	}
+	
 	public class Constituent {
 		private Constituent parent;
 		private TokenSpan tokenSpan;
@@ -188,6 +194,29 @@ public class ConstituencyParse implements StringSerializable {
 		
 		return null;
 		
+	}
+	
+	public Relation getRelation(TokenSpan sourceSpan, TokenSpan targetSpan) {
+		Relation relation = null;
+		for (int i = sourceSpan.getStartTokenIndex(); i < sourceSpan.getEndTokenIndex(); i++) {
+			for (int j = targetSpan.getStartTokenIndex(); j < targetSpan.getEndTokenIndex(); j++) {
+				Relation curRelation = getRelation(i, j);
+				if (relation != null && curRelation != relation || curRelation == Relation.NONE)
+					return Relation.NONE;
+				relation = curRelation;
+			}
+		}
+		
+		return relation;
+	}
+	
+	public Relation getRelation(int sourceTokenIndex, int targetTokenIndex) {
+		if (isDominating(sourceTokenIndex, targetTokenIndex))
+			return Relation.DOMINATING;
+		else if (isDominating(targetTokenIndex, sourceTokenIndex))
+			return Relation.DOMINATED;
+		else
+			return Relation.NONE;
 	}
 	
 	public boolean isDominating(int sourceTokenIndex, int targetTokenIndex) {

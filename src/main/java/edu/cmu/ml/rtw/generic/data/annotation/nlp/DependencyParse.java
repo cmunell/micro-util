@@ -30,8 +30,8 @@ public class DependencyParse implements StringSerializable {
 	private static Pattern dependencyPattern = Pattern.compile("(.+)\\((.+)\\-([0-9']+), (.+)\\-([0-9']+)\\)");
 	
 	public enum PathType {
-		DOMINATING,
-		DOMINATED,
+		GOVERNING,
+		GOVERNED_BY,
 		NONE
 	}
 	
@@ -193,9 +193,9 @@ public class DependencyParse implements StringSerializable {
 		
 		public PathType getType() {
 			if (isAllGoverning())
-				return PathType.DOMINATING;
+				return PathType.GOVERNING;
 			else if (isAllGovernedBy())
-				return PathType.DOMINATED;
+				return PathType.GOVERNED_BY;
 			else
 				return PathType.NONE;
 		}
