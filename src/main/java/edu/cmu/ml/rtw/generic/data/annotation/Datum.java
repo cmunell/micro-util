@@ -521,6 +521,9 @@ public abstract class Datum<L> {
 		}
 		
 		public DatumIndicator<D> getDatumIndicator(String name) {
+			if (!this.datumIndicators.containsKey(name))
+				throw new IllegalArgumentException("Missing datum indicator " + name);
+			
 			return this.datumIndicators.get(name);
 		}
 		
