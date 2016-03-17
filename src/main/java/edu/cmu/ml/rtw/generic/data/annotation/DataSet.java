@@ -607,6 +607,9 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 			
 		}, maxThreads);
 		
+		filtered.builder = this.builder;
+		filtered.built = this.built;
+		
 		return filtered;
 	}
 }
