@@ -198,6 +198,11 @@ public abstract class Datum<L> {
 			double weight(L label);
 		}
 		
+		public static interface DatumIndicator<D> {
+			String toString();
+			boolean indicator(D datum);
+		}
+		
 		public static interface InverseLabelIndicator<L> {
 			String toString();
 			L label(Map<String, Double> indicatorWeights, List<String> positiveIndicators);
@@ -216,6 +221,7 @@ public abstract class Datum<L> {
 		private Map<String, DoubleExtractor<D, L>> doubleExtractors;
 		private Map<String, LabelMapping<L>> labelMappings;
 		private Map<String, LabelIndicator<L>> labelIndicators;
+		private Map<String, DatumIndicator<D>> datumIndicators;
 		private Map<String, InverseLabelIndicator<L>> inverseLabelIndicators;
 		
 		private Map<String, Feature<D, L>> genericFeatures;
@@ -239,6 +245,7 @@ public abstract class Datum<L> {
 			this.doubleExtractors = new HashMap<String, DoubleExtractor<D, L>>();
 			this.labelMappings = new HashMap<String, LabelMapping<L>>();
 			this.labelIndicators = new HashMap<String, LabelIndicator<L>>();
+			this.datumIndicators = new HashMap<String, DatumIndicator<D>>();
 			this.inverseLabelIndicators = new HashMap<String, InverseLabelIndicator<L>>();
 			
 			this.genericFeatures = new HashMap<String, Feature<D, L>>();
@@ -468,6 +475,10 @@ public abstract class Datum<L> {
 			return this.labelIndicators.get(name);
 		}
 		
+		public DatumIndicator<D> getDatumIndicator(String name) {
+			return this.datumIndicators.get(name);
+		}
+		
 		public InverseLabelIndicator<L> getInverseLabelIndicator(String name) {
 			return this.inverseLabelIndicators.get(name);
 		}
@@ -612,6 +623,11 @@ public abstract class Datum<L> {
 		
 		public boolean addLabelIndicator(LabelIndicator<L> labelIndicator) {
 			this.labelIndicators.put(labelIndicator.toString(), labelIndicator);
+			return true;
+		}
+		
+		public boolean addDatumIndicator(DatumIndicator<D> datumIndicator) {
+			this.datumIndicators.put(datumIndicator.toString(), datumIndicator);
 			return true;
 		}
 		

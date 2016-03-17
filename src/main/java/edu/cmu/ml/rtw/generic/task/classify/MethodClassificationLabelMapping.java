@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
-import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
@@ -62,7 +62,7 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	}
 
 	@Override
-	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
+	public Map<D, L> classify(DataSet<D, L> data) {
 		Map<D, L> map = this.method.classify(data);
 		for (Entry<D, L> entry : map.entrySet())
 			entry.setValue(this.labelMapping.map(entry.getValue()));
@@ -70,7 +70,7 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	}
 
 	@Override
-	public boolean init(DataFeatureMatrix<D, L> testData) {
+	public boolean init(DataSet<D, L> testData) {
 		return this.method.init(testData);
 	}
 

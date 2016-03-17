@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
-import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -21,9 +21,8 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 		FALSE_NEGATIVE,
 	}
 	
-	protected DataFeatureMatrix<D, L> data;
-	protected boolean precomputeFeatures = false;
-	protected String[] parameterNames = {"data", "precomputeFeatures"};
+	protected DataSet<D, L> data;
+	protected String[] parameterNames = { "data" };
 	
 	protected Map<MethodClassification<D, L>, Map<L, Map<L, List<D>>>> methodsActualToPredicted;
 	protected boolean initialized = false;
@@ -35,18 +34,14 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	}
 	
 	public boolean init() {
-		if (!this.data.isInitialized() && !this.data.init())
+		if (this.data.isBuildable() && !this.data.isBuilt() && !this.data.build())
 			return false;
-		
-		if (this.precomputeFeatures && !this.data.isPrecomputed())
-			if (!this.data.precompute())
-				return false;
 		
 		this.initialized = true;
 		return true;
 	}
 	
-	public DataFeatureMatrix<D, L> getData() {
+	public DataSet<D, L> getData() {
 		if (!this.initialized && !init())
 			return null;
 		return this.data;
@@ -62,7 +57,7 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 		Map<L, Map<L, List<D>>> actualToPredicted = new HashMap<L, Map<L, List<D>>>();
 		Map<D, L> predictions = method.classify(getData());
 		
-		for (D datum : this.data.getData()) {
+		for (D datum : this.data) {
 			L actual = datum.getLabel();
 			L predicted = predictions.get(datum);
 			
@@ -123,17 +118,13 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("data")) 
 			return (this.data == null) ? null : Obj.curlyBracedValue(this.data.getReferenceName());
-		else if (parameter.equals("precomputeFeatures"))
-			return Obj.stringValue(String.valueOf(this.precomputeFeatures));
 		return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("data"))
-			this.data = (parameterValue == null) ? null : this.context.getMatchDataFeatures(parameterValue);
-		else if (parameter.equals("precomputeFeatures"))
-			return Boolean.valueOf(this.context.getMatchValue(parameterValue));
+			this.data = (parameterValue == null) ? null : this.context.getMatchDataSet(parameterValue);
 		else 
 			return false;
 		return true;

@@ -2,9 +2,9 @@ package edu.cmu.ml.rtw.generic.task.classify;
 
 import java.util.Map;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
-import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 
 public abstract class MethodClassification<D extends Datum<L>, L> extends CtxParsableFunction {
@@ -37,8 +37,8 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 		return init(null);
 	}
 	
-	public abstract Map<D, L> classify(DataFeatureMatrix<D, L> data);
-	public abstract boolean init(DataFeatureMatrix<D, L> testData);
+	public abstract Map<D, L> classify(DataSet<D, L> data);
+	public abstract boolean init(DataSet<D, L> testData);
 	public abstract MethodClassification<D, L> clone();
 	public abstract MethodClassification<D, L> makeInstance(DatumContext<D, L> context);
 }

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
@@ -71,21 +72,31 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	}
 
 	@Override
-	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
-		return this.model.classify(data);
+	public Map<D, L> classify(DataSet<D, L> data) {
+		DataFeatureMatrix<D, L> mat = new DataFeatureMatrix<D, L>(this.context, 
+																  data.getReferenceName() + "_" + this.data.getFeatures().getReferenceName(), 
+																  data,
+																  this.data.getFeatures());
+		
+		return this.model.classify(mat);
 	}
 
 	@Override
-	public boolean init(DataFeatureMatrix<D, L> testData) {
+	public boolean init(DataSet<D, L> testData) {
 		if (!this.data.isInitialized() && !this.data.init())
 			return false;
 		
-		if (!testData.isInitialized() && !testData.init())
+		if (testData.isBuildable() && !testData.isBuilt() && !testData.build())
 			return false;
+		
+		DataFeatureMatrix<D, L> testMat = new DataFeatureMatrix<D, L>(this.context, 
+				  testData.getReferenceName() + "_" + this.data.getFeatures().getReferenceName(), 
+				  testData,
+				  this.data.getFeatures());
 		
 		List<SupervisedModelEvaluation<D, L>> evals = new ArrayList<SupervisedModelEvaluation<D, L>>();
 		evals.add(this.trainEvaluation);
-		return this.model.train(this.data, testData, evals);
+		return this.model.train(this.data, testMat, evals);
 	}
 
 	@Override
