@@ -31,7 +31,6 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
-import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	public static enum YADLLTrainingEstimator {
@@ -340,8 +339,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	private List<String> fnParameters;
 	private String targetFnNode;
 	private Map<String, Obj> additionalParameters;
-	
-	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode" };
+	private double classificationThreshold = -1;
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold" };
 	
 	private FunctionGraph model;
 	private Map<String, Obj.Function> possibleFnNodes;
@@ -603,15 +602,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		for (D datum : data.getData()) {
 			double maxValue = 0.0;
 			int maxIndex = 0;
+			double norm = 0.0;
 			for (int j = 0; j < labels.length; j++) {
 				if (Double.compare(outputY[i*labels.length + j], maxValue) >= 0) {
 					maxIndex = j;
 					maxValue = outputY[i*labels.length + j];
 				}
+				norm += outputY[i*labels.length + j];
 			}
 			
-			classifications.put(datum, labels[maxIndex]);
-	
+			if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(maxValue/norm, this.classificationThreshold) >= 0)
+				classifications.put(datum, labels[maxIndex]);
 			i++;
 		}
 		
@@ -639,6 +640,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			return Obj.array(this.fnParameters);
 		else if (parameter.equals("targetFnNode"))
 			return Obj.stringValue(this.targetFnNode);
+		else if (parameter.equals("classificationThreshold"))
+			return Obj.stringValue(String.valueOf(this.classificationThreshold));
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
 		return null;
@@ -656,9 +659,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.fnNodes = this.context.getMatchArray(parameterValue);
 		else if (parameter.equals("fnParameters"))
 			this.fnParameters = this.context.getMatchArray(parameterValue);
-		else if (parameter.equals("targetFnNode")) {
+		else if (parameter.equals("targetFnNode"))
 			this.targetFnNode = this.context.getMatchValue(parameterValue);
-		} else 
+		else if (parameter.equals("classificationThreshold"))
+			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
+		else 
 			this.additionalParameters.put(parameter, parameterValue);
 		
 		return true;
