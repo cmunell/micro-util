@@ -397,22 +397,20 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			optimizer.update_graph();
 			this.model.flush_stats(false);
 			
-			// FIXME iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData));
+			iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 
 			epoch = epoch + 1;
 		}
 		
 		StringBuilder iterativeOutput = new StringBuilder();
-		
-		
-		
-		output.debugWriteln(this.toParse(false) + 
-				" Epoch: " + epoch + " " + 
+		iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
+		for (Double evaluation : iterativeEvaluations) {
+			iterativeOutput.append("Epoch: " + epoch + " " + 
 				evaluations.get(0).getReferenceName() + ": " + 
-					evaluations.get(0).evaluate(this, testData, classify(testData)));
-		
-
-		output.debugWriteln("YADLL finished training"); 
+					evaluation + "\n");
+		}
+		iterativeOutput.append("End of training for model " + this.toParse(false)); 
+		output.debugWriteln(iterativeOutput.toString());
 		
 		return true;
 	}
@@ -481,8 +479,6 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 					continue;
 				fnNodeParamMap.put(entry.getKey().substring(fnNodeStrAndIndex.length() + 1), entry.getValue());
 			}
-			
-			System.out.println("PARAM MAP " + fnNodeParamMap);
 			
 			Obj fnNodeObj = this.possibleFnNodes.get(fnNodeStr).clone();
 			if (!fnNodeObj.resolveValues(fnNodeParamMap)) {
