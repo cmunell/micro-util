@@ -404,10 +404,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		StringBuilder iterativeOutput = new StringBuilder();
 		iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
-		for (Double evaluation : iterativeEvaluations) {
-			iterativeOutput.append("Epoch: " + epoch + " " + 
+		for (int i = 0; i < iterativeEvaluations.size(); i++) {
+			iterativeOutput.append("Epoch " + i + " " + 
 				evaluations.get(0).getReferenceName() + ": " + 
-					evaluation + "\n");
+					iterativeEvaluations.get(i) + "\n");
 		}
 		iterativeOutput.append("End of training for model " + this.toParse(false)); 
 		output.debugWriteln(iterativeOutput.toString());
