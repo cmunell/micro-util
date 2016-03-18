@@ -129,12 +129,18 @@ public class FeatureSet<D extends Datum<L>, L> extends CtxParsableFunction {
 	protected boolean fromParseInternal(AssignmentList internalAssignments) {
 		if (internalAssignments == null)
 			return true;
-		
+
 		if (!clear())
 			return false;
 		
 		for (int i = 0; i < internalAssignments.size(); i++) {
 			AssignmentTyped assignment = (AssignmentTyped)internalAssignments.get(i);
+			
+			if (assignment.getType().equals(Context.ObjectType.VALUE.toString()) && assignment.getName().equals("initialized")) {
+				this.initialized = Boolean.valueOf(this.context.getMatchValue(assignment.getValue()));
+				continue;
+			}
+			
 			if (!assignment.getType().equals(DatumContext.ObjectType.FEATURE.toString()))
 				continue;
 			
@@ -155,7 +161,8 @@ public class FeatureSet<D extends Datum<L>, L> extends CtxParsableFunction {
 		AssignmentList assignments = new AssignmentList();
 		
 		assignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "vocabularySize", Obj.stringValue(String.valueOf(this.featureVocabularySize))));
-		
+		assignments.add(Assignment.assignmentTyped(null, Context.ObjectType.VALUE.toString(), "initialized", Obj.stringValue(String.valueOf(this.initialized))));
+	
 		for (Feature<D, L> feature : this.featureList) {
 			assignments.add(Assignment.assignmentTyped(feature.getModifiers(), DatumContext.ObjectType.FEATURE.toString(), feature.getReferenceName(), feature.toParse(true)));
 		}

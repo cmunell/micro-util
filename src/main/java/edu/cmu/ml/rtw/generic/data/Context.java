@@ -178,7 +178,7 @@ public class Context extends CtxParsableFunction {
 			if (runAssignmentCommandStrFn(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null){
 				return false;
 			}
-		} else if (assignment.getType().equals(ObjectType.TOKEN_SPAN_STR_FN.toString().toString())) {
+		} else if (assignment.getType().equals(ObjectType.TOKEN_SPAN_STR_FN.toString())) {
 			if (runAssignmentCommandTokenSpanStrFn(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
 				return false;
 			}
@@ -566,7 +566,7 @@ public class Context extends CtxParsableFunction {
 		if (maxThreadsStr != null)
 			return Integer.valueOf(maxThreadsStr);
 		
-		if (this.dataTools.getProperties().getMaxThreads() != null)
+		if (this.dataTools.getProperties() != null && this.dataTools.getProperties().getMaxThreads() != null)
 			return this.dataTools.getProperties().getMaxThreads();
 		return 1;	
 	}
@@ -576,7 +576,7 @@ public class Context extends CtxParsableFunction {
 		if (randomSeedStr != null)
 			return Integer.valueOf(randomSeedStr);
 		
-		if (this.dataTools.getProperties().getRandomSeed() != null)
+		if (this.dataTools.getProperties() != null && this.dataTools.getProperties().getRandomSeed() != null)
 			return this.dataTools.getProperties().getRandomSeed();
 		return 1;	
 	}
