@@ -71,7 +71,9 @@ public class FnString extends Fn<TokenSpan, String> {
 	@Override
 	public <C extends Collection<String>> C compute(Collection<TokenSpan> input, C output) {
 		for (TokenSpan tokenSpan : input) {
-			if (this.splitTokens) {
+			if (tokenSpan.getSentenceIndex() < 0) {
+				continue;
+			} else if (this.splitTokens) {
 				StringBuilder str = new StringBuilder();
 				int s = tokenSpan.getSentenceIndex();
 				DocumentNLP document = tokenSpan.getDocument();
@@ -83,7 +85,8 @@ public class FnString extends Fn<TokenSpan, String> {
 					str.append(tStr).append("_");
 				}
 				
-				str.delete(str.length() - 1, str.length());
+				if (str.length() > 0)
+					str.delete(str.length() - 1, str.length());
 				
 				output.add(str.toString());
 			} else {
