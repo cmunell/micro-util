@@ -19,7 +19,8 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 		START,
 		END,
 		MIDDLE,
-		ALL
+		ALL,
+		NONE
 	}
 	
 	private String[] parameterNames = {  };
@@ -49,6 +50,11 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 	@Override
 	public <C extends Collection<String>> C compute(Collection<TokenSpan> input, C output) {
 		for (TokenSpan tokenSpan : input) {
+			if (tokenSpan.getSentenceIndex() < 0) {
+				output.add(Position.NONE.toString());
+				continue;
+			}
+				
 			int sentenceTokenCount = tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex());
 			if (tokenSpan.getStartTokenIndex() == 0 
 					&& tokenSpan.getEndTokenIndex() == sentenceTokenCount)
