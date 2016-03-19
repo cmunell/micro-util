@@ -122,7 +122,7 @@ public class ConfusionMatrix<D extends Datum<L>, L> {
 		
 		confusionMatrixStr.append("Correct\t");
 		for (int i = 0; i < colIncorrects.length; i++)
-			confusionMatrixStr.append(cleanDouble.format(colIncorrects[i])).append("\t");
+			confusionMatrixStr.append(cleanDouble.format(colTotals[i] - colIncorrects[i])).append("\t");
 		confusionMatrixStr.append("\n");
 		
 		confusionMatrixStr.append("Percent\t");
