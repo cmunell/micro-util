@@ -183,7 +183,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				str.append(this.parameterValues.get(paramName)).append(",");
 			
 			if (this.fnType.getType() == YADLLFunctionType.LOSS)
-				str.append(this.parameterValues.get(targetFnNode));
+				str.append(targetFnNode);
 			else
 				str.delete(str.length() - 1, str.length());
 			str.append(")");
