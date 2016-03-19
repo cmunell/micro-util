@@ -162,7 +162,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		Instances instances = constructInstances(data, true);
 		
 		this.classifier = new LibSVM();
-		this.classifier.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
+		
+		this.classifier.setSVMType( new SelectedTag(2, LibSVM.TAGS_SVMTYPE));
 		this.classifier.setKernelType(new SelectedTag(this.kernelType.getIndex(), LibSVM.TAGS_KERNELTYPE));
 		this.classifier.setGamma(this.gamma);
 		
