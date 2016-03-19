@@ -58,7 +58,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 	private L targetLabel;
 	private L defaultOutlierLabel;
 	private KernelType kernelType = KernelType.RBF;
-	private String[] parameterNames = { "targetLabel", "defaultOutlierLabel", "kernelType" };
+	private double gamma;
+	private String[] parameterNames = { "targetLabel", "defaultOutlierLabel", "kernelType", "gamma" };
 	
 	private LibSVM classifier;
 	
@@ -83,6 +84,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 			return Obj.stringValue(String.valueOf(this.defaultOutlierLabel.toString()));
 		else if (parameter.equals("kernelType"))
 			return Obj.stringValue(this.kernelType.toString());
+		else if (parameter.equals("gamma"))
+			return Obj.stringValue(String.valueOf(this.gamma));
 		else
 			return null;
 	}
@@ -95,6 +98,8 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 			this.defaultOutlierLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("kernelType"))
 			this.kernelType = KernelType.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("gamma"))
+			this.gamma = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -158,6 +163,7 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		this.classifier = new LibSVM();
 		this.classifier.setSVMType( new SelectedTag(Integer.parseInt("2"), LibSVM.TAGS_SVMTYPE));
 		this.classifier.setKernelType(new SelectedTag(this.kernelType.getIndex(), LibSVM.TAGS_KERNELTYPE));
+		this.classifier.setGamma(this.gamma);
 		
 		try {
 			this.context.getDataTools().getOutputWriter().debugWriteln("WekaSVMOneClass training model... ");
