@@ -13,6 +13,62 @@ import edu.cmu.ml.rtw.generic.util.Properties;
 
 public class ContextTest {
 	@Test
+	public void testBinaryContext() {
+		DataTools dataTools = new DataTools(new OutputWriter(), 
+				new Properties(new StringReader(
+						"debug_dir=\n" +
+						"storage_fs_bson_testBson=/test/bson\n" +
+						"storage_fs_str_testStr=/test/str"
+						)));
+		
+
+		dataTools.addGenericContext(new DatumContext<TestDatum<Boolean>, Boolean>(TestDatum.getBooleanTools(dataTools), "TestBoolean"));
+		Context.run("test", dataTools, makeBinaryContextString());
+		
+		StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
+		System.out.println(outputEvals.getStoredItems().toString());
+	}
+	
+	private String makeBinaryContextString() {
+		String contextStr = "value maxThreads=\"2\";\n";
+		contextStr +=       "value debug=Debug();\n";
+		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"6\");\n";
+		contextStr +=       "context testBooleanCtx=TestBoolean() {\n";
+		contextStr +=       	"data trainData = Test(storage=\"BSONMemory\", collection=\"TrainDocuments\");\n";
+		contextStr +=       	"data devData = Test(storage=\"BSONMemory\", collection=\"DevDocuments\");\n";
+		contextStr +=       	"data testData = Test(storage=\"BSONMemory\", collection=\"TestDocuments\");\n";
+		contextStr +=           "value testSize = SizeData(data=${testData});\n";
+		contextStr +=           "value sizeDataDebug = OutputDebug(refs=(${testSize}));\n";
+		contextStr +=           "ts_fn doc1=NGramDocument(n=\"1\", noSentence=\"false\");\n";
+		contextStr +=           "ts_str_fn strDef=String(cleanFn=\"DefaultCleanFn\");\n";
+		contextStr +=           "feature fdoc1=TokenSpanFnDataVocab(scale=\"NORMALIZED_TFIDF\", minFeatureOccurrence=\"2\", tokenExtractor=\"TokenSpan\", fn=(${strDef} o ${doc1}));\n";
+		contextStr +=           "feature_set f = FeatureSet(features=(${fdoc1}), initData=(${trainData}));\n";
+		contextStr +=           "data_features trainMatrix = DataFeatureMatrix(data=${trainData}, features=${f});\n";
+		contextStr +=           "model weka=WekaSVMOneClass(gamma=\".001\", targetLabel=\"true\", defaultOutlierLabel=\"false\", kernelType=\"RBF\")\n";
+		contextStr +=           "{\n";
+		contextStr +=           "array validLabels=(\"true\", \"false\");\n";
+		contextStr +=           "};\n";
+		contextStr +=           "evaluation modelF1=F(filterLabel=\"true\", Beta=\"1\");\n";
+		contextStr +=           "classify_method wekaMethod = SupervisedModel(model=${weka}, data=${trainMatrix}, trainEvaluation=${modelF1});\n";
+		contextStr +=           "search trr=Grid() {\n";
+		contextStr +=           "dimension gamma=Enumerated(values=(\".1\",\".01\",\".0001\",\".00001\"), stageIndex=\"0\");\n";
+		contextStr +=           "};\n";
+		contextStr +=           "classify_task devTask = Classification(data=${devData});\n";
+		contextStr +=           "classify_eval devEval = F(task=${devTask}, method=${wekaMethod}, Beta=\"1\", filterLabel=\"true\");\n";
+		contextStr +=           "classify_method bestMethod = RunClassifyMethodSearch(fn=${devEval}, search=${trr});\n";
+	
+		contextStr +=           "classify_task testTask = Classification(data=${testData});\n";
+		contextStr +=           "classify_eval testF = F(task=${testTask}, method=${bestMethod}, Beta=\"1\", mode=\"MICRO\");\n";
+		contextStr +=           "classify_eval testPrecision = Precision(task=${testTask}, method=${bestMethod}, mode=\"MICRO\");\n";
+		contextStr +=           "classify_eval testRecall = Recall(task=${testTask}, method=${bestMethod}, mode=\"MICRO\");\n";
+		contextStr +=           "value strEvals = OutputStrings(id=\"TestEvals\", storage=\"StringMemory\", collection=\"ExperimentEvaluationOutput\", refs=(${testF}, ${testPrecision}, ${testRecall}));\n";
+		contextStr +=       "};\n";
+		
+		return contextStr;
+	}
+	
+	
+	@Test
 	public void testTernaryContext() {
 		DataTools dataTools = new DataTools(new OutputWriter(), 
 				new Properties(new StringReader(
@@ -23,16 +79,16 @@ public class ContextTest {
 		
 
 		dataTools.addGenericContext(new DatumContext<TestDatum<TernaryLabel>, TernaryLabel>(TestDatum.getTernaryTools(dataTools), "TestTernary"));
-		Context.run("test", dataTools, makeContextString());
+		Context.run("test", dataTools, makeTernaryContextString());
 		
-		StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
+		//StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
 		//StoredItemSet<?, ?> outputParses = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentParseOutput");
-		System.out.println(outputEvals.getStoredItems().toString());
+		//System.out.println(outputEvals.getStoredItems().toString());
 		//System.out.println(outputParses.getStoredItems().toString());
 		
 	}
 	
-	private String makeContextString() {
+	private String makeTernaryContextString() {
 		String contextStr = "value maxThreads=\"2\";\n";
 		contextStr +=       "value debug=Debug();\n";
 		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"6\");\n";
@@ -54,10 +110,8 @@ public class ContextTest {
 		contextStr +=           "feature fdoc1=TokenSpanFnDataVocab(scale=\"INDICATOR\", minFeatureOccurrence=\"2\", tokenExtractor=\"TokenSpan\", fn=(${strDef} o ${doc1}));\n";
 		contextStr +=           "feature_set f = FeatureSet(features=(${fdoc1}), initData=(${trainData}));\n";
 		contextStr +=           "data_features trainMatrix = DataFeatureMatrix(data=${trainData}, features=${f});\n";
-		contextStr +=           "data_features devMatrix = DataFeatureMatrix(data=${devData}, features=${f});\n";
-		contextStr +=           "data_features testMatrix = DataFeatureMatrix(data=${testData}, features=${f});\n";
-		contextStr +=           "classify_method testMethod = TernaryTest(incorrect=\".2\", correct=\".2\");";
-		contextStr +=           "classify_task testTask = Classification(data=${testMatrix});\n";
+		contextStr +=           "classify_method testMethod = TernaryTest(incorrect=\".2\", correct=\".2\");\n";
+		contextStr +=           "classify_task testTask = Classification(data=${testData});\n";
 		contextStr +=           "classify_eval testF = F(task=${testTask}, method=${testMethod}, Beta=\"1\", mode=\"MICRO\");\n";
 		contextStr +=           "classify_eval testPrecision = Precision(task=${testTask}, method=${testMethod}, mode=\"MICRO\");\n";
 		contextStr +=           "classify_eval testRecall = Recall(task=${testTask}, method=${testMethod}, mode=\"MICRO\");\n";

@@ -64,7 +64,7 @@ public class TestDataSetBuilder extends DataSetBuilder<TestDatum<Boolean>, Boole
 		DataSet<TestDatum<Boolean>, Boolean> data = new DataSet<TestDatum<Boolean>, Boolean>(this.context.getDatumTools());
 		for (DocumentNLP document : storedDocuments) {
 			int id = Integer.valueOf(document.getName());
-			data.add(new TestDatum<Boolean>(id, new TokenSpan(document, 0, 0, 0), id % 2 == 0));
+			data.add(new TestDatum<Boolean>(id, new TokenSpan(document, 0, 0, 1), id % 2 == 0));
 		}
 		
 		return data;

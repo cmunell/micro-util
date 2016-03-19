@@ -26,7 +26,7 @@ public class TestDatum<L> extends Datum<L> {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		str.append(this.id).append(": ");
-		str.append(this.tokenSpan.toString()).append(", ");
+		str.append(this.tokenSpan.toString());
 			
 		return str.toString();
 	}

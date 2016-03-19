@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.platanios.learn.math.matrix.Vector;
 import org.platanios.learn.math.matrix.Vector.VectorElement;
@@ -167,7 +168,6 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		
 		try {
 			this.context.getDataTools().getOutputWriter().debugWriteln("WekaSVMOneClass training model... ");
-
 			this.classifier.buildClassifier(instances);
 		} catch (Exception e) {
 			this.context.getDataTools().getOutputWriter().debugWriteln("ERROR: " + e.getMessage());
@@ -209,7 +209,7 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		try {
 			int i = 0;
 			for (D datum : data.getData()) {
-				int classIndex = Double.compare(this.classifier.classifyInstance(instances.get(i)), 0);
+				int classIndex = Double.compare(this.classifier.classifyInstance(instances.get(i)), 0.0);
 				if (classIndex == 0)
 					out.put(datum, this.targetLabel);
 				else
@@ -238,22 +238,31 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		
 		Instances dataSet = new Instances("data", attrs, 10);
 		dataSet.setClassIndex(featureNames.size());
-		
+		Random r = this.context.getDataTools().makeLocalRandom();
 		for (D datum : data.getData()) {
 			Vector v = data.getFeatureVocabularyValues(datum, false);
-			Instance instance = new SparseInstance(featureNames.size() + 1);
+			Instance instance = new SparseInstance(attrs.size());
 			for (VectorElement e : v) {
-				instance.setValue(attrs.get(e.index()), e.value());
+				double noise = 0.0;
+				if (includeLabels)
+					noise = (r.nextDouble() - .5)/100.0;
+				
+				instance.setValue(attrs.get(e.index()), e.value() + noise);
 			}
 			
-			if (includeLabels) {
-				if (datum.getLabel().equals(this.targetLabel)) 
-					instance.setValue(attrs.get(featureNames.size()), "target");
-			}
-			dataSet.add(instance);
 			instance.setDataset(dataSet);
+			if (includeLabels) {
+				if (datum.getLabel().equals(this.targetLabel))
+					instance.setValue(outputClass, "target");
+				else 
+					instance.setClassMissing();
+			} else {
+				instance.setClassMissing();
+			}
+			
+			dataSet.add(instance);
 		}
-	
+		
 		return dataSet;
 	}
 }

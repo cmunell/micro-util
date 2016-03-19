@@ -128,7 +128,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 			return null;
 		if (this.featureVocabularyValues.containsKey(datum.getId()))
 			return this.featureVocabularyValues.get(datum.getId());
-		
+
 		Vector vector = this.features.getFeatureVocabularyValues(datum);
 		
 		if (cacheValues)
