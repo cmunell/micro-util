@@ -342,9 +342,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	private List<String> fnNodes; // Values point to possibleFnNodes
 	private List<String> fnParameters;
 	private String targetFnNode;
+	private String lossFnNode;
 	private Map<String, Obj> additionalParameters;
 	private double classificationThreshold = -1;
-	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold" };
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold", "lossFnNode" };
 	
 	private FunctionGraph model;
 	private Map<String, Obj.Function> possibleFnNodes;
@@ -396,11 +397,14 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.model.clamp_("y", Y);
 			this.model.eval();
 			
+			if (this.lossFnNode != null)
+				iterativeEvaluations.add(Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]));
+			
 			optimizer.accum_grad(1f); 
 			optimizer.update_graph();
 			this.model.flush_stats(false);
-			
-			iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
+
+			//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 
 			epoch = epoch + 1;
 		}
@@ -409,7 +413,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
 		for (int i = 0; i < iterativeEvaluations.size(); i++) {
 			iterativeOutput.append("Epoch " + i + " " + 
-				evaluations.get(0).getReferenceName() + ": " + 
+				this.lossFnNode + ": " + 
 					iterativeEvaluations.get(i) + "\n");
 		}
 		iterativeOutput.append("End of training for model " + this.toParse(false)); 
@@ -646,6 +650,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			return Obj.stringValue(this.targetFnNode);
 		else if (parameter.equals("classificationThreshold"))
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
+		else if (parameter.equals("lossFnNode"))
+			return Obj.stringValue(this.lossFnNode);
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
 		return null;
@@ -667,6 +673,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.targetFnNode = this.context.getMatchValue(parameterValue);
 		else if (parameter.equals("classificationThreshold"))
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("lossFnNode"))
+			this.lossFnNode = this.context.getMatchValue(parameterValue);
 		else 
 			this.additionalParameters.put(parameter, parameterValue);
 		
