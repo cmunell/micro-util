@@ -248,6 +248,14 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			return "FunctionNode";
 		}
 		
+		public int getSize() {
+			return this.size;
+		}
+		
+		public String getYADLLFunctionString(String targetFnNode) {
+			return this.fn.getYADLLFunctionString(targetFnNode);
+		}
+		
 		public boolean replaceFnParameterValues(String findStr, String replacementStr) {
 			return this.fn.replaceParameterValues(findStr, replacementStr);
 		}
@@ -502,7 +510,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 					|| !fnNode.replaceFnParameterValues("%(i+1)", String.valueOf(i-1)))
 				return false;
 			
-			this.model.defineFunction(fnNode.getYADLLModelFunctionObject(fnNodeStrAndIndex, this.targetFnNode));
+			Function yadllFn = fnNode.getYADLLModelFunctionObject(fnNodeStrAndIndex, this.targetFnNode);
+			this.model.defineFunction(yadllFn);
+			this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed node " + fnNodeStrAndIndex + ": " + fnNode.getYADLLFunctionString(this.targetFnNode));
 		}
 		
 		for (int i = 0; i < this.fnParameters.size(); i++) {
@@ -531,6 +541,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				return false;
 			
 			this.model.defineParamInit_(fnParameterStrAndIndex, fnParameter.getYADLLInitFnString(this.targetFnNode));
+			this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed parameters " + fnParameterStrAndIndex + ": " + fnParameter.getYADLLInitFnString(this.targetFnNode));
+
 			// FIXME Build model from existing weights when available from deserialization
 		}
 		
