@@ -389,15 +389,18 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				return false;
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false);
+		Pair<Matrix, Matrix> testDataMatrices = buildMatricesFromData(data, false);
 		Matrix X = dataMatrices.getFirst();
 		Matrix Y = dataMatrices.getSecond();
+		Matrix testX = testDataMatrices.getFirst();
+		Matrix testY = testDataMatrices.getSecond();
 		
 		Estimator estimator = new BP(this.model); // FIXME: Add other estimators
 		GradOpt optimizer = new GradOpt(estimator);
 		optimizer.setStepSize(this.stepSize);
 		optimizer.setOptType("descent");
 		
-		List<Double> iterativeEvaluations = new ArrayList<Double>();
+		List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
 		
 		int epoch = 0;
 		while(epoch < this.numEpochs) {
@@ -405,27 +408,40 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.model.clamp_("y", Y);
 			this.model.eval();
 			
+			double trainLoss = 0.0;
 			if (this.lossFnNode != null)
-				iterativeEvaluations.add(Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]));
+				trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
 			
 			optimizer.accum_grad(1f); 
 			optimizer.update_graph();
 			this.model.flush_stats(false);
 
+			
+			double testLoss = 0.0;
+			if (this.lossFnNode != null) {
+				this.model.clamp_("x", testX);
+				this.model.clamp_("y", testY);
+				this.model.eval();
+				testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+			
+				iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
+			}
 			//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 
 			epoch = epoch + 1;
 		}
 		
-		StringBuilder iterativeOutput = new StringBuilder();
-		iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
-		for (int i = 0; i < iterativeEvaluations.size(); i++) {
-			iterativeOutput.append("Epoch " + i + " " + 
-				this.lossFnNode + ": " + 
-					iterativeEvaluations.get(i) + "\n");
+		if (this.lossFnNode != null) {
+			StringBuilder iterativeOutput = new StringBuilder();
+			iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
+			for (int i = 0; i < iterativeEvaluations.size(); i++) {
+				iterativeOutput.append("Epoch " + i + " " + 
+					this.lossFnNode + ": " + 
+						iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+			}
+			iterativeOutput.append("End of training for model " + this.toParse(false)); 
+			output.debugWriteln(iterativeOutput.toString());
 		}
-		iterativeOutput.append("End of training for model " + this.toParse(false)); 
-		output.debugWriteln(iterativeOutput.toString());
 		
 		return true;
 	}
