@@ -404,28 +404,29 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		int epoch = 0;
 		while(epoch < this.numEpochs) {
-			this.model.clamp_("x", X);
-			this.model.clamp_("y", Y);
-			this.model.eval();
-			
-			double trainLoss = 0.0;
-			if (this.lossFnNode != null)
-				trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-			
-			optimizer.accum_grad(1f); 
-			optimizer.update_graph();
-			this.model.flush_stats(false);
-
-			
 			double testLoss = 0.0;
 			if (this.lossFnNode != null) {
 				this.model.clamp_("x", testX);
 				this.model.clamp_("y", testY);
 				this.model.eval();
 				testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+				this.model.flush_stats(false);
+			}
 			
+			this.model.clamp_("x", X);
+			this.model.clamp_("y", Y);
+			this.model.eval();
+			
+			double trainLoss = 0.0;
+			if (this.lossFnNode != null) {
+				trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
 				iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
 			}
+				
+			optimizer.accum_grad(1f); 
+			optimizer.update_graph();
+			this.model.flush_stats(false);
+			
 			//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 
 			epoch = epoch + 1;
