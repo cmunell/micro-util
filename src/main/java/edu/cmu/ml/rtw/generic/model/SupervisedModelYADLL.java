@@ -473,7 +473,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			i++;
 		}
 		
-		int[] featureIndices = new int[numNonZeroFeatures];
+		// FIXME This uses dense matrix temporarily
+		float[] X = new float[datumCount * datumFeatureCount];
+		for (i = 0; i < featureMaps.size(); i++) {
+			for (Entry<Integer, Double> entry : featureMaps.get(i).entrySet())
+				X[i*datumFeatureCount + entry.getKey()] = entry.getValue().floatValue();
+		}
+		
+		return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
+				(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
+		
+		/*int[] featureIndices = new int[numNonZeroFeatures];
 		int[] datumIndices = new int[numNonZeroFeatures];
 		float[] values = new float[numNonZeroFeatures];
 		
@@ -489,7 +499,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		return new Pair<Matrix, Matrix>(new SMatrix(datumFeatureCount, datumCount, featureIndices, datumIndices, values),
-										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
+										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); */
 	}
 	
 	private boolean buildModelFromParameters(int inputVectorSize) {
@@ -603,7 +613,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
 			for (int j = 0; j < labels.length; j++) {
-				p.put(labels[j], new Double(outputY[i*labels.length + j]));
+				p.put(labels[j], Double.valueOf(outputY[i*labels.length + j]));
 				norm += outputY[i*labels.length + j];
 			}
 			
