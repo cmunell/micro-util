@@ -769,5 +769,22 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		return binaryModel;
 	}
 
+	
+	@Override
+	public SupervisedModel<D, L> clone() {
+		SupervisedModelYADLL<D, L> clone = (SupervisedModelYADLL<D, L>)this.context.getDatumTools().makeModelInstance(getGenericName(), this.context);
+		if (!clone.fromParse(getModifiers(), getReferenceName(), toParse()))
+			return null;
+		
+		// FIXME Probably best not to do this once toParseInternal and fromParseInternal are implemented?
+		if (this.model != null) {
+			clone.model = this.model;
+			clone.possibleFnNodes = this.possibleFnNodes;
+			clone.possibleFnParameters = this.possibleFnParameters;
+		}
+		
+		
+		return clone;
+	}
 }
 
