@@ -234,10 +234,10 @@ public class Rule extends CtxParsable {
 		List<Map<String, Obj>> matches = new ArrayList<Map<String, Obj>>();
 		
 		for (Obj sourceObj : sourceObjs) {
-			Map<String, Obj> currentMatch = sourceObj.match(this.parse.getSource());
-			if (currentMatch.size() != 0) {
+			Map<String, Obj> currentMatch = sourceObj.match(pattern);
+			if (currentMatch.containsKey("")) {
 				currentMatch.putAll(match);
-				matches.add(match);
+				matches.add(currentMatch);
 			}
 		}
 		
