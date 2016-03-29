@@ -303,7 +303,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	
 	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths) {
 		List<WeightedStructureSequence> currentPaths = new ArrayList<WeightedStructureSequence>();
-		
+
 		Map<String, Map<WeightedStructureRelationBinary, Double>> neighbors = this.edges.get(startNodeId);
 		for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
 			for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
@@ -331,7 +331,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			
 			currentPaths = nextPaths;
 		}
-		
+
 		paths.addAll(currentPaths);
 		return paths;
 	}
@@ -342,7 +342,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			return paths;
 		
 		for (String nodeId : this.edges.keySet())
-			paths.addAll(getEdgePaths(nodeId, length, paths));
+			getEdgePaths(nodeId, length, paths);
 		return paths;
 	}
 
