@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java_cup.runtime.ComplexSymbolFactory;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.Structurizer;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
@@ -46,7 +47,8 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		DATA_FEATURES("data_features"),
 		CLASSIFY_TASK("classify_task"),
 		CLASSIFY_METHOD("classify_method"),
-		CLASSIFY_EVAL("classify_eval");
+		CLASSIFY_EVAL("classify_eval"),
+		STRUCTURIZER("structurizer");
 		
 		private String str;
 		
@@ -81,6 +83,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 	private Map<String, MethodClassification<D, L>> classifyMethods;
 	private Map<String, TaskClassification<D, L>> classifyTasks;
 	private Map<String, EvaluationClassification<D, L, ?>> classifyEvals;
+	private Map<String, Structurizer<D, L, ?>> structurizers;
 	
 	public DatumContext(Datum.Tools<D, L> datumTools) {
 		this(datumTools, "DatumContext");
@@ -106,6 +109,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		this.classifyMethods = new TreeMap<String, MethodClassification<D, L>>();
 		this.classifyTasks = new TreeMap<String, TaskClassification<D, L>>();
 		this.classifyEvals = new TreeMap<String, EvaluationClassification<D, L, ?>>();
+		this.structurizers = new TreeMap<String, Structurizer<D, L, ?>>();
 		
 		this.storageMaps.add(this.data);
 		this.storageMaps.add(this.models);
@@ -118,6 +122,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		this.storageMaps.add(this.classifyMethods);
 		this.storageMaps.add(this.classifyTasks);
 		this.storageMaps.add(this.classifyEvals);
+		this.storageMaps.add(this.structurizers);
 	}
 	
 	public DatumContext(Datum.Tools<D, L> datumTools, List<Feature<D, L>> features) {
@@ -163,6 +168,8 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 			return Assignment.assignmentTyped(this.classifyTasks.get(obj.getSecond()).getModifiers(), ObjectType.CLASSIFY_TASK.toString(), obj.getSecond(), this.classifyTasks.get(obj.getSecond()).toParse());
 		} else if (type == ObjectType.CLASSIFY_EVAL) {
 			return Assignment.assignmentTyped(this.classifyEvals.get(obj.getSecond()).getModifiers(), ObjectType.CLASSIFY_EVAL.toString(), obj.getSecond(), this.classifyEvals.get(obj.getSecond()).toParse());
+		} else if (type == ObjectType.STRUCTURIZER) {
+			return Assignment.assignmentTyped(this.structurizers.get(obj.getSecond()).getModifiers(), ObjectType.STRUCTURIZER.toString(), obj.getSecond(), this.structurizers.get(obj.getSecond()).toParse());
 		} else {
 			return null;
 		}
@@ -217,6 +224,10 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 			if (runAssignmentCommandClassifyEval(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null){
 				return false;
 			}
+		} else if (assignment.getType().equals(ObjectType.STRUCTURIZER.toString())) {
+			if (runAssignmentCommandStructurizer(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null){
+				return false;
+			}
 		} else {
 			return false;
 		}
@@ -245,7 +256,8 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 												.except(ObjectType.DATA_FEATURES.toString())
 												.except(ObjectType.CLASSIFY_EVAL.toString())
 												.except(ObjectType.CLASSIFY_METHOD.toString())
-												.except(ObjectType.CLASSIFY_TASK.toString()).toParse()))
+												.except(ObjectType.CLASSIFY_TASK.toString())
+												.except(ObjectType.STRUCTURIZER.toString()).toParse()))
 													.getInternalAssignments().makeObjMap();
 		
 		// FIXME For now this just works assuming we only need to resolve fn references...
@@ -322,7 +334,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 	
 	/* Match and construct rule sets */
 	
-	public RuleSet<D, L> getMatchRuleSet(Obj obj) {
+	public RuleSet<D, L> getMatchRules(Obj obj) {
 		return getFunctionMatch(obj, this.ruleSets);
 	}
 	
@@ -390,7 +402,18 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		return runAssignmentCommand(ObjectType.CLASSIFY_EVAL.toString(), modifiers, referenceName, obj, this.classifyEvals);
 	}
 	
+	/* Match and construct structurizer */
+	
+	public Structurizer<D, L, ?> getMatchStructurizer(Obj obj) {
+		return getFunctionMatch(obj, this.structurizers);
+	}
+	
+	private Structurizer<D, L, ?> runAssignmentCommandStructurizer(String referenceName, Obj.Function obj, List<String> modifiers) {
+		return runAssignmentCommand(ObjectType.STRUCTURIZER.toString(), modifiers, referenceName, obj, this.structurizers);
+	}
+	
 	/* Match parameter searches */
+	
 	@SuppressWarnings("unchecked")
 	public ParameterSearchable getMatchParameterSearchable(Obj obj) {
 		EvaluationClassification<D, L, ?> eval = this.getMatchClassifyEval(obj);
@@ -601,6 +624,9 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		} else if (objectTypeStr.equals(ObjectType.CLASSIFY_EVAL.toString())) {
 			for (Entry<String, EvaluationClassification<D, L, ?>> entry : this.classifyEvals.entrySet())
 				onlyDatum.classifyEvals.put(entry.getKey(), entry.getValue());
+		} else if (objectTypeStr.equals(ObjectType.STRUCTURIZER.toString())) {
+			for (Entry<String, Structurizer<D, L, ?>> entry : this.structurizers.entrySet())
+				onlyDatum.structurizers.put(entry.getKey(), entry.getValue());
 		}
 		
 		return onlyDatum;
@@ -676,6 +702,11 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		if (!objectTypeStr.equals(ObjectType.CLASSIFY_EVAL.toString())) {
 			for (Entry<String, EvaluationClassification<D, L, ?>> entry : this.classifyEvals.entrySet())
 				exceptDatum.classifyEvals.put(entry.getKey(), entry.getValue());
+		} 
+		
+		if (!objectTypeStr.equals(ObjectType.STRUCTURIZER.toString())) {
+			for (Entry<String, Structurizer<D, L, ?>> entry : this.structurizers.entrySet())
+				exceptDatum.structurizers.put(entry.getKey(), entry.getValue());
 		} 
 		
 		return exceptDatum;

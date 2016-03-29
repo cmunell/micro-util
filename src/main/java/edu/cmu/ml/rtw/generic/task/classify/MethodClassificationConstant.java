@@ -8,6 +8,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodClassification<D, L> {
 	private L label;
@@ -51,6 +52,18 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 		for (D datum : data) {
 			map.put(datum, this.label);
 		}
+		
+		return map;
+	}
+	
+	@Override
+	public Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data) {
+		Map<D, Pair<L, Double>> map = new HashMap<D, Pair<L, Double>>();
+		
+		for (D datum : data) {
+			map.put(datum, new Pair<L, Double>(this.label, 1.0));
+		}
+		
 		return map;
 	}
 

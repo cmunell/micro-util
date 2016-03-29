@@ -10,7 +10,6 @@ import java.util.Set;
 
 import YADLL.Data.FMatrix;
 import YADLL.Data.Matrix;
-import YADLL.Data.SMatrix;
 import YADLL.Estimators.BP;
 import YADLL.Estimators.Estimator;
 import YADLL.FunctionGraphs.FunctionGraph;
@@ -459,11 +458,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
-		int numNonZeroFeatures = 0;
+		// FIXME int numNonZeroFeatures = 0;
 		for (D datum : data.getData()) {
 			Map<Integer, Double> datumFeatureMap = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 			featureMaps.add(datumFeatureMap);
-			numNonZeroFeatures += datumFeatureMap.size();
+			// FIXME numNonZeroFeatures += datumFeatureMap.size();
 			
 			if (!onlyX) {
 				int labelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
@@ -612,13 +611,19 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		for (D datum : data.getData()) {
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
+			
 			for (int j = 0; j < labels.length; j++) {
-				p.put(labels[j], Double.valueOf(outputY[i*labels.length + j]));
+				double value = Double.valueOf(outputY[i*labels.length + j]);
+				p.put(labels[j], value);
 				norm += outputY[i*labels.length + j];
 			}
 			
 			for (int j = 0; j < labels.length; j++) {
-				p.put(labels[j], p.get(labels[j])/norm);
+				double normValue = p.get(labels[j])/norm;
+				if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(normValue, this.classificationThreshold) >= 0)
+					p.put(labels[j], normValue);
+				else
+					p.remove(labels[j]);
 			}
 			
 			posteriors.put(datum, p);

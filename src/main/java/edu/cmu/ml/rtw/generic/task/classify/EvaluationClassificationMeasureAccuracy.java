@@ -8,7 +8,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.task.classify.TaskClassification.Stat;
 
-public class EvaluationClassificationMeasureAccuracy<D extends Datum<L> , L> extends EvaluationClassificationMeasure<D, L> {
+public class EvaluationClassificationMeasureAccuracy<D extends Datum<L>, L> extends EvaluationClassificationMeasure<D, L> {
 	public EvaluationClassificationMeasureAccuracy() {
 		this(null);
 	}

@@ -9,6 +9,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.DatumIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> extends MethodClassification<D, L> {
 	private DatumIndicator<D> datumIndicator;
@@ -64,6 +65,12 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	public Map<D, L> classify(DataSet<D, L> data) {
 		DataSet<D, L> filteredData = data.filter(this.datumIndicator, this.context.getMaxThreads());
 		return this.method.classify(filteredData);
+	}
+	
+	@Override
+	public Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data) {
+		DataSet<D, L> filteredData = data.filter(this.datumIndicator, this.context.getMaxThreads());
+		return this.method.classifyWithScore(filteredData);
 	}
 
 	@Override

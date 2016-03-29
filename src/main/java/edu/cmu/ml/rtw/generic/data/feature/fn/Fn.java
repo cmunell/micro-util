@@ -122,6 +122,14 @@ public abstract class Fn<S, T> extends CtxParsableFunction {
 		this.setCache = null;
 	}
 	
+	public List<T> listCompute(S input, String id, CacheMode cacheMode) {
+		return listCompute(Collections.singletonList(input), id, cacheMode);
+	}
+
+	public Set<T> setCompute(S input, String id, CacheMode cacheMode) {
+		return setCompute(Collections.singletonList(input), id, cacheMode);
+	}
+	
 	public List<T> listCompute(Collection<S> input, String id, CacheMode cacheMode) {
 		if (cacheMode == CacheMode.ON)
 			return listCachedCompute(input, id);
@@ -142,6 +150,14 @@ public abstract class Fn<S, T> extends CtxParsableFunction {
 	
 	public Set<T> setCompute(Collection<S> input) {
 		return this.compute(input, new HashSet<T>());
+	}
+	
+	public List<T> listCompute(S input) {
+		return this.compute(Collections.singletonList(input), new ArrayList<T>());
+	}
+	
+	public Set<T> setCompute(S input) {
+		return this.compute(Collections.singletonList(input), new HashSet<T>());
 	}
 	
 	/**

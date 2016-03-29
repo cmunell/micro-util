@@ -19,7 +19,7 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	
 	private Mode mode = Mode.MACRO_WEIGHTED;
 	private L filterLabel; 
-	private String[] parameterNames = { "weighted", "mode" };
+	private String[] parameterNames = { "filterLabel", "mode" };
 	
 	public EvaluationClassificationMeasurePrecision() {
 		this(null);

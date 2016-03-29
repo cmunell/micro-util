@@ -16,6 +16,7 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.parse.Obj.Function;
+import edu.cmu.ml.rtw.generic.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.str.StringTransform;
 import edu.cmu.ml.rtw.generic.str.StringTransformRemoveLongTokens;
 import edu.cmu.ml.rtw.generic.str.StringTransformRemoveSymbols;
@@ -25,6 +26,19 @@ import edu.cmu.ml.rtw.generic.str.StringTransformStem;
 import edu.cmu.ml.rtw.generic.str.StringTransformToLowerCase;
 import edu.cmu.ml.rtw.generic.str.StringTransformTrim;
 import edu.cmu.ml.rtw.generic.str.StringTransformUnderscoreToSpace;
+import edu.cmu.ml.rtw.generic.structure.FnGraphPaths;
+import edu.cmu.ml.rtw.generic.structure.FnGreedyStructureRules;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructureSequence;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassification;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasureAccuracy;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasureF;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasurePrecision;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasureRecall;
+import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassification;
+import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSieve;
+import edu.cmu.ml.rtw.generic.task.classify.multi.TaskMultiClassification;
 import edu.cmu.ml.rtw.generic.util.NamedIterable;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
@@ -162,8 +176,13 @@ public class DataTools {
 	protected Map<String, List<Fn<TokenSpan, TokenSpan>>> genericTokenSpanFns;
 	protected Map<String, List<Fn<TokenSpan, String>>> genericTokenSpanStrFns;
 	protected Map<String, List<Fn<String, String>>> genericStrFns;
+	protected Map<String, List<Fn<?, ?>>> genericStructureFns;
 	
 	protected Map<String, Search> genericSearches;
+	protected Map<String, WeightedStructure> genericStructures;
+	
+	protected Map<String, MethodMultiClassification> genericMultiClassifyMethods;
+	protected Map<String, EvaluationMultiClassification<?>> genericMultiClassifyEvals;
 	
 	protected Map<String, List<Command<?>>> commands;
 	
@@ -198,8 +217,13 @@ public class DataTools {
 		this.genericTokenSpanFns = new HashMap<String, List<Fn<TokenSpan, TokenSpan>>>();
 		this.genericTokenSpanStrFns = new HashMap<String, List<Fn<TokenSpan, String>>>();
 		this.genericStrFns = new HashMap<String, List<Fn<String, String>>>();
+		this.genericStructureFns = new HashMap<String, List<Fn<?, ?>>>();
 		
 		this.genericSearches = new HashMap<String, Search>();
+		this.genericStructures = new HashMap<String, WeightedStructure>();
+		
+		this.genericMultiClassifyMethods = new HashMap<String, MethodMultiClassification>();
+		this.genericMultiClassifyEvals = new HashMap<String, EvaluationMultiClassification<?>>();
 		
 		this.commands = new HashMap<String, List<Command<?>>>();
 		
@@ -294,9 +318,30 @@ public class DataTools {
 		this.addGenericStrFn(new FnIdentity<String>());
 		this.addGenericStrFn(new FnClean());
 		
+		this.addGenericStructureFn(new FnGreedyStructureRules<WeightedStructureGraph>());
+		this.addGenericStructureFn(new FnGraphPaths());
+		
 		this.addGenericSearch(new SearchGrid());
 		
+		this.addGenericWeightedStructure(new WeightedStructureGraph());
+		this.addGenericWeightedStructure(new WeightedStructureSequence());
+		
+		this.addGenericMultiClassifyEval(new EvaluationMultiClassificationMeasureAccuracy());
+		this.addGenericMultiClassifyEval(new EvaluationMultiClassificationMeasureF());
+		this.addGenericMultiClassifyEval(new EvaluationMultiClassificationMeasurePrecision());
+		this.addGenericMultiClassifyEval(new EvaluationMultiClassificationMeasureRecall());
+		
+		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSieve());
+		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
+		
+		addConstructionCommand(new TaskMultiClassification(null), new MakeInstanceFn<TaskMultiClassification>() {
+			public TaskMultiClassification make(String name, Context parentContext) {
+				return new TaskMultiClassification(parentContext); } });
+		
+		this.addConstructionCommand(new RuleSet(null), new MakeInstanceFn<RuleSet>() {
+			public RuleSet make(String name, Context parentContext) {
+				return new RuleSet(parentContext); } });
 		
 		this.addCommand("BuildCleanFn", new Command<String>() {
 			@Override
@@ -600,6 +645,18 @@ public class DataTools {
 		return tokenSpanStrFns;
 	}
 	
+	public List<Fn<?, ?>> makeStructureFns(String genericStructureFnName, Context context) {
+		if (!this.genericStructureFns.containsKey(genericStructureFnName))
+			return new ArrayList<Fn<?, ?>>();
+		List<Fn<?, ?>> genericStructureFns = this.genericStructureFns.get(genericStructureFnName);
+		List<Fn<?, ?>> structureFns = new ArrayList<Fn<?, ?>>(genericStructureFns.size());
+		
+		for (Fn<?, ?> genericTokenSpanStrFn : genericStructureFns)
+			structureFns.add(genericTokenSpanStrFn.makeInstance(context));
+		
+		return structureFns;
+	}
+	
 	public Context makeContext(String genericContextName, Context parentContext) {
 		if (!this.genericContexts.containsKey(genericContextName))
 			return null;
@@ -610,6 +667,20 @@ public class DataTools {
 		if (!this.genericSearches.containsKey(genericSearchName))
 			return null;
 		return this.genericSearches.get(genericSearchName).makeInstance(context);
+	}
+	
+	public WeightedStructure makeWeightedStructure(String genericStructureName, Context context) {
+		if (!this.genericStructures.containsKey(genericStructureName))
+			return null;
+		return this.genericStructures.get(genericStructureName).makeInstance(context);
+	}
+	
+	public EvaluationMultiClassification<?> makeMultiClassifyEvalInstance(String genericMultiClassifyEvalName, Context context) {
+		return this.genericMultiClassifyEvals.get(genericMultiClassifyEvalName).makeInstance(context); 
+	}
+	
+	public MethodMultiClassification makeMultiClassifyMethodInstance(String genericMultiClassifyMethodName, Context context) {
+		return this.genericMultiClassifyMethods.get(genericMultiClassifyMethodName).makeInstance(context); 
 	}
 	
 	public boolean addGazetteer(Gazetteer gazetteer) {
@@ -732,6 +803,25 @@ public class DataTools {
 		});
 	}
 	
+	public boolean addGenericStructureFn(Fn<?, ?> structureFn) {
+		if (!this.genericStructureFns.containsKey(structureFn.getGenericName()))
+			this.genericStructureFns.put(structureFn.getGenericName(), new ArrayList<Fn<?, ?>>());
+		this.genericStructureFns.get(structureFn.getGenericName()).add(structureFn);
+		
+		return addCommand(structureFn.getGenericName(), new Command<Fn<?, ?>>() {
+			@Override
+			public Fn<?, ?> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				List<Fn<?, ?>> structureFns = makeStructureFns(structureFn.getGenericName(), context);
+				for (Fn<?, ?> structureFn : structureFns) {
+					if (structureFn.fromParse(modifiers, referenceName, fnObj)) {
+						return structureFn;
+					}
+				}
+				return null;
+			}
+		});
+	}
+	
 	public boolean addGenericContext(Context context) {
 		this.genericContexts.put(context.getGenericName(), context);
 		
@@ -747,6 +837,33 @@ public class DataTools {
 		return addConstructionCommand(search, new MakeInstanceFn<Search>() {
 			public Search make(String name, Context context) {
 				return makeSearch(name, context); } }
+		);
+	}
+	
+	public boolean addGenericMultiClassifyEval(EvaluationMultiClassification<?> multiClassifyEval) {
+		this.genericMultiClassifyEvals.put(multiClassifyEval.getGenericName(), multiClassifyEval);
+		
+		return addConstructionCommand(multiClassifyEval, new MakeInstanceFn<EvaluationMultiClassification<?>>() {
+			public EvaluationMultiClassification<?> make(String name, Context context) {
+				return makeMultiClassifyEvalInstance(name, context); } }
+		);
+	}
+	
+	public boolean addGenericMultiClassifyMethod(MethodMultiClassification multiClassifyMethod) {
+		this.genericMultiClassifyMethods.put(multiClassifyMethod.getGenericName(), multiClassifyMethod);
+		
+		return addConstructionCommand(multiClassifyMethod, new MakeInstanceFn<MethodMultiClassification>() {
+			public MethodMultiClassification make(String name, Context context) {
+				return makeMultiClassifyMethodInstance(name, context); } }
+		);
+	}
+	
+	public boolean addGenericWeightedStructure(WeightedStructure structure) {
+		this.genericStructures.put(structure.getGenericName(), structure);
+		
+		return addConstructionCommand(structure, new MakeInstanceFn<WeightedStructure>() {
+			public WeightedStructure make(String name, Context context) {
+				return makeWeightedStructure(name, context); } }
 		);
 	}
 	

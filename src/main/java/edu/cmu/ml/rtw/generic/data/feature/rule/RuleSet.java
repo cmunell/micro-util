@@ -128,7 +128,7 @@ public class RuleSet<D extends Datum<L>, L> extends CtxParsableFunction {
 						if (vObj.getType() == Obj.Value.Type.STRING
 								&& vObj.getStr().matches("[0-9]+")) {
 							int matchValue = Integer.valueOf(vObj.getStr());
-							// FIXME This is a hack to allow checking that the mached number is less than some specified number
+							// FIXME This is a hack to allow checking that the matched number is less than some specified number
 							if (entry.getKey().contains("<")) { 
 								String[] keyParts = entry.getKey().split("<");
 								if (matchValue >= Integer.valueOf(keyParts[1].trim())) {

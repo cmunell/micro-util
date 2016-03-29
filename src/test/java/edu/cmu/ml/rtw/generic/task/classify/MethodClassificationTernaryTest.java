@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -12,6 +13,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.TernaryLabel;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> extends MethodClassification<D, TernaryLabel> {
 	private double correct;
@@ -106,5 +108,15 @@ public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> exte
 	@Override
 	public MethodClassification<D, TernaryLabel> makeInstance(DatumContext<D, TernaryLabel> context) {
 		return new MethodClassificationTernaryTest<D>(context);
+	}
+
+	@Override
+	public Map<D, Pair<TernaryLabel, Double>> classifyWithScore(DataSet<D, TernaryLabel> data) {
+		Map<D, TernaryLabel> classification = classify(data);
+		Map<D, Pair<TernaryLabel, Double>> scores = new HashMap<>();
+		for (Entry<D, TernaryLabel> entry : classification.entrySet()) {
+			scores.put(entry.getKey(), new Pair<TernaryLabel, Double>(entry.getValue(), 1.0));
+		}
+		return scores;
 	}
 }

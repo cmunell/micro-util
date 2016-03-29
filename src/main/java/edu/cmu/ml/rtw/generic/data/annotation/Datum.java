@@ -61,6 +61,7 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.parse.Obj.Function;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassification;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionData;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionMatrix;
@@ -167,6 +168,19 @@ public abstract class Datum<L> {
 	 * 
 	 */
 	public static abstract class Tools<D extends Datum<L>, L> {
+		public static abstract class Structurizer<D extends Datum<L>, L, S extends WeightedStructure> extends CtxParsableFunction {
+			protected DatumContext<D, L> context;
+			
+			public abstract Map<String, S> addToStructures(D datum, L label, double weight, Map<String, S> structures);
+			public abstract Map<String, S> makeStructures();
+			public abstract Map<L, Double> getLabels(D datum, Map<String, S> structures);
+			public abstract Structurizer<D, L, S> makeInstance(DatumContext<D, L> context);
+			
+			public boolean matchesData(DataSet<?, ?> data) {
+				return data.getDatumTools().equals(this.context.getDatumTools());
+			}
+		}
+
 		public static abstract class DataSetBuilder<D extends Datum<L>, L> extends CtxParsableFunction {
 			protected DatumContext<D, L> context;
 			
@@ -229,6 +243,7 @@ public abstract class Datum<L> {
 		private Map<String, Feature<D, L>> genericFeatures;
 		private Map<String, SupervisedModel<D, L>> genericModels;
 		private Map<String, SupervisedModelEvaluation<D, L>> genericEvaluations;
+		private Map<String, Structurizer<D, L, ?>> genericStructurizers;
 		
 		private Map<String, DatumStructureCollection<D, L>> genericDatumStructureCollections;
 		
@@ -255,6 +270,7 @@ public abstract class Datum<L> {
 			this.genericEvaluations = new HashMap<String, SupervisedModelEvaluation<D, L>>();
 			
 			this.genericDatumStructureCollections = new HashMap<String, DatumStructureCollection<D, L>>();
+			this.genericStructurizers = new HashMap<String, Structurizer<D, L, ?>>();
 			
 			this.genericClassifyMethods = new HashMap<String, MethodClassification<D, L>>();
 			this.genericClassifyEvals = new HashMap<String, EvaluationClassification<D, L, ?>>();
@@ -565,6 +581,10 @@ public abstract class Datum<L> {
 			return this.genericDatumStructureCollections.get(genericCollectionName).makeInstance(data);
 		}
 		
+		public Structurizer<D, L, ?> makeStructurizerInstance(String name, DatumContext<D, L> context) {
+			return this.genericStructurizers.get(name).makeInstance(context);
+		}
+		
 		public boolean addCommand(String name, Command<?> command) {
 			if (!this.commands.containsKey(name))
 				this.commands.put(name, new ArrayList<Command<?>>());
@@ -661,6 +681,16 @@ public abstract class Datum<L> {
 				@SuppressWarnings("unchecked")
 				public MethodClassification<D, L> make(String name, Context parentContext) {
 					return makeClassifyMethodInstance(name, (DatumContext<D, L>)parentContext); } }
+			);
+		}
+		
+		public boolean addGenericStructurizer(Structurizer<D, L, ?> structurizer) {
+			this.genericStructurizers.put(structurizer.getGenericName(), structurizer);
+			
+			return addConstructionCommand(structurizer, new MakeInstanceFn<Structurizer<D, L, ?>>() {
+				@SuppressWarnings("unchecked")
+				public Structurizer<D, L, ?> make(String name, Context parentContext) {
+					return makeStructurizerInstance(name, (DatumContext<D, L>)parentContext); } }
 			);
 		}
 		

@@ -34,6 +34,9 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	}
 	
 	public boolean init() {
+		if (this.initialized)
+			return true;
+		
 		if (this.data.isBuildable() && !this.data.isBuilt() && !this.data.build())
 			return false;
 		
@@ -42,13 +45,13 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	}
 	
 	public DataSet<D, L> getData() {
-		if (!this.initialized && !init())
+		if (!init())
 			return null;
 		return this.data;
 	}
 	
 	public Map<L, Map<L, List<D>>> computeActualToPredictedData(MethodClassification<D, L> method) {
-		if (!this.initialized && !init())
+		if (!init())
 			return null;
 		
 		if (this.methodsActualToPredicted.containsKey(method))
@@ -144,5 +147,4 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	public String getGenericName() {
 		return "Classification";
 	}
-
 }

@@ -10,6 +10,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends MethodClassification<D, L> {
 	private LabelMapping<L> labelMapping;
@@ -66,6 +67,14 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 		Map<D, L> map = this.method.classify(data);
 		for (Entry<D, L> entry : map.entrySet())
 			entry.setValue(this.labelMapping.map(entry.getValue()));
+		return map;
+	}
+	
+	@Override
+	public Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data) {
+		Map<D, Pair<L, Double>> map = this.method.classifyWithScore(data);
+		for (Entry<D, Pair<L, Double>> entry : map.entrySet())
+			entry.setValue(new Pair<>(this.labelMapping.map(entry.getValue().getFirst()), entry.getValue().getSecond()));
 		return map;
 	}
 

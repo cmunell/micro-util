@@ -70,7 +70,7 @@ public class RuleSetTest {
 				"};");
 		
 		Feature<TestDatum<String>, String> feature = context.getMatchFeature(Obj.curlyBracedValue("fsent1"));
-		RuleSet<TestDatum<String>, String> rulesTemp = context.getMatchRuleSet(Obj.curlyBracedValue("rules"));
+		RuleSet<TestDatum<String>, String> rulesTemp = context.getMatchRules(Obj.curlyBracedValue("rules"));
 		RuleSet<TestDatum<String>, String> rules = new RuleSet<TestDatum<String>, String>(context);
 		rules.fromParse(rulesTemp.toParse());
 		

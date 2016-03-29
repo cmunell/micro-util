@@ -529,7 +529,7 @@ public class SupervisedModelLGApproximation<D extends Datum<L>, L> extends Super
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("rules"))
-			this.rules = this.context.getMatchRuleSet(parameterValue);
+			this.rules = this.context.getMatchRules(parameterValue);
 		else if (parameter.equals("t"))
 			this.t = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("l2"))

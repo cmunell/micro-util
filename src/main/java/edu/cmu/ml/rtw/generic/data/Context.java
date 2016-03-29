@@ -22,6 +22,12 @@ import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.parse.Obj.Type;
+import edu.cmu.ml.rtw.generic.rule.Rule;
+import edu.cmu.ml.rtw.generic.rule.RuleSet;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
+import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassification;
+import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassification;
+import edu.cmu.ml.rtw.generic.task.classify.multi.TaskMultiClassification;
 import edu.cmu.ml.rtw.generic.util.FileUtil;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
@@ -41,9 +47,15 @@ public class Context extends CtxParsableFunction {
 		TOKEN_SPAN_FN("ts_fn"),
 		STR_FN("str_fn"),
 		TOKEN_SPAN_STR_FN("ts_str_fn"),
+		STRUCTURE_FN("structure_fn"),
+		RULE("rule"),
+		RULE_SET("rule_set"),
 		ARRAY("array"),
 		VALUE("value"),
-		SEARCH("search");
+		SEARCH("search"),
+		MULTI_CLASSIFY_TASK("multi_classify_task"),
+		MULTI_CLASSIFY_METHOD("multi_classify_method"),
+		MULTI_CLASSIFY_EVAL("multi_classify_eval");
 		
 		private String str;
 		
@@ -76,9 +88,15 @@ public class Context extends CtxParsableFunction {
 	protected Map<String, Fn<TokenSpan, TokenSpan>> tokenSpanFns;
 	protected Map<String, Fn<String, String>> strFns;
 	protected Map<String, Fn<TokenSpan, String>> tokenSpanStrFns;
+	protected Map<String, Fn<?, ?>> structureFns;
+	protected Map<String, Rule> rules;
+	protected Map<String, RuleSet> ruleSets;
 	protected Map<String, List<String>> arrays;
 	protected Map<String, String> values;
 	protected Map<String, Search> searches;
+	private Map<String, MethodMultiClassification> multiClassifyMethods;
+	private Map<String, TaskMultiClassification> multiClassifyTasks;
+	private Map<String, EvaluationMultiClassification<?>> multiClassifyEvals;
 	
 	protected int currentReferenceId;
 	
@@ -95,17 +113,29 @@ public class Context extends CtxParsableFunction {
 		this.tokenSpanFns = new ConcurrentHashMap<String, Fn<TokenSpan, TokenSpan>>();
 		this.strFns = new ConcurrentHashMap<String, Fn<String, String>>();
 		this.tokenSpanStrFns = new ConcurrentHashMap<String, Fn<TokenSpan, String>>();
+		this.structureFns = new ConcurrentHashMap<String, Fn<?, ?>>();
+		this.rules = new ConcurrentHashMap<String, Rule>();
+		this.ruleSets = new ConcurrentHashMap<String, RuleSet>();
 		this.arrays = new TreeMap<String, List<String>>();
 		this.values = new TreeMap<String, String>();
 		this.searches = new ConcurrentHashMap<String, Search>();
+		this.multiClassifyMethods = new ConcurrentHashMap<String, MethodMultiClassification>();
+		this.multiClassifyTasks = new ConcurrentHashMap<String, TaskMultiClassification>();
+		this.multiClassifyEvals = new ConcurrentHashMap<String, EvaluationMultiClassification<?>>();
 		
 		this.storageMaps.add(this.contexts);
 		this.storageMaps.add(this.tokenSpanFns);
 		this.storageMaps.add(this.strFns);
 		this.storageMaps.add(this.tokenSpanStrFns);
+		this.storageMaps.add(this.structureFns);
+		this.storageMaps.add(this.rules);
+		this.storageMaps.add(this.ruleSets);
 		this.storageMaps.add(this.arrays);
 		this.storageMaps.add(this.values);
 		this.storageMaps.add(this.searches);
+		this.storageMaps.add(this.multiClassifyEvals);
+		this.storageMaps.add(this.multiClassifyMethods);
+		this.storageMaps.add(this.multiClassifyTasks);
 		
 		this.currentReferenceId = 0;
 		
@@ -141,12 +171,24 @@ public class Context extends CtxParsableFunction {
 			return Assignment.assignmentTyped(this.strFns.get(obj.getSecond()).getModifiers(), ObjectType.STR_FN.toString(), obj.getSecond(), this.strFns.get(obj.getSecond()).toParse());	
 		} else if (type == ObjectType.TOKEN_SPAN_STR_FN) {
 			return Assignment.assignmentTyped(this.tokenSpanStrFns.get(obj.getSecond()).getModifiers(), ObjectType.TOKEN_SPAN_STR_FN.toString(), obj.getSecond(), this.tokenSpanStrFns.get(obj.getSecond()).toParse());	
+		} else if (type == ObjectType.STRUCTURE_FN) {
+			return Assignment.assignmentTyped(this.structureFns.get(obj.getSecond()).getModifiers(), ObjectType.STRUCTURE_FN.toString(), obj.getSecond(), this.structureFns.get(obj.getSecond()).toParse());	
+		} else if (type == ObjectType.RULE) {
+			return Assignment.assignmentTyped(this.rules.get(obj.getSecond()).getModifiers(), ObjectType.RULE.toString(), obj.getSecond(), this.rules.get(obj.getSecond()).toParse());	
+		} else if (type == ObjectType.RULE_SET) {
+			return Assignment.assignmentTyped(this.ruleSets.get(obj.getSecond()).getModifiers(), ObjectType.RULE_SET.toString(), obj.getSecond(), this.ruleSets.get(obj.getSecond()).toParse());	
 		} else if (type == ObjectType.ARRAY) {
 			return Assignment.assignmentTyped(new ArrayList<String>(), ObjectType.ARRAY.toString(), obj.getSecond(), Obj.array(this.arrays.get(obj.getSecond())));
 		} else if (type == ObjectType.VALUE) {
 			return Assignment.assignmentTyped(new ArrayList<String>(), ObjectType.VALUE.toString(), obj.getSecond(), Obj.stringValue(this.values.get(obj.getSecond())));
 		} else if (type == ObjectType.SEARCH) {
 			return Assignment.assignmentTyped(new ArrayList<String>(), ObjectType.SEARCH.toString(), obj.getSecond(), this.searches.get(obj.getSecond()).toParse());
+		} else if (type == ObjectType.MULTI_CLASSIFY_EVAL) {
+			return Assignment.assignmentTyped(this.multiClassifyEvals.get(obj.getSecond()).getModifiers(), ObjectType.MULTI_CLASSIFY_EVAL.toString(), obj.getSecond(), this.multiClassifyEvals.get(obj.getSecond()).toParse());	
+		} else if (type == ObjectType.MULTI_CLASSIFY_TASK) {
+			return Assignment.assignmentTyped(this.multiClassifyTasks.get(obj.getSecond()).getModifiers(), ObjectType.MULTI_CLASSIFY_TASK.toString(), obj.getSecond(), this.multiClassifyTasks.get(obj.getSecond()).toParse());	
+		} else if (type == ObjectType.MULTI_CLASSIFY_METHOD) {
+			return Assignment.assignmentTyped(this.multiClassifyMethods.get(obj.getSecond()).getModifiers(), ObjectType.MULTI_CLASSIFY_METHOD.toString(), obj.getSecond(), this.multiClassifyMethods.get(obj.getSecond()).toParse());	
 		} else {
 			return null;
 		}
@@ -182,6 +224,18 @@ public class Context extends CtxParsableFunction {
 			if (runAssignmentCommandTokenSpanStrFn(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
 				return false;
 			}
+		} else if (assignment.getType().equals(ObjectType.STRUCTURE_FN.toString())) {
+			if (runAssignmentCommandStructureFn(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
+		} else if (assignment.getType().equals(ObjectType.RULE.toString())) {
+			if (runAssignmentCommandRule(assignment.getName(), (Obj.Rule)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
+		} else if (assignment.getType().equals(ObjectType.RULE_SET.toString())) {
+			if (runAssignmentCommandRuleSet(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
 		} else if (assignment.getType().equals(ObjectType.ARRAY.toString())) {
 			if (constructOrRunCommandArray(assignment.getModifiers(), assignment.getName(), assignment.getValue()) == null) {
 				return false;
@@ -192,6 +246,18 @@ public class Context extends CtxParsableFunction {
 			}
 		} else if (assignment.getType().equals(ObjectType.SEARCH.toString())) {
 			if (runAssignmentCommandSearch(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
+		} else if (assignment.getType().equals(ObjectType.MULTI_CLASSIFY_EVAL.toString())) {
+			if (runAssignmentCommandMultiClassifyEval(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
+		} else if (assignment.getType().equals(ObjectType.MULTI_CLASSIFY_TASK.toString())) {
+			if (runAssignmentCommandMultiClassifyTask(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
+				return false;
+			}
+		} else if (assignment.getType().equals(ObjectType.MULTI_CLASSIFY_METHOD.toString())) {
+			if (runAssignmentCommandMultiClassifyMethod(assignment.getName(), (Obj.Function)assignment.getValue(), assignment.getModifiers()) == null) {
 				return false;
 			}
 		} else {
@@ -433,6 +499,76 @@ public class Context extends CtxParsableFunction {
 		}
 	}
 	
+	/* Match and construct structure fns */
+	
+	public Fn<?, ?> getMatchStructureFn(Obj obj) {
+		synchronized (this.structureFns) {
+			return getFunctionMatch(obj, this.structureFns);
+		}
+	}
+	
+	public List<Fn<?, ?>> getMatchesStructureFn(Obj obj) {
+		synchronized (this.structureFns) {
+			return getFunctionMatches(obj, this.structureFns);
+		}
+	}
+
+	public Fn<?, ?> getMatchOrRunCommandStructureFn(String referenceName, Obj obj) {
+		synchronized (this.structureFns) {
+			return getMatchOrRunCommand(ObjectType.STRUCTURE_FN.toString(), null, referenceName, obj, this.structureFns);
+		}
+	}
+	
+	public Fn<?, ?> getMatchOrConstructStructureFn(Obj obj) {
+		synchronized (this.structureFns) {
+			return getMatchOrRunCommand(ObjectType.STRUCTURE_FN.toString(), obj, this.structureFns);
+		}
+	}
+	
+	private Fn<?, ?> runAssignmentCommandStructureFn(String referenceName, Obj.Function obj, List<String> modifiers) {
+		synchronized (this.structureFns) {
+			return runAssignmentCommand(ObjectType.STRUCTURE_FN.toString(), modifiers, referenceName, obj, this.structureFns);
+		}
+	}
+	
+	/* Match and construct rules */
+	
+	public Rule getMatchRule(Obj obj) {
+		synchronized (this.rules) {
+			return getAssignedMatches(obj, this.rules).get(0);
+		}
+	}
+	
+	private Rule runAssignmentCommandRule(String referenceName, Obj.Rule obj, List<String> modifiers) {
+		synchronized (this.rules) {
+			Rule rule = new Rule();
+			if (!rule.fromParse(obj))
+				return null;
+			this.rules.put(referenceName, rule);
+			return rule;
+		}
+	}
+	
+	/* Match and construct rule sets */
+	
+	public RuleSet getMatchRuleSet(Obj obj) {
+		synchronized (this.ruleSets) {
+			return getFunctionMatch(obj, this.ruleSets);
+		}
+	}
+	
+	public List<RuleSet> getMatchesRuleSet(Obj obj) {
+		synchronized (this.ruleSets) {
+			return getFunctionMatches(obj, this.ruleSets);
+		}
+	}
+	
+	private RuleSet runAssignmentCommandRuleSet(String referenceName, Obj.Function obj, List<String> modifiers) {
+		synchronized (this.ruleSets) {
+			return runAssignmentCommand(ObjectType.RULE_SET.toString(), modifiers, referenceName, obj, this.ruleSets);
+		}
+	}
+	
 	/* Match and construct arrays */
 	
 	public List<String> constructOrRunCommandArray(Obj obj) {
@@ -546,6 +682,36 @@ public class Context extends CtxParsableFunction {
 		}
 	}
 	
+	/* Match and construct multi-classify methods */
+	
+	public MethodMultiClassification getMatchMultiClassifyMethod(Obj obj) {
+		return getFunctionMatch(obj, this.multiClassifyMethods);
+	}
+	
+	private MethodMultiClassification runAssignmentCommandMultiClassifyMethod(String referenceName, Obj.Function obj, List<String> modifiers) {
+		return runAssignmentCommand(ObjectType.MULTI_CLASSIFY_METHOD.toString(), modifiers, referenceName, obj, this.multiClassifyMethods);
+	}
+	
+	/* Match and construct classify tasks */
+	
+	public TaskMultiClassification getMatchMultiClassifyTask(Obj obj) {
+		return getFunctionMatch(obj, this.multiClassifyTasks);
+	}
+	
+	private TaskMultiClassification runAssignmentCommandMultiClassifyTask(String referenceName, Obj.Function obj, List<String> modifiers) {
+		return runAssignmentCommand(ObjectType.MULTI_CLASSIFY_TASK.toString(), modifiers, referenceName, obj, this.multiClassifyTasks);
+	}
+
+	/* Match and construct classify eval */
+	
+	public EvaluationMultiClassification<?> getMatchMultiClassifyEval(Obj obj) {
+		return getFunctionMatch(obj, this.multiClassifyEvals);
+	}
+	
+	private EvaluationMultiClassification<?> runAssignmentCommandMultiClassifyEval(String referenceName, Obj.Function obj, List<String> modifiers) {
+		return runAssignmentCommand(ObjectType.MULTI_CLASSIFY_EVAL.toString(), modifiers, referenceName, obj, this.multiClassifyEvals);
+	}
+	
 	/* Match parameter searchable */
 	
 	public ParameterSearchable getMatchParameterSearchable(Obj obj) {
@@ -603,6 +769,14 @@ public class Context extends CtxParsableFunction {
 	
 	/* Other stuff */
 	
+	public WeightedStructure constructMatchWeightedStructure(Obj obj) {
+		Obj.Function f = (Obj.Function)obj;
+		WeightedStructure s = this.dataTools.makeWeightedStructure(f.getName(), this);
+		if (!s.fromParse(f))
+			return null;
+		return s;
+	}
+	
 	public DataTools getDataTools() {
 		return this.dataTools;
 	}
@@ -645,6 +819,8 @@ public class Context extends CtxParsableFunction {
 			only.strFns = this.strFns;
 		} else if (objectTypeStr.equals(ObjectType.TOKEN_SPAN_STR_FN.toString())) {
 			only.tokenSpanStrFns = this.tokenSpanStrFns;
+		} else if (objectTypeStr.equals(ObjectType.STRUCTURE_FN.toString())) {
+			only.structureFns = this.structureFns;
 		} else if (objectTypeStr.equals(ObjectType.ARRAY.toString())) {
 			for (Entry<String, List<String>> entry : this.arrays.entrySet())
 				only.arrays.put(entry.getKey(), entry.getValue());	
@@ -653,7 +829,13 @@ public class Context extends CtxParsableFunction {
 				only.values.put(entry.getKey(), entry.getValue());	
 		} else if (objectTypeStr.equals(ObjectType.SEARCH.toString())) {
 			only.searches = this.searches;
-		}
+		} else if (objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_EVAL.toString())) {
+			only.multiClassifyEvals = this.multiClassifyEvals;
+		} else if (objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_TASK.toString())) {
+			only.multiClassifyTasks = this.multiClassifyTasks;
+		} else if (objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_METHOD.toString())) {
+			only.multiClassifyMethods = this.multiClassifyMethods;
+		} 
 		
 		return only;
 	}
@@ -686,6 +868,10 @@ public class Context extends CtxParsableFunction {
 			except.tokenSpanStrFns = this.tokenSpanStrFns;
 		} 
 		
+		if (!objectTypeStr.equals(ObjectType.STRUCTURE_FN.toString())) {
+			except.structureFns = this.structureFns;
+		} 
+		
 		if (!objectTypeStr.equals(ObjectType.ARRAY.toString())) {
 			for (Entry<String, List<String>> entry : this.arrays.entrySet())
 				except.arrays.put(entry.getKey(), entry.getValue());	
@@ -700,6 +886,18 @@ public class Context extends CtxParsableFunction {
 			for (Entry<String, Search> entry : this.searches.entrySet())
 				except.searches.put(entry.getKey(), entry.getValue());
 		}
+		
+		if (!objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_EVAL.toString())) {
+			except.multiClassifyEvals = this.multiClassifyEvals;
+		}
+		
+		if (!objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_METHOD.toString())) {
+			except.multiClassifyMethods = this.multiClassifyMethods;
+		} 
+		
+		if (!objectTypeStr.equals(ObjectType.MULTI_CLASSIFY_TASK.toString())) {
+			except.multiClassifyTasks = this.multiClassifyTasks;
+		} 
 		
 		return except;
 	}

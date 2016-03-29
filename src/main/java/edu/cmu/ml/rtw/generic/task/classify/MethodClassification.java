@@ -6,6 +6,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public abstract class MethodClassification<D extends Datum<L>, L> extends CtxParsableFunction {
 	protected DatumContext<D, L> context;
@@ -33,11 +34,20 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 		return classify(task.getData());
 	}
 	
+	public Map<D, Pair<L, Double>> classifyWithScore(TaskClassification<D, L> task) {
+		return classifyWithScore(task.getData());
+	}
+	
 	public boolean init() {
 		return init(null);
 	}
 	
+	public boolean matchesData(DataSet<?, ?> data) {
+		return data.getDatumTools().equals(this.context.getDatumTools());
+	}
+	
 	public abstract Map<D, L> classify(DataSet<D, L> data);
+	public abstract Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data);
 	public abstract boolean init(DataSet<D, L> testData);
 	public abstract MethodClassification<D, L> clone();
 	public abstract MethodClassification<D, L> makeInstance(DatumContext<D, L> context);
