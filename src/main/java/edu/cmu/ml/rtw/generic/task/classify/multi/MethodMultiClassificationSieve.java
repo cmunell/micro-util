@@ -115,6 +115,9 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			}
 		}
 		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");
+
+		
 		List<Map<Datum<?>, ?>> classifications = new ArrayList<Map<Datum<?>, ?>>();
 		for (int i = 0; i < data.size(); i++) {
 			Structurizer structurizer = null;
@@ -129,6 +132,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			Map labeledData = new HashMap();
 			for (Object o : dataSet) {
 				Datum d = (Datum)o;
+				this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying datum " + d.getId());
+
 				Map<Object, Double> labelsWeighted = structurizer.getLabels(d, structures);
 				if (labelsWeighted == null)
 					continue;
@@ -147,6 +152,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			}
 			classifications.add(labeledData);
 		}
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve finished classifying data");
 		
 		return classifications;
 	}
