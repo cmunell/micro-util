@@ -45,10 +45,8 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 	@Override
 	protected <C extends Collection<WeightedStructureSequence>> C compute(
 			Collection<WeightedStructureGraph> input, C output) {
-		System.out.println("Getting paths");
 		for (WeightedStructureGraph g : input)
 			output.addAll(g.getEdgePaths(this.length));
-		System.out.println("Finished paths");
 		return output;
 	}
 
