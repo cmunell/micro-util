@@ -318,11 +318,13 @@ public class WeightedStructureGraph extends WeightedStructure {
 			for (WeightedStructureSequence currentPath : currentPaths) {
 				String currentNodeId = ((WeightedStructureRelationBinary)currentPath.get(currentPath.size() - 1)).getSecond().getId();
 				neighbors = this.edges.get(currentNodeId);
-				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
-					for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
-						WeightedStructureSequence seq = currentPath.clone();
-						seq.add(edge.getKey(), edge.getValue());
-						nextPaths.add(seq);
+				if (neighbors != null) {
+					for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
+						for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
+							WeightedStructureSequence seq = currentPath.clone();
+							seq.add(edge.getKey(), edge.getValue());
+							nextPaths.add(seq);
+						}
 					}
 				}
 			}
