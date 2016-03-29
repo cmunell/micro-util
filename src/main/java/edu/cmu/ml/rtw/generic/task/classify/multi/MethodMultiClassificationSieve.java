@@ -92,14 +92,19 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		for (int i = 0; i < this.methods.size(); i++) {
 			Structurizer structurizer = this.structurizers.get(i);
 			MethodClassification<?, ?> method = this.methods.get(i);
+			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
+			int addedLinks = 0;
 			for (int j = 0; j < data.size(); j++) {
 				if (!method.matchesData(data.get(j)))
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
 				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
 					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), entry.getValue().getSecond(), structures);
-				}
+					addedLinks++;
+				}				
 			}
+			
+			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
 			
 			for (Entry entry : structures.entrySet()) {
 				List transformedStructures = ((Fn)this.structureTransformFn).listCompute(entry.getValue());
