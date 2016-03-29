@@ -79,13 +79,15 @@ public abstract class WeightedStructureRelation extends WeightedStructure {
 		WeightedStructureRelation rel = (WeightedStructureRelation)o;
 		return this.ordered == rel.ordered
 				&& this.type.equals(rel.type)
-				&& this.id.equals(rel.id);
+				&& ((this.id == null && rel.id == null) || (this.id != null && this.id.equals(rel.id)));
 	}
 	
 	@Override
 	public int hashCode() {
-		int h = this.type.hashCode() ^ 
-				this.id.hashCode();
+		int h = this.type.hashCode();
+		
+		if (this.id != null)
+			h ^= this.id.hashCode();
 		
 		return h;
 	}
