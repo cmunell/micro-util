@@ -97,7 +97,7 @@ public class Rule extends CtxParsable {
 	}
 	
 	private List<Map<String, Obj>> match(Obj pattern, List<Obj> sourceObjs, Map<String, Obj> match) {
-		SpecialFn specialFn = SpecialFn.getFn(this.parse.getSource());
+		SpecialFn specialFn = SpecialFn.getFn(pattern);
 		if (specialFn == SpecialFn.And) {
 			return matchAnd((Obj.Function)pattern, sourceObjs, match);
 		} else if (specialFn == SpecialFn.Or) {
