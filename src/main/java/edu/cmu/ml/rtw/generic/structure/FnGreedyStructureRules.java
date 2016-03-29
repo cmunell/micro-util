@@ -61,7 +61,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	protected <C extends Collection<S>> C compute(Collection<S> input, C output) {
 		for (S structure : input) {
 			List<?> splitStructure = this.splitFn.listCompute(structure);
-			System.out.pritnln("Computed " + splitStructure.size() + " paths");
+			System.out.println("Computed " + splitStructure.size() + " paths");
 			List<Pair<List<CtxParsable>, Double>> orderedStructureParts = new ArrayList<Pair<List<CtxParsable>, Double>>();
 			for (Object o : splitStructure) {
 				WeightedStructure structurePart = (WeightedStructure)o;
