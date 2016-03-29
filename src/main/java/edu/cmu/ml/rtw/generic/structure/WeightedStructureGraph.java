@@ -322,7 +322,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
 						WeightedStructureSequence seq = currentPath.clone();
 						seq.add(edge.getKey(), edge.getValue());
-						currentPaths.add(seq);
+						nextPaths.add(seq);
 					}
 				}
 			}
