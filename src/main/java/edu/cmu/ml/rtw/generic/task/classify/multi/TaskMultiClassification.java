@@ -164,7 +164,7 @@ public class TaskMultiClassification extends CtxParsableFunction {
 				this.tasks = new ArrayList<TaskClassification<?, ?>>();
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
-					this.tasks.add((TaskClassification<?, ?>)this.context.getAssignedMatches(array.get(i)));
+					this.tasks.add((TaskClassification<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
 		} else 
 			return false;

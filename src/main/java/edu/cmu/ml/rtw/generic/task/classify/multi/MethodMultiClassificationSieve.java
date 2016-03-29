@@ -66,14 +66,14 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				this.methods = new ArrayList<MethodClassification<?, ?>>();
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
-					this.methods.add((MethodClassification<?, ?>)this.context.getAssignedMatches(array.get(i)));
+					this.methods.add((MethodClassification<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
 		} else if (parameter.equals("structurizers")) {
 			if (parameterValue != null) {
 				this.structurizers = new ArrayList<Structurizer<?, ?, ?>>();
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
-					this.structurizers.add((Structurizer<?, ?, ?>)this.context.getAssignedMatches(array.get(i)));
+					this.structurizers.add((Structurizer<?, ?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
 		} else if (parameter.equals("structureTransformFn")) {
 			this.structureTransformFn = (parameterValue == null) ? null : this.context.getMatchOrConstructStructureFn(parameterValue);
