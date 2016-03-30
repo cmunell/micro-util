@@ -783,7 +783,6 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}
-
 	
 	@Override
 	public SupervisedModel<D, L> clone() {

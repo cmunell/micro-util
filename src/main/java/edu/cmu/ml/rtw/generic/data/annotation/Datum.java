@@ -57,6 +57,7 @@ import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationP
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluationRecall;
 import edu.cmu.ml.rtw.generic.opt.search.ParameterSearchable;
 import edu.cmu.ml.rtw.generic.opt.search.Search;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -364,6 +365,35 @@ public abstract class Datum<L> {
 				@SuppressWarnings("unchecked")
 				public TaskClassification<D, L> make(String name, Context parentContext) {
 					return new TaskClassification<D, L>((DatumContext<D, L>)parentContext); } });
+			
+			addCommand("CloneClassifyMethod", new Command<MethodClassification<D, L>>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public MethodClassification<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone();
+					
+					for (Assignment assignment : parameters) {
+						if (!assignment.getName().equals("method"))
+							method.setParameterValue(assignment.getName(), assignment.getValue());
+					}
+					
+					return method;
+				}
+			});
+			
+			addCommand("InitClassifyMethod", new Command<String>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("devData").getValue());
+					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue());
+					return String.valueOf(method.init(data));
+				}
+			});
 			
 			addCommand("RunClassifyMethodSearch", new Command<MethodClassification<D, L>>() {
 				@SuppressWarnings("unchecked")
