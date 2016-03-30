@@ -383,15 +383,18 @@ public abstract class Datum<L> {
 				}
 			});
 			
-			addCommand("InitClassifyMethod", new Command<String>() {
+			addCommand("InitClassifyMethod", new Command<MethodClassification<D, L>>() {
 				@SuppressWarnings("unchecked")
 				@Override
-				public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				public MethodClassification<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 					AssignmentList parameters = fnObj.getParameters();
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("devData").getValue());
 					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue());
-					return String.valueOf(method.init(data));
+					if (!method.init(data))
+						return null;
+					else
+						return method;
 				}
 			});
 			
