@@ -390,7 +390,7 @@ public abstract class Datum<L> {
 					AssignmentList parameters = fnObj.getParameters();
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("devData").getValue());
-					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue());
+					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone();
 					if (!method.init(data))
 						return null;
 					else
