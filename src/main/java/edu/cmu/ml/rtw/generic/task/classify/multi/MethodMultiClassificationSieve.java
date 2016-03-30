@@ -132,8 +132,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			Map labeledData = new HashMap();
 			for (Object o : dataSet) {
 				Datum d = (Datum)o;
-				this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying datum " + d.getId());
-
+				
 				Map<Object, Double> labelsWeighted = structurizer.getLabels(d, structures);
 				if (labelsWeighted == null)
 					continue;

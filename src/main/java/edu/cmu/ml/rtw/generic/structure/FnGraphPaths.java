@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.structure;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
@@ -11,7 +13,8 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 	private Context context;
 	
 	private int length = 1;
-	private String[] parameterNames = { "length" };
+	private Set<String> ignoreTypes;
+	private String[] parameterNames = { "length", "ignoreTypes" };
 	
 	public FnGraphPaths() {
 		
@@ -30,6 +33,14 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("length"))
 			return Obj.stringValue(String.valueOf(this.length));
+		else if (parameter.equals("ignoreTypes")) {
+			if (this.ignoreTypes == null)
+				return null;
+			Obj.Array array = Obj.array();
+			for (String ignoreType : this.ignoreTypes)
+				array.add(Obj.stringValue(ignoreType));
+			return array;
+		}
 		return null;
 	}
 
@@ -37,7 +48,12 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("length"))
 			this.length = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		else
+		else if (parameter.equals("ignoreTypes")) {
+			if (parameterValue == null)
+				this.ignoreTypes = null;
+			this.ignoreTypes = new HashSet<String>();
+			this.ignoreTypes.addAll(this.context.getMatchArray(parameterValue));
+		} else
 			return false;
 		return true;
 	}
@@ -46,7 +62,7 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 	protected <C extends Collection<WeightedStructureSequence>> C compute(
 			Collection<WeightedStructureGraph> input, C output) {
 		for (WeightedStructureGraph g : input) {
-			output.addAll(g.getEdgePaths(this.length));
+			output.addAll(g.getEdgePaths(this.length, this.ignoreTypes));
 		}
 		return output;
 	}

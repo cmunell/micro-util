@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -301,12 +302,14 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return edges;
 	}
 	
-	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths) {
+	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths, Set<String> ignoreTypes) {
 		List<WeightedStructureSequence> currentPaths = new ArrayList<WeightedStructureSequence>();
 
 		Map<String, Map<WeightedStructureRelationBinary, Double>> neighbors = this.edges.get(startNodeId);
 		for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
 			for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
+				if (ignoreTypes != null && ignoreTypes.contains(edge.getKey().getType()))
+					continue;
 				WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 				seq.add(edge.getKey(), edge.getValue());
 				currentPaths.add(seq);
@@ -321,6 +324,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 				if (neighbors != null) {
 					for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
 						for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
+							if (ignoreTypes != null && ignoreTypes.contains(edge.getKey().getType()))
+								continue;
 							WeightedStructureSequence seq = currentPath.clone();
 							seq.add(edge.getKey(), edge.getValue());
 							nextPaths.add(seq);
@@ -337,12 +342,16 @@ public class WeightedStructureGraph extends WeightedStructure {
 	}
 	
 	public List<WeightedStructureSequence> getEdgePaths(int length) {
+		return getEdgePaths(length, null);
+	}
+	
+	public List<WeightedStructureSequence> getEdgePaths(int length, Set<String> ignoreTypes) {
 		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
 		if (length <= 0)
 			return paths;
 		
 		for (String nodeId : this.edges.keySet())
-			getEdgePaths(nodeId, length, paths);
+			getEdgePaths(nodeId, length, paths, ignoreTypes);
 		return paths;
 	}
 
