@@ -107,10 +107,11 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		if (this.structurizers.size() > 0)
 			structures = this.structurizers.get(0).makeStructures();
 		
-		List<Integer> classifierOrdering = getClassifierOrdering();
+		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering();
 		
 		for (int o = 0; o < classifierOrdering.size(); o++) {
-			int i = classifierOrdering.get(o);
+			Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
+			int i = indexAndWeight.getFirst();
 			Structurizer structurizer = this.structurizers.get(i);
 			MethodClassification<?, ?> method = this.methods.get(i);
 			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
@@ -120,9 +121,10 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
 				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
-					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), entry.getValue().getSecond(), structures);
+					double weight = (indexAndWeight.getSecond() != null) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
+					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures);
 					addedLinks++;
-				}				
+				}
 			}
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
@@ -178,14 +180,14 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		return classifications;
 	}
 
-	private List<Integer> getClassifierOrdering() {
-		List<Integer> ordering = new ArrayList<Integer>();
+	private List<Pair<Integer, Double>> getClassifierOrdering() {
+		List<Pair<Integer, Double>> ordering = new ArrayList<>();
 		
 		if (this.permutationMeasures == null) {
 			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by default: ");
 			for (int i = 0; i < this.methods.size(); i++) {
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName());
-				ordering.add(i);
+				ordering.add(new Pair<Integer, Double>(i, null));
 			}
 		} else {
 			List<Pair<Integer, Double>> measures = new ArrayList<>();
@@ -204,7 +206,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				int orderIndex = measures.get(i).getFirst();
 				
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(orderIndex).getReferenceName() + " " + measures.get(i).getSecond());
-				ordering.add(orderIndex);
+				ordering.add(new Pair<Integer, Double>(orderIndex, measures.get(i).getSecond()));
 			}
 		}
 		
