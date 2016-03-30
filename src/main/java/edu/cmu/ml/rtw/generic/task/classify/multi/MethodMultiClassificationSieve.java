@@ -215,7 +215,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 	@Override
 	public boolean init(List<DataSet<?, ?>> testData) {
 		for (int i = 0; i < testData.size(); i++) {
-			this.methods.get(i).init((DataSet)testData);
+			this.methods.get(i).init((DataSet)testData.get(i));
 		}
 		return true;
 	}
