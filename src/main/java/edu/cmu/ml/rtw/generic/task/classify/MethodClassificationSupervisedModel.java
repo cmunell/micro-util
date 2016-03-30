@@ -158,6 +158,7 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
 		clone.model = this.model.clone();
+		clone.initialized = this.initialized;
 		return clone;
 	}
 
