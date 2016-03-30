@@ -1,9 +1,9 @@
 package edu.cmu.ml.rtw.generic.model;
 
-import java.io.StringReader;
+//import java.io.StringReader;
 
 import org.junit.Test;
-
+/*
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.StoredItemSet;
@@ -11,11 +11,11 @@ import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.TestDatum;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
-
+*/
 public class YADLLTest {
 	@Test
 	public void testYADLL() {
-		DataTools dataTools = new DataTools(new OutputWriter(), 
+	/*	DataTools dataTools = new DataTools(new OutputWriter(), 
 				new Properties(new StringReader(
 						"debug_dir=\n" +
 						"storage_fs_bson_testBson=/test/bson\n" +
@@ -27,10 +27,10 @@ public class YADLLTest {
 		Context.run("test", dataTools, makeBinaryContextString());
 		
 		StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("StringMemory", "ExperimentEvaluationOutput");
-		System.out.println(outputEvals.getStoredItems().toString());
+		System.out.println(outputEvals.getStoredItems().toString());*/
 	}
 	
-	private String makeBinaryContextString() {
+	/*private String makeBinaryContextString() {
 		String contextStr = "value maxThreads=\"2\";\n";
 		contextStr +=       "value debug=Debug();\n";
 		contextStr +=       "value randomSeed=SetRandomSeed(seed=\"6\");\n";
@@ -72,5 +72,5 @@ public class YADLLTest {
 		contextStr +=       "};\n";
 		
 		return contextStr;
-	}
+	}*/
 }
