@@ -23,9 +23,9 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 public class MethodMultiClassificationSieve extends MethodMultiClassification {
 	private List<MethodClassification<?, ?>> methods;
 	private List<Structurizer<?, ?, ?>> structurizers;
-	private List<EvaluationClassificationMeasure<?, ?>> orderingMeasures;
+	private List<EvaluationClassificationMeasure<?, ?>> permutationMeasures;
 	private Fn<?, ?> structureTransformFn;
-	private String[] parameterNames = { "methods", "structurizers", "orderingMeasures", "structureTransformFn" };
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn" };
 	
 	public MethodMultiClassificationSieve() {
 		
@@ -57,10 +57,10 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				array.add(Obj.curlyBracedValue(structurizer.getReferenceName()));
 			return array;
 		} else if (parameter.equals("orderingMeasure")) {
-			if (this.orderingMeasures == null)
+			if (this.permutationMeasures == null)
 				return null;
 			Obj.Array array = Obj.array();
-			for (EvaluationClassificationMeasure<?, ?> measure : this.orderingMeasures)
+			for (EvaluationClassificationMeasure<?, ?> measure : this.permutationMeasures)
 				array.add(Obj.curlyBracedValue(measure.getReferenceName()));
 			return array;
 		} else if (parameter.equals("structureTransformFn")) {
@@ -86,12 +86,12 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				for (int i = 0; i < array.size(); i++)
 					this.structurizers.add((Structurizer<?, ?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
-		} else if (parameter.equals("orderingMeasures")) {
+		} else if (parameter.equals("permutationMeasures")) {
 			if (parameterValue != null) {
-				this.orderingMeasures = new ArrayList<EvaluationClassificationMeasure<?, ?>>();
+				this.permutationMeasures = new ArrayList<EvaluationClassificationMeasure<?, ?>>();
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
-					this.orderingMeasures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
+					this.permutationMeasures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
 		} else if (parameter.equals("structureTransformFn")) {
 			this.structureTransformFn = (parameterValue == null) ? null : this.context.getMatchOrConstructStructureFn(parameterValue);
@@ -181,7 +181,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 	private List<Integer> getClassifierOrdering() {
 		List<Integer> ordering = new ArrayList<Integer>();
 		
-		if (this.orderingMeasures == null) {
+		if (this.permutationMeasures == null) {
 			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by default: ");
 			for (int i = 0; i < this.methods.size(); i++) {
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName());
@@ -190,7 +190,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		} else {
 			List<Pair<Integer, Double>> measures = new ArrayList<>();
 			for (int i = 0; i < this.methods.size(); i++)
-				measures.add(new Pair<>(i, this.orderingMeasures.get(i).compute()));
+				measures.add(new Pair<>(i, this.permutationMeasures.get(i).compute()));
 			Collections.sort(measures, new Comparator<Pair<Integer, Double>>() {
 				@Override
 				public int compare(Pair<Integer, Double> o1,
@@ -200,7 +200,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			});
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by measures: ");
-			for (int i = 0; i < this.orderingMeasures.size(); i++) {
+			for (int i = 0; i < this.permutationMeasures.size(); i++) {
 				int orderIndex = measures.get(i).getFirst();
 				
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(orderIndex).getReferenceName() + " " + measures.get(i).getSecond());
