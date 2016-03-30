@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.task.classify.multi;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,14 +16,16 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasure;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodMultiClassificationSieve extends MethodMultiClassification {
 	private List<MethodClassification<?, ?>> methods;
 	private List<Structurizer<?, ?, ?>> structurizers;
+	private List<EvaluationClassificationMeasure<?, ?>> orderingMeasures;
 	private Fn<?, ?> structureTransformFn;
-	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn" };
+	private String[] parameterNames = { "methods", "structurizers", "orderingMeasures", "structureTransformFn" };
 	
 	public MethodMultiClassificationSieve() {
 		
@@ -51,7 +55,14 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			Obj.Array array = Obj.array();
 			for (Structurizer<?, ?, ?> structurizer : this.structurizers)
 				array.add(Obj.curlyBracedValue(structurizer.getReferenceName()));
-			return array;		
+			return array;
+		} else if (parameter.equals("orderingMeasure")) {
+			if (this.orderingMeasures == null)
+				return null;
+			Obj.Array array = Obj.array();
+			for (EvaluationClassificationMeasure<?, ?> measure : this.orderingMeasures)
+				array.add(Obj.curlyBracedValue(measure.getReferenceName()));
+			return array;
 		} else if (parameter.equals("structureTransformFn")) {
 			return (this.structureTransformFn == null) ? null : this.structureTransformFn.toParse();
 		}
@@ -75,6 +86,13 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				for (int i = 0; i < array.size(); i++)
 					this.structurizers.add((Structurizer<?, ?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
+		} else if (parameter.equals("orderingMeasures")) {
+			if (parameterValue != null) {
+				this.orderingMeasures = new ArrayList<EvaluationClassificationMeasure<?, ?>>();
+				Obj.Array array = (Obj.Array)parameterValue;
+				for (int i = 0; i < array.size(); i++)
+					this.orderingMeasures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
+			}
 		} else if (parameter.equals("structureTransformFn")) {
 			this.structureTransformFn = (parameterValue == null) ? null : this.context.getMatchOrConstructStructureFn(parameterValue);
 		} else 
@@ -84,12 +102,15 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data) {		
+	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data) {
 		Map<String, ?> structures = null;
 		if (this.structurizers.size() > 0)
 			structures = this.structurizers.get(0).makeStructures();
 		
-		for (int i = 0; i < this.methods.size(); i++) {
+		List<Integer> classifierOrdering = getClassifierOrdering();
+		
+		for (int o = 0; o < classifierOrdering.size(); o++) {
+			int i = classifierOrdering.get(o);
 			Structurizer structurizer = this.structurizers.get(i);
 			MethodClassification<?, ?> method = this.methods.get(i);
 			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
@@ -157,6 +178,39 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		return classifications;
 	}
 
+	private List<Integer> getClassifierOrdering() {
+		List<Integer> ordering = new ArrayList<Integer>();
+		
+		if (this.orderingMeasures == null) {
+			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by default: ");
+			for (int i = 0; i < this.methods.size(); i++) {
+				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName());
+				ordering.add(i);
+			}
+		} else {
+			List<Pair<Integer, Double>> measures = new ArrayList<>();
+			for (int i = 0; i < this.methods.size(); i++)
+				measures.add(new Pair<>(i, this.orderingMeasures.get(i).compute()));
+			Collections.sort(measures, new Comparator<Pair<Integer, Double>>() {
+				@Override
+				public int compare(Pair<Integer, Double> o1,
+						Pair<Integer, Double> o2) {
+					return o2.getSecond().compareTo(o1.getSecond());
+				}
+			});
+			
+			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by measures: ");
+			for (int i = 0; i < this.orderingMeasures.size(); i++) {
+				int orderIndex = measures.get(i).getFirst();
+				
+				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(orderIndex).getReferenceName() + " " + measures.get(i).getSecond());
+				ordering.add(orderIndex);
+			}
+		}
+		
+		return ordering;
+	}
+	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public boolean init(List<DataSet<?, ?>> testData) {

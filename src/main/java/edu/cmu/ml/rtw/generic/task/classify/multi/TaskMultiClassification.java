@@ -65,6 +65,8 @@ public class TaskMultiClassification extends CtxParsableFunction {
 	public List<Map<?, Map<?, List<?>>>> computeActualToPredictedData(MethodMultiClassification method) {
 		if (!this.initialized && !init())
 			return null;
+		if (!method.init(this.getData()))
+			return null;
 		if (this.methodsActualToPredicted.containsKey(method))
 			return this.methodsActualToPredicted.get(method);
 		

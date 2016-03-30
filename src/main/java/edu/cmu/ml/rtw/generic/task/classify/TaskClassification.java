@@ -53,6 +53,8 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	public Map<L, Map<L, List<D>>> computeActualToPredictedData(MethodClassification<D, L> method) {
 		if (!init())
 			return null;
+		if (!method.init(this.data))
+			return null;
 		
 		if (this.methodsActualToPredicted.containsKey(method))
 			return this.methodsActualToPredicted.get(method);
