@@ -27,7 +27,7 @@ public class WordNet {
 		try {
 			JWNL.initialize(new FileInputStream(properties.getWordNetJWNLConfigFile()));
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Failed to load wordnet from properties file");
+			throw new IllegalArgumentException("Failed to load wordnet from properties file : " + e.getMessage());
 		} 
 	}
 	
@@ -50,8 +50,11 @@ public class WordNet {
 	
 	private Map<String, Synset> getImmediateSynsets(String word, PoSTag tag) {
 		try {
-			IndexWord iword = Dictionary.getInstance().lookupIndexWord(convertPoSTag(tag), word);
 			Map<String, Synset> synsets = new HashMap<String, Synset>();
+			POS pos = convertPoSTag(tag);
+			if (pos == null)
+				return synsets;
+			IndexWord iword = Dictionary.getInstance().lookupIndexWord(pos, word);
 			if (iword == null)
 				return synsets;
 			
@@ -86,7 +89,10 @@ public class WordNet {
 			return null;
 		
 		try {
-			IndexWord iword = Dictionary.getInstance().lookupIndexWord(convertPoSTag(tag), word);
+			POS pos = convertPoSTag(tag);
+			if (pos == null)
+				return null;
+			IndexWord iword = Dictionary.getInstance().lookupIndexWord(pos, word);
 			if (iword == null)
 				return null;
 			String lemma = iword.getLemma();
