@@ -390,7 +390,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				return false;
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false);
-		Pair<Matrix, Matrix> testDataMatrices = buildMatricesFromData(data, false);
+		Pair<Matrix, Matrix> testDataMatrices = buildMatricesFromData(testData, false);
 		Matrix X = dataMatrices.getFirst();
 		Matrix Y = dataMatrices.getSecond();
 		Matrix testX = testDataMatrices.getFirst();
