@@ -101,8 +101,10 @@ public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> exte
 	}
 
 	@Override
-	public MethodClassification<D, TernaryLabel> clone() {
-		return new MethodClassificationTernaryTest<D>(this.context);
+	public MethodClassification<D, TernaryLabel> clone(String referenceName) {
+		MethodClassificationTernaryTest<D> clone = new MethodClassificationTernaryTest<D>(this.context);
+		clone.referenceName = referenceName;
+		return clone;
 	}
 
 	@Override

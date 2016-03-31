@@ -47,7 +47,7 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 	}
 	
 	public MethodClassification<D, L> clone() {
-		return this.clone(null);
+		return this.clone(this.referenceName);
 	}
 	
 	public abstract Map<D, L> classify(DataSet<D, L> data);
