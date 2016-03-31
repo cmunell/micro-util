@@ -8,13 +8,13 @@ package edu.cmu.ml.rtw.generic.data.annotation.nlp;
  *
  */
 public class PoSTagClass {
-	public static final PoSTag[] JJ = { PoSTag.JJ, PoSTag.JJR };
+	public static final PoSTag[] JJ = { PoSTag.JJ, PoSTag.JJR, PoSTag.JJS };
 	public static final PoSTag[] VB = { PoSTag.VBD, PoSTag.VBZ, PoSTag.VBP, PoSTag.VBN, PoSTag.VBG, PoSTag.VB };
 	public static final PoSTag[] NNP = { PoSTag.NNP, PoSTag.NNPS };
 	public static final PoSTag[] NN = { PoSTag.NN, PoSTag.NNS };
 	public static final PoSTag[] FN = { PoSTag.IN, PoSTag.DT, PoSTag.CC, PoSTag.POS };
 	public static final PoSTag[] PRP = { PoSTag.PRP };
-	public static final PoSTag[] RB = { PoSTag.RB };
+	public static final PoSTag[] RB = { PoSTag.RB, PoSTag.RBR, PoSTag.RBS };
 	public static final PoSTag[] CD = { PoSTag.CD };
 
 	public static PoSTag[] fromString(String str) {

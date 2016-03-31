@@ -59,6 +59,8 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPMicro;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
@@ -195,6 +197,8 @@ public class DataTools {
 	protected Random globalRandom;
 	protected OutputWriter outputWriter;
 	protected Timer timer;
+	protected WordNet wordNet;
+	protected Word2Vec word2Vec;
 	
 	public DataTools() {
 		this(new OutputWriter());
@@ -912,6 +916,18 @@ public class DataTools {
 	
 	public Properties getProperties() {
 		return this.properties;
+	}
+	
+	public WordNet getWordNet() {
+		if (this.wordNet == null)
+			this.wordNet = new WordNet(this.properties);
+		return this.wordNet;
+	}
+	
+	public Word2Vec getWord2Vec() {
+		if (this.word2Vec == null)
+			this.word2Vec = new Word2Vec(this.properties);
+		return this.word2Vec;
 	}
 	
 	public DataTools makeInstance(OutputWriter outputWriter) {

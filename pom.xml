@@ -5,6 +5,8 @@
   <version>0.0.2-SNAPSHOT</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <nd4j.version>0.4-rc3.8</nd4j.version> <!-- word2vec -->
+    <dl4j.version>0.4-rc3.8</dl4j.version> <!-- word2vec -->
   </properties>
   <build>
     <resources>
@@ -124,6 +126,28 @@
 		<groupId>nz.ac.waikato.cms.weka</groupId>
 		<artifactId>LibSVM</artifactId>
 		<version>1.0.4</version>
+	</dependency>
+	<!--  word2vec -->
+	<dependency>
+		<groupId>org.deeplearning4j</groupId>
+		<artifactId>deeplearning4j-ui</artifactId>
+		<version>${dl4j.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.deeplearning4j</groupId>
+		<artifactId>deeplearning4j-nlp</artifactId>
+		<version>${dl4j.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.nd4j</groupId>
+		<artifactId>nd4j-x86</artifactId> 
+		<version>${nd4j.version}</version>
+	</dependency>
+	<!-- WordNet -->
+	<dependency>
+		<groupId>net.sf.jwordnet</groupId>
+		<artifactId>jwnl</artifactId>
+		<version>1.4_rc3</version>
 	</dependency>
 	<!--  YADLL Deps -->
 	<dependency>

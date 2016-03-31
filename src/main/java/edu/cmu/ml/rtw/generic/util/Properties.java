@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.util;
 
+import java.io.File;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +59,35 @@ public class Properties {
 	
 	public Map<String, String> getFileSystemStorageStringDirectories() {
 		return getFileSystemStorageDirectories("str");
+	}
+
+	public Map<String, File> getWord2VecVectorFiles() {
+		Map<String, File> vectorFiles = new HashMap<String, File>();
+		Set<String> propertyKeys = this.properties.stringPropertyNames();
+		
+		for (String propertyKey : propertyKeys) {
+			if (propertyKey.startsWith("word2vec_vectors_")) {
+				String key = propertyKey.substring("word2vec_vectors_".length());
+				if (key.length() == 0) {
+					throw new IllegalArgumentException("Failed to load word2vec files");
+				}
+				
+				vectorFiles.put(key, new File(loadProperty(propertyKey)));
+			}
+		}
+		
+		return vectorFiles;
+	}
+	
+	public File getWord2VecVectorFile() {
+		Map<String, File> files = getWord2VecVectorFiles();
+		if (files.size() > 0)
+			throw new UnsupportedOperationException("Word2Vec vector file not specified, but there is more than one possibility");
+		return files.values().iterator().next();
+	}
+	
+	public File getWordNetJWNLConfigFile() {
+		return new File(loadProperty("wordnet_jwnl_config_file"));
 	}
 	
 	private Map<String, String> getFileSystemStorageDirectories(String type) {
