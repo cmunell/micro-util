@@ -617,9 +617,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				p.put(labels[j], value);
 				norm += outputY[i*labels.length + j];
 			}
-			
+
 			for (int j = 0; j < labels.length; j++) {
 				double normValue = p.get(labels[j])/norm;
+
 				if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(normValue, this.classificationThreshold) >= 0)
 					p.put(labels[j], normValue);
 				else
@@ -665,8 +666,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				norm += outputY[i*labels.length + j];
 			}
 			
-			if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(maxValue/norm, this.classificationThreshold) >= 0)
+			if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(maxValue/norm, this.classificationThreshold) >= 0) {
 				classifications.put(datum, labels[maxIndex]);
+			}
 			i++;
 		}
 		
@@ -717,9 +719,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			this.fnParameters = this.context.getMatchArray(parameterValue);
 		else if (parameter.equals("targetFnNode"))
 			this.targetFnNode = this.context.getMatchValue(parameterValue);
-		else if (parameter.equals("classificationThreshold"))
+		else if (parameter.equals("classificationThreshold")) {
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("lossFnNode"))
+		} else if (parameter.equals("lossFnNode"))
 			this.lossFnNode = this.context.getMatchValue(parameterValue);
 		else 
 			this.additionalParameters.put(parameter, parameterValue);

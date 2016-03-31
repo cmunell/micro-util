@@ -95,11 +95,12 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	}
 
 	@Override
-	public MethodClassification<D, L> clone() {
+	public MethodClassification<D, L> clone(String referenceName) {
 		MethodClassificationFilterDatumIndicator<D, L> clone = new MethodClassificationFilterDatumIndicator<D, L>(this.context);
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
 		clone.method = this.method.clone();
+		clone.referenceName = referenceName;
 		return clone;
 	}
 

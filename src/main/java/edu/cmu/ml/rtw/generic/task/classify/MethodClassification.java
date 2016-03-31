@@ -46,9 +46,13 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 		return data.getDatumTools().equals(this.context.getDatumTools());
 	}
 	
+	public MethodClassification<D, L> clone() {
+		return this.clone(null);
+	}
+	
 	public abstract Map<D, L> classify(DataSet<D, L> data);
 	public abstract Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data);
 	public abstract boolean init(DataSet<D, L> testData);
-	public abstract MethodClassification<D, L> clone();
+	public abstract MethodClassification<D, L> clone(String referenceName);
 	public abstract MethodClassification<D, L> makeInstance(DatumContext<D, L> context);
 }

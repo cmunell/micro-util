@@ -88,8 +88,11 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	}
 
 	@Override
-	public MethodClassification<D, L> clone() {
-		return new MethodClassificationConstant<D, L>(this.context);
+	public MethodClassification<D, L> clone(String referenceName) {
+		MethodClassificationFilterDatumIndicator<D, L> clone = new MethodClassificationFilterDatumIndicator<D, L>(this.context);
+		if (!clone.fromParse(this.getModifiers(), referenceName, toParse()))
+			return null;
+		return clone;
 	}
 
 	@Override

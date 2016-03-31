@@ -99,11 +99,12 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	}
 
 	@Override
-	public MethodClassification<D, L> clone() {
+	public MethodClassification<D, L> clone(String referenceName) {
 		MethodClassificationLabelMapping<D, L> clone = new MethodClassificationLabelMapping<D, L>(this.context);
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
 		clone.method = this.method.clone();
+		clone.referenceName = referenceName;
 		return clone;
 	}
 

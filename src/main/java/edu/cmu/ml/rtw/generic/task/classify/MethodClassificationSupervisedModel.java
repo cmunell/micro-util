@@ -153,12 +153,13 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	}
 
 	@Override
-	public MethodClassification<D, L> clone() {
+	public MethodClassification<D, L> clone(String referenceName) {
 		MethodClassificationSupervisedModel<D, L> clone = new MethodClassificationSupervisedModel<D, L>(this.context);
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
 		clone.model = this.model.clone();
 		clone.initialized = this.initialized;
+		clone.referenceName = referenceName;
 		return clone;
 	}
 

@@ -372,8 +372,8 @@ public abstract class Datum<L> {
 				public MethodClassification<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 					AssignmentList parameters = fnObj.getParameters();
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
-					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone();
-					
+					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone(referenceName);
+				
 					for (Assignment assignment : parameters) {
 						if (!assignment.getName().equals("method"))
 							method.setParameterValue(assignment.getName(), assignment.getValue());
@@ -390,7 +390,7 @@ public abstract class Datum<L> {
 					AssignmentList parameters = fnObj.getParameters();
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("devData").getValue());
-					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone();
+					MethodClassification<D, L> method = (MethodClassification<D, L>)datumContext.getMatchClassifyMethod(parameters.get("method").getValue()).clone(referenceName);
 					if (!method.init(data))
 						return null;
 					else
@@ -410,7 +410,7 @@ public abstract class Datum<L> {
 						return null;
 					
 					EvaluationClassification<D, L, ?> evaluation = (EvaluationClassification<D, L, ?>)search.getPositionFn(search.getBestPosition());
-					return evaluation.getMethod();
+					return evaluation.getMethod().clone(referenceName);
 				}
 			});
 			
