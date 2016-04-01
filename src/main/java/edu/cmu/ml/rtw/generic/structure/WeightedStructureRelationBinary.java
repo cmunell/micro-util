@@ -123,4 +123,9 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	public List<CtxParsable> toList() {
 		throw new UnsupportedOperationException(); // FIXME Add this later (weighted nodes)
 	}
+
+	@Override
+	public int getItemCount() {
+		throw new UnsupportedOperationException(); // FIXME Add this later
+	}
 }

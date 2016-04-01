@@ -20,7 +20,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	
 	private RuleSet rules;
 	private Fn<S, ?> splitFn;
-	private String[] parameterNames = { "rules", "splitFn" };
+	private int maxIterations = 0;
+	private String[] parameterNames = { "rules", "splitFn", "maxIterations" };
 	
 	public FnGreedyStructureRules() {
 		
@@ -41,6 +42,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 			return (this.rules == null) ? null : Obj.curlyBracedValue(this.rules.getReferenceName());
 		else if (parameter.equals("splitFn"))
 			return (this.splitFn == null) ? null : Obj.curlyBracedValue(this.splitFn.getReferenceName());
+		else if (parameter.equals("maxIterations"))
+			return Obj.stringValue(String.valueOf(this.maxIterations));
 		else 
 			return null;
 	}
@@ -52,6 +55,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 			this.rules = (parameterValue == null) ? null : this.context.getMatchRuleSet(parameterValue);
 		else if (parameter.equals("splitFn"))
 			this.splitFn = (parameterValue == null) ? null : (Fn<S, ?>)this.context.getMatchStructureFn(parameterValue);
+		else if (parameter.equals("maxIterations"))
+			this.maxIterations = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		else 
 			return false;
 		return true;
@@ -60,37 +65,46 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	@Override
 	protected <C extends Collection<S>> C compute(Collection<S> input, C output) {
 		for (S structure : input) {
-			List<?> splitStructure = this.splitFn.listCompute(structure);
-			List<Pair<List<CtxParsable>, Double>> orderedStructureParts = new ArrayList<Pair<List<CtxParsable>, Double>>();
-			
-			for (Object o : splitStructure) {
-				WeightedStructure structurePart = (WeightedStructure)o;
-				List<CtxParsable> structurePartList = structurePart.toList();
-				double weight = 0.0;
+			int iterations = 0;
+			int addedObjs = 0;
+			do {
+				List<?> splitStructure = this.splitFn.listCompute(structure);
+				List<Pair<List<CtxParsable>, Double>> orderedStructureParts = new ArrayList<Pair<List<CtxParsable>, Double>>();
 				
-				for (CtxParsable part : structurePartList) {
-					weight += structurePart.getWeight(part);
-				}
-
-				orderedStructureParts.add(new Pair<>(structurePartList, weight / (double)structurePartList.size()));
-			}
-			
-			Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Double>>() {
-				@Override
-				public int compare(Pair<List<CtxParsable>, Double> o1, Pair<List<CtxParsable>, Double> o2) {
-					return Double.compare(o2.getSecond(), o1.getSecond());
-				}
-				
-			});
-			
-			for (Pair<List<CtxParsable>, Double> structurePart : orderedStructureParts) {
-				Map<String, List<Obj>> objs = this.rules.apply(structurePart.getFirst());
-				for (List<Obj> objList : objs.values())
-					for (Obj obj : objList) {
-						WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
-						structure.add(newStructurePart, structurePart.getSecond());
+				for (Object o : splitStructure) {
+					WeightedStructure structurePart = (WeightedStructure)o;
+					List<CtxParsable> structurePartList = structurePart.toList();
+					double weight = 0.0;
+					
+					for (CtxParsable part : structurePartList) {
+						weight += structurePart.getWeight(part);
 					}
-			}
+	
+					orderedStructureParts.add(new Pair<>(structurePartList, weight / (double)structurePartList.size()));
+				}
+				
+				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Double>>() {
+					@Override
+					public int compare(Pair<List<CtxParsable>, Double> o1, Pair<List<CtxParsable>, Double> o2) {
+						return Double.compare(o2.getSecond(), o1.getSecond());
+					}
+					
+				});
+				
+				addedObjs = 0;
+				for (Pair<List<CtxParsable>, Double> structurePart : orderedStructureParts) {
+					Map<String, List<Obj>> objs = this.rules.apply(structurePart.getFirst());
+					for (List<Obj> objList : objs.values())
+						for (Obj obj : objList) {
+							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
+							int oldCount = structure.getItemCount();
+							structure.add(newStructurePart, structurePart.getSecond());
+							addedObjs = structure.getItemCount() - oldCount;
+						}
+				}
+				
+				iterations++;
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && addedObjs > 0);
 			
 			output.add(structure);
 		}

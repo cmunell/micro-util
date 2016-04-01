@@ -52,5 +52,9 @@ public class WeightedStructureRelationUnary extends WeightedStructureRelation {
 		list.add(this);
 		return list;
 	}
-
+	
+	@Override
+	public int getItemCount() {
+		throw new UnsupportedOperationException(); // FIXME Add this later
+	}
 }

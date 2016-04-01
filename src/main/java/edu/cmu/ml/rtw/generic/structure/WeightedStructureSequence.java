@@ -119,4 +119,9 @@ public class WeightedStructureSequence extends WeightedStructure {
 		
 		return seq;
 	}
+	
+	@Override
+	public int getItemCount() {
+		return this.items.size();
+	}
 }

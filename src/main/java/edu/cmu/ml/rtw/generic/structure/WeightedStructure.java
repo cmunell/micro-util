@@ -13,4 +13,5 @@ public abstract class WeightedStructure extends CtxParsableFunction {
 	public abstract WeightedStructure merge(WeightedStructure s);
 	public abstract WeightedStructure makeInstance(Context context);
 	public abstract List<CtxParsable> toList();
+	public abstract int getItemCount();
 }
