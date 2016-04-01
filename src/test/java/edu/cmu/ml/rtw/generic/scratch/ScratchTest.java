@@ -1,5 +1,9 @@
 package edu.cmu.ml.rtw.generic.scratch;
 
+import org.junit.Test;
+
+import edu.cmu.ml.rtw.generic.model.annotator.nlp.mateplus.MatePlus;
+
 /*
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +31,11 @@ import weka.core.SparseInstance;
 import weka.classifiers.functions.LibSVM;*/
 
 public class ScratchTest {
+	@Test
+	public void testMateTools() {
+		new MatePlus();
+	}
+	
 	/*@Test
 	public void testSparseVector() {
 		Map<Integer, Double> v1Map = new HashMap<Integer, Double>();

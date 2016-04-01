@@ -143,6 +143,12 @@
 		<artifactId>nd4j-x86</artifactId> 
 		<version>${nd4j.version}</version>
 	</dependency>
+	<!--  SRL -->
+	<dependency>
+		<groupId>com.googlecode.mate-tools</groupId>
+		<artifactId>srl</artifactId>
+		<version>4.31</version>
+	</dependency>
 	<!-- WordNet -->
 	<dependency>
 		<groupId>net.sf.jwordnet</groupId>

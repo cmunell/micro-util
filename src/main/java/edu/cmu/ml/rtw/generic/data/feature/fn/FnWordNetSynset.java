@@ -48,7 +48,7 @@ public class FnWordNetSynset extends Fn<TokenSpan, String> {
 			Set<String> synsets = this.context.getDataTools().getWordNet().getImmediateSynsetNames(tokenSpanStr, tag);
 			if (synsets != null)
 				for (String synset : synsets)
-				output.add(synset);
+					output.add(synset);
 		}
 		
 		return output;
