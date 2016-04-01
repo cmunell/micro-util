@@ -85,6 +85,8 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenAnnotation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetLemma;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetSynset;
 
 /**
  * 
@@ -310,6 +312,8 @@ public class DataTools {
 		this.addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
 		this.addGenericTokenSpanStrFn(new FnTokenAnnotation());
 		this.addGenericTokenSpanStrFn(new FnSentencePosition());
+		this.addGenericTokenSpanStrFn(new FnWordNetLemma());
+		this.addGenericTokenSpanStrFn(new FnWordNetSynset());
 		
 		this.addGenericStrFn(new FnComposite.FnCompositeStr());
 		this.addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());

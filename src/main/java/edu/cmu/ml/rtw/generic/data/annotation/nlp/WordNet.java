@@ -45,7 +45,7 @@ public class WordNet {
 	}
 	
 	private String getSynsetName(Synset synset) {
-		return synset.getGloss();
+		return synset.getKey().toString().replaceAll("\\s+", "_");
 	}
 	
 	private Map<String, Synset> getImmediateSynsets(String word, PoSTag tag) {
@@ -71,7 +71,7 @@ public class WordNet {
 		}
 	}
 	
-	public boolean areSynonyms(String word1, PoSTag tag1, String word2, PoSTag tag2) {
+	public synchronized boolean areSynonyms(String word1, PoSTag tag1, String word2, PoSTag tag2) {
 		Map<String, Synset> synsets1 = getImmediateSynsets(word1, tag1);
 		Map<String, Synset> synsets2 = getImmediateSynsets(word2, tag2);
 		for (String synset : synsets1.keySet())
@@ -80,11 +80,11 @@ public class WordNet {
 		return false;
 	}
 	
-	public Set<String> getImmediateSynsetNames(String word, PoSTag tag) {
+	public synchronized Set<String> getImmediateSynsetNames(String word, PoSTag tag) {
 		return getImmediateSynsets(word, tag).keySet();
 	}
 	
-	public String getLemma(String word, PoSTag tag) {
+	public synchronized String getLemma(String word, PoSTag tag) {
 		if(word.indexOf('-') > -1 || word.indexOf('/') > -1)
 			return null;
 		
