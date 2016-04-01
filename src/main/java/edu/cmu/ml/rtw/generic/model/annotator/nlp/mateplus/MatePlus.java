@@ -5,11 +5,14 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import se.lth.cs.srl.CompletePipeline;
 import se.lth.cs.srl.corpus.Predicate;
 import se.lth.cs.srl.corpus.Sentence;
+import se.lth.cs.srl.corpus.Word;
 import se.lth.cs.srl.io.CoNLL09Writer;
 import se.lth.cs.srl.io.SentenceWriter;
 import se.lth.cs.srl.options.CompletePipelineCMDLineOptions;
@@ -25,7 +28,7 @@ public class MatePlus {
 		String taggerModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.postagger.model";
 		String srlModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.srl-4.1.srl.model";
 		//String srlModel = "/data_reitter/nlp_tools/mateplus/models/srl-EMNLP14+fs-eng.model";
-		String inputText = "John baked a cake.  Sally ate it for dinner.";
+		String inputText = "John baked a cake.  Sally ate it for dinner. John frustratedly threw his fork at Sally.";
 		run(lemmaModel, parserModel, taggerModel, srlModel, inputText);
 	}
 	
@@ -158,8 +161,16 @@ public class MatePlus {
 	}
 	
 	private void outputSentence(Sentence s) {
+		System.out.println(s);
+		
 		for (Predicate p : s.getPredicates()) {
-			System.out.println(p);
+			System.out.println("  Sense: " + p.getSense() + " Head: " + p.getHeadId() + " " + p.getHead().getIdx() + p.getHead().getForm());
+			Map<Word, String> args = p.getArgMap();
+			for (Entry<Word, String> arg : args.entrySet()) {
+				System.out.println("    Arg " + arg.getKey().getHeadId() + " " + arg.getKey().getIdx() + " " + arg.getKey().getLemma() +	" Tag: " + arg.getValue());
+				
+			}
+			System.out.println("  " + p);
 		}
 	}
 }
