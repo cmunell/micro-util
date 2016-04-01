@@ -922,13 +922,13 @@ public class DataTools {
 		return this.properties;
 	}
 	
-	public WordNet getWordNet() {
+	public synchronized WordNet getWordNet() {
 		if (this.wordNet == null)
 			this.wordNet = new WordNet(this.properties);
 		return this.wordNet;
 	}
 	
-	public Word2Vec getWord2Vec() {
+	public synchronized Word2Vec getWord2Vec() {
 		if (this.word2Vec == null)
 			this.word2Vec = new Word2Vec(this.properties);
 		return this.word2Vec;
