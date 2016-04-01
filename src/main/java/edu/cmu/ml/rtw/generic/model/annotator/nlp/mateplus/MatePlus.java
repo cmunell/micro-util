@@ -40,7 +40,7 @@ public class MatePlus {
 				taggerModel,
 				"-srl",
 				srlModel,
-				"-reranker",
+				//"-reranker",
 				"-tokenize",
 				"-test",
 				"" // Input file path? I think.
