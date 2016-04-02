@@ -28,7 +28,7 @@ public class MatePlus {
 		String taggerModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.postagger.model";
 		String srlModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.srl-4.1.srl.model";
 		//String srlModel = "/data_reitter/nlp_tools/mateplus/models/srl-EMNLP14+fs-eng.model";
-		String inputText = "John Anderson baked a cake.\n  Sally ate it for an excellent dinner.\n John frustratedly threw his fork at Sally.\n Jim flew his spaceship to Texas.\n Debra went to the store on Sunday.\n The game starts sometime on Sunday evening in Madrid.\n I went on a flight through the air.";
+		String inputText = "John Anderson baked a cake.\n  Sally ate it for an excellent dinner.\n John frustratedly threw his fork at Sally.\n Jim flew his spaceship to Texas.\n Debra went to the store on Sunday.\n The game starts sometime on Sunday evening in Madrid.\n I went on a long flight through the air.";
 		run(lemmaModel, parserModel, taggerModel, srlModel, inputText);
 	}
 	
@@ -88,6 +88,7 @@ public class MatePlus {
 			CompletePipelineCMDLineOptions options, CompletePipeline pipeline,
 			BufferedReader in) throws IOException,
 			Exception {
+		System.out.println("Nonseg");
 		int senCount = 0;
 		String str;
 
@@ -166,7 +167,7 @@ public class MatePlus {
 		for (Predicate p : s.getPredicates()) {
 			System.out.println("  Sense: " + p.getSense() + " Index: " + p.getIdx() + " " + p.getForm() + " ");
 			Map<Word, String> args = p.getArgMap();
-
+			
 			for (Entry<Word, String> arg : args.entrySet()) {
 				// What's get yield give?
 				System.out.println("    Arg " + arg.getKey().getIdx() + " " + arg.getKey().getLemma() +	" Tag: " + arg.getValue() + " ");

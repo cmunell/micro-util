@@ -31,6 +31,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public static final AnnotationTypeNLP<PoSTag> POS = new AnnotationTypeNLP<PoSTag>("pos", PoSTag.class, Target.TOKEN);
 	public static final AnnotationTypeNLP<Token> TOKEN = new AnnotationTypeNLP<Token>("token", Token.class, Target.TOKEN);
 	public static final AnnotationTypeNLP<String> LEMMA = new AnnotationTypeNLP<String>("lemma", String.class, Target.TOKEN);
+	public static final AnnotationTypeNLP<Predicate> PREDICATE = new AnnotationTypeNLP<Predicate>("predicate", Predicate.class, Target.TOKEN_SPAN);
 	
 	protected static abstract class Serializer<T> {
 		protected T makeInstance(Class<T> annotationClass, Document document, int sentenceIndex) {
