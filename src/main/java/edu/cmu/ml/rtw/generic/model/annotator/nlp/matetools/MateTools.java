@@ -1,4 +1,4 @@
-package edu.cmu.ml.rtw.generic.model.annotator.nlp.mateplus;
+package edu.cmu.ml.rtw.generic.model.annotator.nlp.matetools;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import java.util.zip.ZipException;
 
+import edu.cmu.ml.rtw.generic.util.Properties;
 import se.lth.cs.srl.CompletePipeline;
 import se.lth.cs.srl.corpus.Predicate;
 import se.lth.cs.srl.corpus.Sentence;
@@ -19,17 +21,59 @@ import se.lth.cs.srl.options.CompletePipelineCMDLineOptions;
 import se.lth.cs.srl.util.ChineseDesegmenter;
 import se.lth.cs.srl.util.FileExistenceVerifier;
 
-public class MatePlus {
+public class MateTools {
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+	private CompletePipeline pipeline;
 	
-	public MatePlus() {
+	public MateTools(Properties properties) {
+
+	}
+	
+	public boolean init() {
 		String lemmaModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.lemmatizer.model";
 		String parserModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.parser.model";
 		String taggerModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.postagger.model";
 		String srlModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.srl-4.1.srl.model";
-		//String srlModel = "/data_reitter/nlp_tools/mateplus/models/srl-EMNLP14+fs-eng.model";
-		String inputText = "John Anderson baked a cake.\n  Sally ate it for an excellent dinner.\n John frustratedly threw his fork at Sally.\n Jim flew his spaceship to Texas.\n Debra went to the store on Sunday.\n The game starts sometime on Sunday evening in Madrid.\n I went on a long flight through the air.";
-		run(lemmaModel, parserModel, taggerModel, srlModel, inputText);
+
+		String[] args = {
+				"eng",
+				"-lemma",
+				lemmaModel,
+				"-parser",
+				parserModel,
+				"-tagger",
+				taggerModel,
+				"-srl",
+				srlModel,
+				//"-reranker",
+				"-tokenize",
+				"-test",
+				"" // Input file path? I think.
+			};
+		
+		CompletePipelineCMDLineOptions options = new CompletePipelineCMDLineOptions();
+		options.parseCmdLineArgs(args);
+		String error = FileExistenceVerifier
+				.verifyCompletePipelineAllNecessaryModelFiles(options);
+		if (error != null) {
+			System.err.println(error);
+			System.err.println();
+			System.err.println("ERROR: Mate plus failed to load models.");
+			return false;
+		}
+		
+		try {
+			this.pipeline = CompletePipeline.getCompletePipeline(options);
+		} catch (Exception e) {
+			System.err.println("ERROR: Mate plus failed to construct pipeline.");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public Sentence parseSentence(String sentenceStr) throws Exception {
+			return this.pipeline.parse(sentenceStr);
 	}
 	
 	private void run(String lemmaModel, String parserModel, String taggerModel, String srlModel, String inputText) {

@@ -2,8 +2,6 @@ package edu.cmu.ml.rtw.generic.scratch;
 
 import org.junit.Test;
 
-import edu.cmu.ml.rtw.generic.model.annotator.nlp.mateplus.MatePlus;
-
 /*
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +31,7 @@ import weka.classifiers.functions.LibSVM;*/
 public class ScratchTest {
 	@Test
 	public void testMateTools() {
-		new MatePlus();
+		
 	}
 	
 	/*@Test
