@@ -28,7 +28,7 @@ public class MatePlus {
 		String taggerModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.postagger.model";
 		String srlModel = "/data_reitter/nlp_tools/mateplus/models/CoNLL2009-ST-English-ALL.anna-3.3.srl-4.1.srl.model";
 		//String srlModel = "/data_reitter/nlp_tools/mateplus/models/srl-EMNLP14+fs-eng.model";
-		String inputText = "John baked a cake.\n  Sally ate it for dinner.\n John frustratedly threw his fork at Sally.\n Jim flew his spaceship to Texas.\n Debra went to the store on Sunday.";
+		String inputText = "John baked a cake.\n  Sally ate it for dinner.\n John frustratedly threw his fork at Sally.\n Jim flew his spaceship to Texas.\n Debra went to the store on Sunday.\n The game starts at 5:00 in Madrid.";
 		run(lemmaModel, parserModel, taggerModel, srlModel, inputText);
 	}
 	
@@ -164,10 +164,11 @@ public class MatePlus {
 		System.out.println(s);
 		
 		for (Predicate p : s.getPredicates()) {
-			System.out.println("  Sense: " + p.getSense() + " Head: " + p.getHeadId() + " " + p.getHead().getIdx() + p.getHead().getForm());
+			System.out.println("  Sense: " + p.getSense() + " Index: " + p.getIdx() + " " + p.getForm() + " ");
 			Map<Word, String> args = p.getArgMap();
+
 			for (Entry<Word, String> arg : args.entrySet()) {
-				System.out.println("    Arg " + arg.getKey().getHeadId() + " " + arg.getKey().getIdx() + " " + arg.getKey().getLemma() +	" Tag: " + arg.getValue());
+				System.out.println("    Arg " + arg.getKey().getIdx() + " " + arg.getKey().getLemma() +	" Tag: " + arg.getValue() + " ");
 				
 			}
 			System.out.println("  " + p);
