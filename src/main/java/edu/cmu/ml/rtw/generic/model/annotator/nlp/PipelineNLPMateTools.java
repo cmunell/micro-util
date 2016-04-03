@@ -3,8 +3,13 @@ package edu.cmu.ml.rtw.generic.model.annotator.nlp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import se.lth.cs.srl.corpus.Sentence;
+import se.lth.cs.srl.corpus.Word;
+import se.lth.cs.srl.corpus.Yield;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
@@ -40,9 +45,39 @@ public class PipelineNLPMateTools extends PipelineNLP {
 						
 						List<se.lth.cs.srl.corpus.Predicate> predicates = sentence.getPredicates();
 						for (se.lth.cs.srl.corpus.Predicate predicate : predicates) {
+							Map<Word, String> mateArguments = predicate.getArgMap();
 							String sense = predicate.getSense();
-							// FIXME
+							TokenSpan span = new TokenSpan(document, i, predicate.getIdx() - 1, predicate.getIdx());
+							Map<String, Integer> argTagCounts = new TreeMap<String, Integer>();
+							Map<String, TokenSpan[]> arguments = new TreeMap<String, TokenSpan[]>();
+
+							for (Entry<Word, String> entry : mateArguments.entrySet()) {
+								if (!argTagCounts.containsKey(entry.getValue()))
+									argTagCounts.put(entry.getValue(), 0);
+								argTagCounts.put(entry.getValue(), argTagCounts.get(entry.getValue()) + 1);
+							}
 							
+							for (Entry<Word, String> entry : mateArguments.entrySet()) {
+								String tag = entry.getValue();
+								if (!arguments.containsKey(tag)) {
+									arguments.put(tag, new TokenSpan[argTagCounts.get(tag)]);
+									argTagCounts.put(tag, 0);
+								}
+							
+								Word word = entry.getKey();
+								Yield yield = word.getYield(predicate, tag, mateArguments.keySet());
+								int startIndex = yield.first().getIdx() - 1;
+								int endIndex = yield.last().getIdx();
+								
+								arguments.get(tag)[argTagCounts.get(tag)] = new TokenSpan(document, i, startIndex, endIndex);
+								argTagCounts.put(tag, argTagCounts.get(tag) + 1);		
+							}
+
+							srlAnnotations.add(new Triple<TokenSpan, Predicate, Double>(
+									span,
+									new Predicate(sense, span, arguments),
+									null
+									));		
 						}
 					}
 				} catch (Exception e) {
@@ -55,10 +90,7 @@ public class PipelineNLPMateTools extends PipelineNLP {
 	}
 	
 	public boolean initialize() {
-		this.mateTools = new MateTools(this.properties);
-		if (!this.mateTools.init())
-			return false;
-			
+		this.mateTools = new MateTools(this.properties);		
 		return true;
 	}
 	

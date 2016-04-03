@@ -79,10 +79,28 @@ public class Properties {
 		return vectorFiles;
 	}
 	
+	public Map<String, File> getMateToolsModelFiles() {
+		Map<String, File> mateFiles = new HashMap<String, File>();
+		Set<String> propertyKeys = this.properties.stringPropertyNames();
+		
+		for (String propertyKey : propertyKeys) {
+			if (propertyKey.startsWith("matetools_model_")) {
+				String key = propertyKey.substring("matetools_model_".length());
+				if (key.length() == 0) {
+					throw new IllegalArgumentException("Failed to load matetools model files");
+				}
+				
+				mateFiles.put(key, new File(loadProperty(propertyKey)));
+			}
+		}
+		
+		return mateFiles;
+	}
+	
 	public File getWord2VecVectorFile() {
 		Map<String, File> files = getWord2VecVectorFiles();
-		if (files.size() > 0)
-			throw new UnsupportedOperationException("Word2Vec vector file not specified, but there is more than one possibility");
+		if (files.size() > 1)
+			throw new UnsupportedOperationException("Word2Vec vector file name not specified, but there is more than one possibility in the properties file");
 		return files.values().iterator().next();
 	}
 	
