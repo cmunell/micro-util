@@ -286,6 +286,7 @@ public class DataTools {
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.COREF);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.DEPENDENCY_PARSE);
 		this.addAnnotationTypeNLP(AnnotationTypeNLP.CONSTITUENCY_PARSE);
+		this.addAnnotationTypeNLP(AnnotationTypeNLP.PREDICATE);
 		
 		this.addDocumentSerializer(new SerializerDocumentNLPBSON(this));
 		this.addDocumentSerializer(new SerializerDocumentNLPHTML(this));
