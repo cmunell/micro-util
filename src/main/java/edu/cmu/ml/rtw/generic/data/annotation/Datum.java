@@ -25,7 +25,7 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerInitialism;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGazetteerPrefixTokens;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGramCluster;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureGramContextPattern;
-import edu.cmu.ml.rtw.generic.data.feature.FeatureIdentity;
+//import edu.cmu.ml.rtw.generic.data.feature.FeatureIdentity;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramDep;
@@ -296,7 +296,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureNGramContext<D, L>());
 			addGenericFeature(new FeatureNGramSentence<D, L>());
 			addGenericFeature(new FeatureNGramDep<D, L>());
-			addGenericFeature(new FeatureIdentity<D, L>());
+			//addGenericFeature(new FeatureIdentity<D, L>()); // FIXME The command for this conflicts with FnIdentity
 			addGenericFeature(new FeatureDependencyPath<D, L>());
 			addGenericFeature(new FeatureConstituencyPath<D, L>());
 			addGenericFeature(new FeatureConjunction<D, L>());
