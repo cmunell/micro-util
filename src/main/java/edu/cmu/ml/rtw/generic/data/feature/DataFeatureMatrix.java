@@ -141,6 +141,11 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 		DataFeatureMatrix<T, Boolean> matrix = new DataFeatureMatrix<T, Boolean>(context);
 		if (!matrix.fromParse(getModifiers(), getReferenceName(), toParse()))
 			return null;
+		if (matrix.data == null)
+			matrix.data = this.data.makeBinary(labelIndicator, context);
+		if (matrix.features == null)
+			matrix.features = this.features.makeBinary(labelIndicator, context);
+		
 		return matrix;
 	}
 
@@ -152,7 +157,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 	@Override
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("data"))
-			return Obj.curlyBracedValue(this.data.getReferenceName());
+			return this.data.getReferenceName() == null ? null : Obj.curlyBracedValue(this.data.getReferenceName());
 		else if (parameter.equals("features"))
 			return Obj.curlyBracedValue(this.features.getReferenceName());
 		else
@@ -162,7 +167,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("data"))
-			this.data = this.context.getMatchDataSet(parameterValue);
+			this.data = parameterValue == null ? null : this.context.getMatchDataSet(parameterValue);
 		else if (parameter.equals("features"))
 			this.features = this.context.getMatchFeatureSet(parameterValue);
 		else
