@@ -269,6 +269,7 @@ public class FeatureSet<D extends Datum<L>, L> extends CtxParsableFunction {
 	
 	public <T extends Datum<Boolean>> FeatureSet<T, Boolean> makeBinary(LabelIndicator<L> labelIndicator, DatumContext<T, Boolean> context) {
 		FeatureSet<T, Boolean> featureSet = new FeatureSet<T, Boolean>(context);
+		featureSet.clear();
 		
 		for (Feature<D, L> feature : this.featureList) {
 			featureSet.addFeatureHelper(feature.makeBinary(context, labelIndicator));
