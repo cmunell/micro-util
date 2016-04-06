@@ -64,7 +64,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		Map<D, Map<L, Double>> p = new HashMap<D, Map<L, Double>>();
 		final DataFeatureMatrix<T, Boolean> binaryData = (DataFeatureMatrix<T, Boolean>)data.makeBinary(null, this.binaryContext);
-		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.context.getMaxThreads());
+		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.binaryContext.getMaxThreads());
 		
 		// Generate label for each datum (in parallel)
 		binaryData.getData().map(new Fn<T, T>() {
@@ -80,7 +80,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 				
 				return datum;
 			}
-		}, this.context.getMaxThreads());
+		}, this.binaryContext.getMaxThreads());
 		
 		return p;
 	}
@@ -89,7 +89,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> classifications = new HashMap<D, L>();
 		final DataFeatureMatrix<T, Boolean> binaryData = (DataFeatureMatrix<T, Boolean>)data.makeBinary(null, this.binaryContext);
-		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.context.getMaxThreads());
+		List<Map<T, Map<Boolean, Double>>> binaryP = computeBinaryModelPosteriors(binaryData, this.binaryContext.getMaxThreads());
 			
 		// Generate label for each datum (in parallel)
 		binaryData.getData().map(new Fn<T, T>() {
@@ -104,7 +104,7 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 				
 				return datum;
 			}
-		}, this.context.getMaxThreads());
+		}, this.binaryContext.getMaxThreads());
 		
 		return classifications;
 	}
