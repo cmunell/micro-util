@@ -159,7 +159,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 		if (parameter.equals("data"))
 			return this.data.getReferenceName() == null ? null : Obj.curlyBracedValue(this.data.getReferenceName());
 		else if (parameter.equals("features"))
-			return Obj.curlyBracedValue(this.features.getReferenceName());
+			return this.features.getReferenceName() == null ? null : Obj.curlyBracedValue(this.features.getReferenceName());
 		else
 			return null;
 	}
@@ -169,7 +169,7 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 		if (parameter.equals("data"))
 			this.data = parameterValue == null ? null : this.context.getMatchDataSet(parameterValue);
 		else if (parameter.equals("features"))
-			this.features = this.context.getMatchFeatureSet(parameterValue);
+			this.features = parameterValue == null ? null : this.context.getMatchFeatureSet(parameterValue);
 		else
 			return false;
 		return true;
