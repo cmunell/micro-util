@@ -97,9 +97,8 @@ public class PipelineNLPMateTools extends PipelineNLP {
 	}
 	
 	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
-		if (this.mateTools == null)
-			if (!initialize())
-				return null;
+		if (!initialize())
+			return null;
 		
 		return super.run(document, skipAnnotators);
 	}
