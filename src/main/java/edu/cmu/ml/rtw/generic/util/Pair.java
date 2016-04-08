@@ -52,4 +52,22 @@ public class Pair<F, S> {
     public S getSecond() {
         return this.second;
     }
+    
+    @SuppressWarnings("unchecked")
+	@Override
+    public boolean equals(Object o) {
+    	Pair<F, S> p = (Pair<F, S>)o;
+    	return ((p.getFirst() == null && this.getFirst() == null) || p.getFirst().equals(this.getFirst())) 
+    			&& ((p.getSecond() == null && this.getSecond() == null) || p.getSecond().equals(this.getSecond()));
+    }
+    
+    @Override
+    public int hashCode() {
+    	int h = 0;
+    	if (this.first != null)
+    		h ^= this.first.hashCode();
+    	if (this.second != null)
+    		h ^= this.second.hashCode(); 
+    	return h;
+    }
 }
