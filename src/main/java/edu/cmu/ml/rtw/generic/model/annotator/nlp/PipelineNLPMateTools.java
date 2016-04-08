@@ -89,7 +89,9 @@ public class PipelineNLPMateTools extends PipelineNLP {
 		});
 	}
 	
-	public boolean initialize() {
+	public synchronized boolean initialize() {
+		if (this.mateTools != null)
+			return true;
 		this.mateTools = new MateTools(this.properties);		
 		return true;
 	}
