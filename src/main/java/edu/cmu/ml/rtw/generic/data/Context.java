@@ -77,6 +77,8 @@ public class Context extends CtxParsableFunction {
 		}
 	}
 	
+	private String initScript;
+	
 	protected DataTools dataTools;
 	protected String genericName;
 	protected Context parentContext;
@@ -195,7 +197,22 @@ public class Context extends CtxParsableFunction {
 	}
 
 	@Override
-	protected boolean fromParseInternal(AssignmentList internalAssignments) {		
+	protected boolean fromParseInternal(AssignmentList internalAssignments) {
+		if (internalAssignments == null && this.initScript != null) {
+			CtxScanner scanner = new CtxScanner(
+				FileUtil.getFileReader(
+					new File(this.dataTools.getProperties().getContextDirectory(), this.initScript).getAbsolutePath()
+				)
+			);
+			
+			CtxParser parser = new CtxParser(scanner, new ComplexSymbolFactory());
+			try {
+				internalAssignments = (AssignmentList)parser.parse().value;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		
 		for (int i = 0; i < internalAssignments.size(); i++) {
 			Assignment.AssignmentTyped assignment = (Assignment.AssignmentTyped)internalAssignments.get(i);
 			if (!fromParseAssignment(assignment)) {
@@ -928,16 +945,23 @@ public class Context extends CtxParsableFunction {
 
 	@Override
 	public String[] getParameterNames() {
-		return new String[0];
+		return new String[] { "initScript" };
 	}
 
 	@Override
 	public Obj getParameterValue(String parameter) {
+		if (parameter.equals("initScript"))
+			return Obj.stringValue(this.initScript);
 		return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
+		if (parameter.equals("initScript"))
+			this.initScript = (this.parentContext == null || parameterValue == null) ? null : this.parentContext.getMatchValue(parameterValue);
+		else 
+			return false;
+		
 		return true;
 	}
 	

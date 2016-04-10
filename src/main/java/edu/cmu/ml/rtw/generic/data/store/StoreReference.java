@@ -15,7 +15,7 @@ public class StoreReference implements JSONSerializable {
 	private String collectionName;
 	private List<String> indexFields;
 	private List<Object> indexValues;
-
+	
 	public StoreReference() {
 		
 	}

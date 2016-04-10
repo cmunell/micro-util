@@ -44,6 +44,7 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 import edu.cmu.ml.rtw.generic.util.Timer;
+import edu.cmu.ml.rtw.generic.util.WeightedStringList;
 import edu.cmu.ml.rtw.generic.cluster.Clusterer;
 import edu.cmu.ml.rtw.generic.cluster.ClustererString;
 import edu.cmu.ml.rtw.generic.cluster.ClustererTokenSpanPoSTag;
@@ -59,6 +60,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPMicro;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpansDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
@@ -343,6 +345,11 @@ public class DataTools {
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSieve());
 		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
+		this.addGenericContext(new DatumContext<DocumentNLPDatum<String>, String>(DocumentNLPDatum.getStringTools(this), "DocumentNLPString"));
+		this.addGenericContext(new DatumContext<DocumentNLPDatum<WeightedStringList>, WeightedStringList>(DocumentNLPDatum.getWeightedStringListTools(this), "DocumentNLPWeightedStringList"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<Boolean>, Boolean>(TokenSpansDatum.getBooleanTools(this), "TokenSpansBoolean"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<String>, String>(TokenSpansDatum.getStringTools(this), "TokenSpansString"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<WeightedStringList>, WeightedStringList>(TokenSpansDatum.getWeightedStringListTools(this), "TokenSpansWeightedStringList"));
 		
 		addConstructionCommand(new TaskMultiClassification(null), new MakeInstanceFn<TaskMultiClassification>() {
 			public TaskMultiClassification make(String name, Context parentContext) {
@@ -868,6 +875,9 @@ public class DataTools {
 	}
 	
 	public boolean addGenericWeightedStructure(WeightedStructure structure) {
+		if (this.genericStructures.containsKey(structure.getGenericName()))
+			return true;
+		
 		this.genericStructures.put(structure.getGenericName(), structure);
 		
 		return addConstructionCommand(structure, new MakeInstanceFn<WeightedStructure>() {

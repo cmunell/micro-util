@@ -53,6 +53,13 @@ public class Properties {
 		return propertyValue;
 	}
 	
+	public String getContextDirectory() {
+		if (this.properties.containsKey("context_dir"))
+			return loadProperty("context_dir");
+		else
+			return null;
+	}
+	
 	public Map<String, String> getFileSystemStorageBSONDirectories() {
 		return getFileSystemStorageDirectories("bson");
 	}
