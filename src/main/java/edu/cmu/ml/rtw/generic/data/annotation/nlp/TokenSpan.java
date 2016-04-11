@@ -223,10 +223,11 @@ public class TokenSpan {
 	public static TokenSpan fromJSON(JSONObject json, StoredItemSetManager itemSets) {
 		StoreReference reference = new StoreReference();
 		try {
-			if (!reference.fromJSON(json.getJSONObject("r")))
+			if (!reference.fromJSON(json.getJSONObject("r"))) {
 				return null;
+			}
 			
-			DocumentNLP document = itemSets.resolveStoreReference(reference, false);
+			DocumentNLP document = itemSets.resolveStoreReference(reference, true);
 			int sentenceIndex = json.has("sI") ? json.getInt("sI") : json.getInt("sentenceIndex");
 			int startTokenIndex = json.has("s") ? json.getInt("s") : json.getInt("startTokenIndex");
 			int endTokenIndex = json.has("e") ? json.getInt("e") : json.getInt("endTokenIndex");

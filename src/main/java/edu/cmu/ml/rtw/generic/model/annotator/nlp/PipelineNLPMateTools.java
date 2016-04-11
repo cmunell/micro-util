@@ -89,15 +89,16 @@ public class PipelineNLPMateTools extends PipelineNLP {
 		});
 	}
 	
-	public boolean initialize() {
+	public synchronized boolean initialize() {
+		if (this.mateTools != null)
+			return true;
 		this.mateTools = new MateTools(this.properties);		
 		return true;
 	}
 	
 	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
-		if (this.mateTools == null)
-			if (!initialize())
-				return null;
+		if (!initialize())
+			return null;
 		
 		return super.run(document, skipAnnotators);
 	}

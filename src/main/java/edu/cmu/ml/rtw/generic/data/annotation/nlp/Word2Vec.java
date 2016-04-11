@@ -30,4 +30,8 @@ public class Word2Vec {
 	public double[] computeVector(String str) {
 		return this.vec.getWordVector(str);
 	}
+	
+	public int getVectorSize() {
+		return this.vec.getWordVector("").length;
+	}
 }

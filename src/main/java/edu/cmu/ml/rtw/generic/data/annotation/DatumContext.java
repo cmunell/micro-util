@@ -484,6 +484,12 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 		return true;
 	}
 	
+	public boolean addFeatureSet(FeatureSet<D, L> features) {
+		this.objNameOrdering.add(new Pair<String, String>(ObjectType.FEATURE_SET.toString(), features.getReferenceName()));
+		this.featureSets.put(features.getReferenceName(), features);
+		return true;
+	}
+	
 	public Datum.Tools<D, L> getDatumTools() {
 		return this.datumTools;
 	}

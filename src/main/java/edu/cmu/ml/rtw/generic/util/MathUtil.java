@@ -116,4 +116,16 @@ public class MathUtil {
 		}
 		return dist;
 	}
+	
+	/**
+	 * @param dist
+	 * @param norm
+	 * @return dist scaled by scale
+	 */
+	public static <T> Map<T, Double> scale(Map<T, Double> dist, double scale) {
+		for (Entry<T, Double> entry : dist.entrySet()) {
+			entry.setValue(entry.getValue() * scale);
+		}
+		return dist;
+	}
 }

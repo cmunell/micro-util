@@ -11,10 +11,9 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.Obj;
-import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class WeightedStructureGraph extends WeightedStructure {
-	public static enum EdgeMode {
+	public static enum RelationMode {
 		SINGLE,
 		MULTI
 	}
@@ -24,11 +23,12 @@ public class WeightedStructureGraph extends WeightedStructure {
 		CONSERVE
 	}
 	
-	private EdgeMode edgeMode = EdgeMode.SINGLE;
+	private RelationMode edgeMode = RelationMode.SINGLE;
+	private RelationMode nodeMode = RelationMode.SINGLE;
 	private OverwriteOperator overwriteOperator = OverwriteOperator.CONSERVE;
-	private static String[] parameterNames = { "edgeMode", "overwriteOperator" };
+	private static String[] parameterNames = { "edgeMode", "nodeMode", "overwriteOperator" };
 	
-	private Map<String, Pair<WeightedStructureRelationUnary, Double>> nodes;
+	private Map<String, Map<WeightedStructureRelationUnary, Double>> nodes;
 	private Map<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> edges;
 	private Context context;
 	private int itemCount = 0;
@@ -39,7 +39,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	
 	public WeightedStructureGraph(Context context) {
 		this.context = context;
-		this.nodes = new HashMap<String, Pair<WeightedStructureRelationUnary, Double>>();
+		this.nodes = new HashMap<String, Map<WeightedStructureRelationUnary, Double>>();
 		this.edges = new HashMap<String, Map<String, Map<WeightedStructureRelationBinary, Double>>>();
 	}
 
@@ -80,7 +80,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
 			if (!hasNode(node))
 				return false;
-			this.nodes.remove(node.getId());
+			this.nodes.get(node.getId()).remove(node);
+			if (this.nodes.get(node.getId()).size() == 0)
+				this.nodes.remove(node.getId());
 			this.itemCount--;
 		}
 		
@@ -104,7 +106,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					return this;
 				}
 			} else if (hasEdge(id1, id2)) {
-				if (this.edgeMode == EdgeMode.SINGLE) {
+				if (this.edgeMode == RelationMode.SINGLE) {
 					WeightedStructureRelationBinary currentEdge = this.edges.get(id1).get(id2).keySet().iterator().next();
 					if (this.overwriteOperator == OverwriteOperator.MAX && w >= getEdgeWeight(currentEdge)) {
 						if (edge.isOrdered()) {
@@ -162,7 +164,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 						this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
 					this.edges.get(id1).get(id2).put(edge, w);
 					this.itemCount++;
-				} else if (!hasEdge(id2, id1) || this.edgeMode == EdgeMode.MULTI) {
+				} else if (!hasEdge(id2, id1) || this.edgeMode == RelationMode.MULTI) {
 					if (!this.edges.containsKey(id1))
 						this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
 					if (!this.edges.get(id1).containsKey(id2))
@@ -206,13 +208,25 @@ public class WeightedStructureGraph extends WeightedStructure {
 		} else {
 			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
 			if (hasNode(node)) {
-				if (this.overwriteOperator == OverwriteOperator.MAX && w >= getWeight(node))
-					this.nodes.get(node).setSecond(w);
+				if (this.overwriteOperator == OverwriteOperator.MAX && w >= getNodeWeight(node))
+					this.nodes.get(node.getId()).put(node, w);
 				else 
 					return this;
 			} else {
-				this.nodes.put(node.getId(), new Pair<>(node, w));
-				this.itemCount++;
+				if (this.nodes.containsKey(node.getId())) {
+					WeightedStructureRelationUnary currentNode = this.nodes.get(node.getId()).keySet().iterator().next();
+					if (this.nodeMode == RelationMode.MULTI) {
+						this.nodes.get(node.getId()).put(node, w);
+					} else if (this.overwriteOperator == OverwriteOperator.MAX && w >= getNodeWeight(currentNode)) {
+						this.nodes.get(node.getId()).remove(currentNode);
+						this.nodes.get(node.getId()).put(node, w);
+					} else
+						return this;
+				} else {
+					this.nodes.put(node.getId(), new HashMap<WeightedStructureRelationUnary, Double>());
+					this.nodes.get(node.getId()).put(node, w);
+					this.itemCount++;	
+				}
 			}
 		}
 		
@@ -229,9 +243,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 			return weight;
 		} else {
 			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
-			if (!hasNode(node))
+			Double weight = getNodeWeight(node);
+			if (weight == null)
 				throw new IllegalArgumentException();
-			return this.nodes.get(node.getId()).getSecond();
+			return weight;
 		}
 	}
 
@@ -241,8 +256,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 			throw new IllegalArgumentException();
 		
 		WeightedStructureGraph g = (WeightedStructureGraph)s;
-		for (Entry<String, Pair<WeightedStructureRelationUnary, Double>> entry : g.nodes.entrySet()) {
-			g = (WeightedStructureGraph)add(entry.getValue().getFirst(), entry.getValue().getSecond());
+		for (Entry<String, Map<WeightedStructureRelationUnary, Double>> entry : g.nodes.entrySet()) {
+			for (Entry<WeightedStructureRelationUnary, Double> entry2 : entry.getValue().entrySet()) {
+				g = (WeightedStructureGraph)add(entry2.getKey(), entry2.getValue());
+			}
 		}
 		
 		for (Entry<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> entry : g.edges.entrySet()) {
@@ -275,6 +292,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("edgeMode"))
 			return Obj.stringValue(this.edgeMode.toString());
+		else if (parameter.equals("nodeMode"))
+			return Obj.stringValue(this.nodeMode.toString());
 		else if (parameter.equals("overwriteOperator"))
 			return Obj.stringValue(this.overwriteOperator.toString());
 		else 
@@ -284,7 +303,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("edgeMode"))
-			this.edgeMode = EdgeMode.valueOf(this.context.getMatchValue(parameterValue));
+			this.edgeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("nodeMode"))
+			this.nodeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("overwriteOperator"))
 			this.overwriteOperator = OverwriteOperator.valueOf(this.context.getMatchValue(parameterValue));
 		else 
@@ -320,6 +341,16 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return this.edges.get(edge.getFirst().getId()).get(edge.getSecond().getId()).get(edge);
 	}
 	
+	public Double getNodeWeight(WeightedStructureRelationUnary node) {
+		if (!hasNode(node))
+			return null;
+		return this.nodes.get(node.getId()).get(node);
+	}
+	
+	public boolean hasNode(String id) {
+		return this.nodes.containsKey(id);
+	}
+	
 	public boolean hasEdge(String id1, String id2) {
 		return this.edges.containsKey(id1) && this.edges.get(id1).containsKey(id2);
 	}
@@ -330,6 +361,14 @@ public class WeightedStructureGraph extends WeightedStructure {
 			return edges;
 		edges.addAll(this.edges.get(id1).get(id2).keySet());
 		return edges;
+	}
+	
+	public List<WeightedStructureRelationUnary> getNodes(String id) {
+		List<WeightedStructureRelationUnary> nodes = new ArrayList<>();
+		if (!hasNode(id))
+			return nodes;
+		nodes.addAll(this.nodes.get(id).keySet());
+		return nodes;
 	}
 	
 	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths, Set<String> ignoreTypes) {
@@ -389,8 +428,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 	public List<CtxParsable> toList() {
 		List<CtxParsable> list = new ArrayList<CtxParsable>();
 		
-		for (Pair<WeightedStructureRelationUnary, Double> pair : this.nodes.values())
-			list.add(pair.getFirst());
+		for (Map<WeightedStructureRelationUnary, Double> map : this.nodes.values())
+			for (WeightedStructureRelationUnary rel : map.keySet())
+				list.add(rel);
 		
 		for (Map<String, Map<WeightedStructureRelationBinary, Double>> value : this.edges.values()) {
 			for (Map<WeightedStructureRelationBinary, Double> edgeEntry : value.values()) {

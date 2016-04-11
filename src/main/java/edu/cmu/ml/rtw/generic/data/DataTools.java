@@ -44,6 +44,7 @@ import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Properties;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 import edu.cmu.ml.rtw.generic.util.Timer;
+import edu.cmu.ml.rtw.generic.util.WeightedStringList;
 import edu.cmu.ml.rtw.generic.cluster.Clusterer;
 import edu.cmu.ml.rtw.generic.cluster.ClustererString;
 import edu.cmu.ml.rtw.generic.cluster.ClustererTokenSpanPoSTag;
@@ -59,10 +60,12 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPHTML;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPJSONLegacy;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.SerializerDocumentNLPMicro;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpansDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCat;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
@@ -79,6 +82,8 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
@@ -304,6 +309,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnCoref());
 		this.addGenericTokenSpanFn(new FnDependencyRelation());
 		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
+		this.addGenericTokenSpanFn(new FnPredicateArgument());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
@@ -315,6 +321,7 @@ public class DataTools {
 		this.addGenericTokenSpanStrFn(new FnSentencePosition());
 		this.addGenericTokenSpanStrFn(new FnWordNetLemma());
 		this.addGenericTokenSpanStrFn(new FnWordNetSynset());
+		this.addGenericTokenSpanStrFn(new FnPredicateSense());
 		
 		this.addGenericStrFn(new FnComposite.FnCompositeStr());
 		this.addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
@@ -326,6 +333,7 @@ public class DataTools {
 		this.addGenericStrFn(new FnSplit());
 		this.addGenericStrFn(new FnIdentity<String>());
 		this.addGenericStrFn(new FnClean());
+		this.addGenericStrFn(new FnCat());
 		
 		this.addGenericStructureFn(new FnGreedyStructureRules<WeightedStructureGraph>());
 		this.addGenericStructureFn(new FnGraphPaths());
@@ -343,6 +351,11 @@ public class DataTools {
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSieve());
 		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
+		this.addGenericContext(new DatumContext<DocumentNLPDatum<String>, String>(DocumentNLPDatum.getStringTools(this), "DocumentNLPString"));
+		this.addGenericContext(new DatumContext<DocumentNLPDatum<WeightedStringList>, WeightedStringList>(DocumentNLPDatum.getWeightedStringListTools(this), "DocumentNLPWeightedStringList"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<Boolean>, Boolean>(TokenSpansDatum.getBooleanTools(this), "TokenSpansBoolean"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<String>, String>(TokenSpansDatum.getStringTools(this), "TokenSpansString"));
+		this.addGenericContext(new DatumContext<TokenSpansDatum<WeightedStringList>, WeightedStringList>(TokenSpansDatum.getWeightedStringListTools(this), "TokenSpansWeightedStringList"));
 		
 		addConstructionCommand(new TaskMultiClassification(null), new MakeInstanceFn<TaskMultiClassification>() {
 			public TaskMultiClassification make(String name, Context parentContext) {
@@ -351,6 +364,14 @@ public class DataTools {
 		this.addConstructionCommand(new RuleSet(null), new MakeInstanceFn<RuleSet>() {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
+		
+		addCommand("SizeArray", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				return String.valueOf(context.getMatchArray(parameters.get("array").getValue()).size());
+			}
+		});
 		
 		this.addCommand("BuildCleanFn", new Command<String>() {
 			@Override
@@ -868,6 +889,9 @@ public class DataTools {
 	}
 	
 	public boolean addGenericWeightedStructure(WeightedStructure structure) {
+		if (this.genericStructures.containsKey(structure.getGenericName()))
+			return true;
+		
 		this.genericStructures.put(structure.getGenericName(), structure);
 		
 		return addConstructionCommand(structure, new MakeInstanceFn<WeightedStructure>() {
