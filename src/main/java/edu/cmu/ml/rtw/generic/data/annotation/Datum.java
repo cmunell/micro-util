@@ -33,9 +33,11 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureStringForm;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenCount;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnComparison;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocab;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnDataVocabTrie;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenSpanFnFilteredVocab;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureWord2Vec;
 import edu.cmu.ml.rtw.generic.data.feature.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
@@ -309,6 +311,8 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureTokenSpanFnDataVocabTrie<D, L>());
 			addGenericFeature(new FeatureDependencyPathType<D, L>());
 			addGenericFeature(new FeatureConstituencyParseRelation<D, L>());
+			addGenericFeature(new FeatureWord2Vec<D, L>());
+			addGenericFeature(new FeatureTokenSpanFnComparison<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());

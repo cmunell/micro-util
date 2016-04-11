@@ -65,6 +65,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnCat;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnClean;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnComposite;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCompositeAppend;
@@ -81,6 +82,8 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
@@ -306,6 +309,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnCoref());
 		this.addGenericTokenSpanFn(new FnDependencyRelation());
 		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
+		this.addGenericTokenSpanFn(new FnPredicateArgument());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
@@ -317,6 +321,7 @@ public class DataTools {
 		this.addGenericTokenSpanStrFn(new FnSentencePosition());
 		this.addGenericTokenSpanStrFn(new FnWordNetLemma());
 		this.addGenericTokenSpanStrFn(new FnWordNetSynset());
+		this.addGenericTokenSpanStrFn(new FnPredicateSense());
 		
 		this.addGenericStrFn(new FnComposite.FnCompositeStr());
 		this.addGenericStrFn(new FnCompositeAppend.FnCompositeAppendStr());
@@ -328,6 +333,7 @@ public class DataTools {
 		this.addGenericStrFn(new FnSplit());
 		this.addGenericStrFn(new FnIdentity<String>());
 		this.addGenericStrFn(new FnClean());
+		this.addGenericStrFn(new FnCat());
 		
 		this.addGenericStructureFn(new FnGreedyStructureRules<WeightedStructureGraph>());
 		this.addGenericStructureFn(new FnGraphPaths());
@@ -358,6 +364,14 @@ public class DataTools {
 		this.addConstructionCommand(new RuleSet(null), new MakeInstanceFn<RuleSet>() {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
+		
+		addCommand("SizeArray", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				return String.valueOf(context.getMatchArray(parameters.get("array").getValue()).size());
+			}
+		});
 		
 		this.addCommand("BuildCleanFn", new Command<String>() {
 			@Override
