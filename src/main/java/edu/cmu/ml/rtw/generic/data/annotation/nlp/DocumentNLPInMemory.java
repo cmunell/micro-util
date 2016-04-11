@@ -354,8 +354,12 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		T anno = super.getTokenAnnotation(annotationType, sentenceIndex, tokenIndex);
 		if (anno != null)
 			return anno;
+		Pair<?, Double>[][] annos = this.otherTokenAnnotations.get(annotationType);
+		if (annos.length <= sentenceIndex || annos[sentenceIndex].length <= tokenIndex) {
+			throw new IndexOutOfBoundsException("Failed to get " + annotationType.getType() + " in " + this.getName() + " at (" + sentenceIndex + ", " + tokenIndex + ")");
+		}
 		
-		return annotationType.getAnnotationClass().cast(this.otherTokenAnnotations.get(annotationType)[sentenceIndex][tokenIndex].getFirst());
+		return annotationType.getAnnotationClass().cast(annos[sentenceIndex][tokenIndex].getFirst());
 	}
 	
 	@Override
