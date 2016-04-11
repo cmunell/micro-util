@@ -45,9 +45,14 @@ public class PipelineNLPMateTools extends PipelineNLP {
 						
 						int maxTokenIndex = document.getSentenceTokenCount(i) - 1;
 						if (sentence.getPOSArray().length - 1 != document.getSentenceTokenCount(i)) {
-							System.out.println("WARNING: Matetools gives different sentence length for " + document.getName() + " sentence " + 
-												i + " (" + sentence.getPOSArray().length + " " + document.getSentenceTokenCount(i) + 
-												").  Annotations may be misaligned.");
+							synchronized (tools) {
+								System.out.println("WARNING: Matetools gives different sentence length for " + document.getName() + " sentence " + 
+													i + " (" + sentence.getPOSArray().length + " " + document.getSentenceTokenCount(i) + 
+													").  Annotations may be misaligned.");
+								System.out.println("Matetools tokenization: ");
+								for (int j = 0; j < sentence.getPOSArray().length; j++)
+									System.out.println(sentence.getFormArray()[j]);
+							}
 						}
 						
 						List<se.lth.cs.srl.corpus.Predicate> predicates = sentence.getPredicates();
