@@ -43,11 +43,20 @@ public class PipelineNLPMateTools extends PipelineNLP {
 							sentence = tools.parseSentence(document.getSentence(i));
 						}
 						
+						int maxTokenIndex = document.getSentenceTokenCount(i) - 1;
+						if (sentence.getPOSArray().length - 1 != document.getSentenceTokenCount(i)) {
+							System.out.println("WARNING: Matetools gives different sentence length for " + document.getName() + " sentence " + 
+												i + " (" + sentence.getPOSArray().length + " " + document.getSentenceTokenCount(i) + 
+												").  Annotations may be misaligned.");
+						}
+						
 						List<se.lth.cs.srl.corpus.Predicate> predicates = sentence.getPredicates();
 						for (se.lth.cs.srl.corpus.Predicate predicate : predicates) {
 							Map<Word, String> mateArguments = predicate.getArgMap();
 							String sense = predicate.getSense();
-							TokenSpan span = new TokenSpan(document, i, predicate.getIdx() - 1, predicate.getIdx());
+							int predicateStartIndex = Math.min(predicate.getIdx() - 1, maxTokenIndex);
+							int predicateEndIndex = Math.min(predicate.getIdx(), maxTokenIndex + 1);
+							TokenSpan span = new TokenSpan(document, i, predicateStartIndex, predicateEndIndex);
 							Map<String, Integer> argTagCounts = new TreeMap<String, Integer>();
 							Map<String, TokenSpan[]> arguments = new TreeMap<String, TokenSpan[]>();
 
@@ -66,8 +75,8 @@ public class PipelineNLPMateTools extends PipelineNLP {
 							
 								Word word = entry.getKey();
 								Yield yield = word.getYield(predicate, tag, mateArguments.keySet());
-								int startIndex = yield.first().getIdx() - 1;
-								int endIndex = yield.last().getIdx();
+								int startIndex = Math.min(yield.first().getIdx() - 1, maxTokenIndex);
+								int endIndex = Math.min(yield.last().getIdx(), maxTokenIndex + 1);
 								
 								arguments.get(tag)[argTagCounts.get(tag)] = new TokenSpan(document, i, startIndex, endIndex);
 								argTagCounts.put(tag, argTagCounts.get(tag) + 1);		
