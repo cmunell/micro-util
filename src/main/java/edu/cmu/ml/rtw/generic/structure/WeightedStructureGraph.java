@@ -112,6 +112,11 @@ public class WeightedStructureGraph extends WeightedStructure {
 						if (edge.isOrdered()) {
 							if (!remove(currentEdge))
 								return this;
+							if (!this.edges.containsKey(id1))
+								this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
+							if (!this.edges.get(id1).containsKey(id2))
+								this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
+							
 							this.edges.get(id1).get(id2).put(edge, w);
 						} else {
 							if (!hasEdge(id2, id1)) {
