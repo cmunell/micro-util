@@ -101,7 +101,6 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 							addedObjs = structure.getItemCount() - oldCount;
 						}
 				}
-				System.out.println("Added " + addedObjs);
 				iterations++;
 			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && addedObjs > 0);
 			

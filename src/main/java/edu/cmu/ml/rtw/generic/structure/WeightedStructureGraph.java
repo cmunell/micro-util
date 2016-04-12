@@ -25,7 +25,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	
 	private RelationMode edgeMode = RelationMode.SINGLE;
 	private RelationMode nodeMode = RelationMode.SINGLE;
-	private OverwriteOperator overwriteOperator = OverwriteOperator.CONSERVE;
+	private OverwriteOperator overwriteOperator = OverwriteOperator.MAX;
 	private static String[] parameterNames = { "edgeMode", "nodeMode", "overwriteOperator" };
 	
 	private Map<String, Map<WeightedStructureRelationUnary, Double>> nodes;
