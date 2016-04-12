@@ -365,6 +365,20 @@ public class DataTools {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
 		
+		addCommand("ConcatenateArrays", new Command<List<String>>() {
+			@Override
+			public List<String> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				List<String> arr1 = context.getMatchArray(parameters.get("a1").getValue());
+				List<String> arr2 = context.getMatchArray(parameters.get("a2").getValue());
+				List<String> ret = new ArrayList<String>();
+				ret.addAll(arr1);
+				ret.addAll(arr2);
+				return ret;
+			}
+		});
+		
+		
 		addCommand("SizeArray", new Command<String>() {
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
