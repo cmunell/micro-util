@@ -64,6 +64,8 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 		
 		for (D datum : this.data) {
 			L actual = datum.getLabel();
+			if (actual == null)
+				continue;
 			L predicted = predictions.get(datum);
 			
 			if (!actualToPredicted.containsKey(actual))

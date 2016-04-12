@@ -78,6 +78,9 @@ public class TaskMultiClassification extends CtxParsableFunction {
 			Map<Object, Map<?, List<?>>> actualToPredicted = new HashMap<Object, Map<?, List<?>>>();
 			for (Datum<?> datum : data) {
 				Object actual = datum.getLabel();
+				if (actual == null)
+					continue;
+				
 				Object predicted = predictions.get(datum);
 				
 				if (!actualToPredicted.containsKey(actual))
