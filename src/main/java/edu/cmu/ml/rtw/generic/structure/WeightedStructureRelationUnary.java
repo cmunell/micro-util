@@ -13,7 +13,7 @@ public class WeightedStructureRelationUnary extends WeightedStructureRelation {
 	}
 	
 	public WeightedStructureRelationUnary(String type, Context context) {
-		super(type, context);
+		super(type, false, context);
 	}
 	
 	public WeightedStructureRelationUnary(String type, Context context, String id) {

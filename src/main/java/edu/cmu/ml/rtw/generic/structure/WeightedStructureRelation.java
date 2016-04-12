@@ -13,12 +13,13 @@ public abstract class WeightedStructureRelation extends WeightedStructure {
 	
 	protected Context context;
 	
-	public WeightedStructureRelation(String type) {
-		this(type, null);
+	public WeightedStructureRelation(String type, boolean ordered) {
+		this(type, ordered, null);
 	}
 	
-	public WeightedStructureRelation(String type, Context context) {
+	public WeightedStructureRelation(String type, boolean ordered, Context context) {
 		this.type = type;
+		this.ordered = ordered;
 		this.context = context;
 	}
 	
