@@ -16,12 +16,12 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	
 	private String[] parameterNames = { "r1", "r2" };
 
-	public WeightedStructureRelationBinary(String type) {
-		this(type, null);
+	public WeightedStructureRelationBinary(String type, boolean ordered) {
+		this(type, ordered, null);
 	}
 	
-	public WeightedStructureRelationBinary(String type, Context context) {
-		super(type, context);
+	public WeightedStructureRelationBinary(String type, boolean ordered, Context context) {
+		super(type, ordered, context);
 		
 		String[] extendedParameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + super.getParameterNames().length);
 		for (int i = 0; i < super.getParameterNames().length; i++)
@@ -30,11 +30,10 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	}
 	
 	public WeightedStructureRelationBinary(String type, Context context, String id, WeightedStructureRelation r1, WeightedStructureRelation r2, boolean ordered) {
-		this(type, context);
+		this(type, ordered, context);
 		this.id = id;
 		this.r1 = r1;
 		this.r2 = r2;
-		this.ordered = ordered;
 	}
 		
 	public WeightedStructureRelation getFirst() {
@@ -83,10 +82,9 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	}
 	
 	public WeightedStructureRelationBinary getReverse() {
-		WeightedStructureRelationBinary rel = new WeightedStructureRelationBinary(this.type, this.context);
+		WeightedStructureRelationBinary rel = new WeightedStructureRelationBinary(this.type, this.ordered, this.context);
 		rel.r1 = this.r2;
 		rel.r2 = this.r1;
-		rel.ordered = this.ordered;
 		rel.id = this.id;
 		rel.w1 = this.w2;
 		rel.w2 = this.w1;
@@ -96,7 +94,7 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	
 	@Override
 	public WeightedStructure makeInstance(Context context) {
-		return new WeightedStructureRelationBinary(this.type, context);
+		return new WeightedStructureRelationBinary(this.type, this.ordered, context);
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	
 	private RelationMode edgeMode = RelationMode.SINGLE;
 	private RelationMode nodeMode = RelationMode.SINGLE;
-	private OverwriteOperator overwriteOperator = OverwriteOperator.CONSERVE;
+	private OverwriteOperator overwriteOperator = OverwriteOperator.MAX;
 	private static String[] parameterNames = { "edgeMode", "nodeMode", "overwriteOperator" };
 	
 	private Map<String, Map<WeightedStructureRelationUnary, Double>> nodes;
@@ -131,6 +131,16 @@ public class WeightedStructureGraph extends WeightedStructure {
 									if (!remove(currentEdge)) 
 										return this;
 									remove(currentReverseEdge); // Don't check for true because may fail if undirected
+									
+									if (!this.edges.containsKey(id2))
+										this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
+									if (!this.edges.get(id2).containsKey(id1))
+										this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
+									if (!this.edges.containsKey(id1))
+										this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
+									if (!this.edges.get(id1).containsKey(id2))
+										this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
+									
 									this.edges.get(id1).get(id2).put(edge, w);
 									this.edges.get(id2).get(id1).put(edge.getReverse(), w);
 								} else {

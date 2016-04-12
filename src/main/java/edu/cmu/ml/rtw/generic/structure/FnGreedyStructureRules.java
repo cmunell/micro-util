@@ -79,7 +79,6 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 					for (CtxParsable part : structurePartList) {
 						weight += structurePart.getWeight(part);
 					}
-	
 					orderedStructureParts.add(new Pair<>(structurePartList, weight / (double)structurePartList.size()));
 				}
 				
@@ -102,7 +101,6 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 							addedObjs = structure.getItemCount() - oldCount;
 						}
 				}
-				
 				iterations++;
 			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && addedObjs > 0);
 			

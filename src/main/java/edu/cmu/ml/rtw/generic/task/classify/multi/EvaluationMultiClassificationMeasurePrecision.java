@@ -18,7 +18,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	}
 	
 	private Mode mode = Mode.MACRO_WEIGHTED;
-	private String[] parameterNames = { "mode" };
+	private List<String> filterLabels;
+	private String[] parameterNames = { "mode", "filterLabels" };
 	
 	public EvaluationMultiClassificationMeasurePrecision() {
 		this(null);
@@ -35,8 +36,17 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 		double p = 0.0;
 		double num = 0.0;
 		double den = 0.0;
+		int i = 0;
 		for (Map<?, Map<Stat, Integer>> stat : stats) {
+			String filterLabel = null;
+			if (this.filterLabels != null)
+				if (this.filterLabels.get(i).length() > 0)
+					filterLabel = this.filterLabels.get(i);
+			
 			for (Entry<?, Map<Stat, Integer>> entry : stat.entrySet()) {		
+				if (filterLabel != null && !filterLabel.equals(entry.getKey().toString()))
+					continue;
+				
 				double tp = entry.getValue().get(Stat.TRUE_POSITIVE);
 				double fp = entry.getValue().get(Stat.FALSE_POSITIVE);
 				double tn = entry.getValue().get(Stat.TRUE_NEGATIVE);
@@ -47,7 +57,10 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 					den += (tp + fp);
 				} else {
 					double weight = 0.0;
-					if (this.mode == Mode.MACRO_WEIGHTED) {
+					
+					if (filterLabel != null) {
+						weight = 1.0;
+					} else if (this.mode == Mode.MACRO_WEIGHTED) {
 						if (Double.compare(tp + fp + tn + fn, 0.0) == 0)
 							weight = 1.0;
 						else
@@ -62,6 +75,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 						p += weight * tp/(tp+fp);
 				}
 			}
+			
+			i++;
 		}
 		
 		if (den == 0.0) {
@@ -85,6 +100,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("mode"))
 			return Obj.stringValue(this.mode.toString());
+		else if (parameter.equals("filterLabels"))
+			return this.filterLabels == null ? null : Obj.array(this.filterLabels);
 		else
 			return super.getParameterValue(parameter);
 	}
@@ -93,6 +110,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("mode"))
 			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("filterLabels"))
+			this.filterLabels = (parameterValue == null) ? null : this.context.getMatchArray(parameterValue);
 		else
 			return super.setParameterValue(parameter, parameterValue);
 		return true;

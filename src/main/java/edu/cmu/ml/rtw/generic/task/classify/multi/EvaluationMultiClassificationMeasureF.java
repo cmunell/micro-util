@@ -24,7 +24,8 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 	
 	private Mode mode = Mode.MACRO_WEIGHTED;
 	private double Beta = 1.0;
-	private String[] parameterNames = { "mode", "Beta"  };
+	private List<String> filterLabels;
+	private String[] parameterNames = { "mode", "Beta", "filterLabels" };
 
 	public EvaluationMultiClassificationMeasureF() {
 		this(null);
@@ -46,8 +47,16 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 		
 		double Beta2 = this.Beta*this.Beta;
 		
+		int i = 0;
 		for (Map<?, Map<Stat, Integer>> stat : stats) {
+			String filterLabel = null;
+			if (this.filterLabels != null)
+				if (this.filterLabels.get(i).length() > 0)
+					filterLabel = this.filterLabels.get(i);
+			
 			for (Entry<?, Map<Stat, Integer>> entry : stat.entrySet()) {
+				if (filterLabel != null && !filterLabel.equals(entry.getKey().toString()))
+					continue;
 				
 				double tp = entry.getValue().get(Stat.TRUE_POSITIVE);
 				double fp = entry.getValue().get(Stat.FALSE_POSITIVE);
@@ -55,7 +64,7 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 				double fn = entry.getValue().get(Stat.FALSE_NEGATIVE);
 				
 				double weight = 0.0;
-				if (this.mode == Mode.MICRO) {
+				if (filterLabel != null || this.mode == Mode.MICRO) {
 					weight = 1.0;
 				} else if (this.mode == Mode.MACRO_WEIGHTED) {
 					if (Double.compare(tp + fp + tn + fn, 0.0) == 0)
@@ -77,6 +86,8 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 						F += weight *(1.0+Beta2)*tp/((1.0+Beta2)*tp + Beta2*fn + fp);
 				}
 			}
+			
+			i++;
 		}
 		
 		if (this.mode == Mode.MICRO) {
@@ -103,6 +114,8 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 			return Obj.stringValue(this.mode.toString());
 		else if (parameter.equals("Beta"))
 			return Obj.stringValue(String.valueOf(this.Beta));
+		else if (parameter.equals("filterLabels"))
+			return this.filterLabels == null ? null : Obj.array(this.filterLabels);
 		else
 			return super.getParameterValue(parameter);
 	}
@@ -113,6 +126,8 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("Beta"))
 			this.Beta = Double.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("filterLabels"))
+			this.filterLabels = (parameterValue == null) ? null : this.context.getMatchArray(parameterValue);
 		else
 			return super.setParameterValue(parameter, parameterValue);
 		return true;
