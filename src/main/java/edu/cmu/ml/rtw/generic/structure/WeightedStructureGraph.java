@@ -42,6 +42,13 @@ public class WeightedStructureGraph extends WeightedStructure {
 		this.nodes = new HashMap<String, Map<WeightedStructureRelationUnary, Double>>();
 		this.edges = new HashMap<String, Map<String, Map<WeightedStructureRelationBinary, Double>>>();
 	}
+	
+	public WeightedStructureGraph(Context context, RelationMode edgeMode, RelationMode nodeMode, OverwriteOperator overwriteOperator) {
+		this(context);
+		this.edgeMode = edgeMode;
+		this.nodeMode = nodeMode;
+		this.overwriteOperator = overwriteOperator;
+	}
 
 	@Override
 	public int getItemCount() {

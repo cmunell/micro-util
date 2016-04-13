@@ -3,6 +3,7 @@ package edu.cmu.ml.rtw.generic.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,8 +17,8 @@ import YADLL.FunctionGraphs.FunctionGraph;
 import YADLL.FunctionGraphs.Functions.Function;
 import YADLL.FunctionGraphs.Functions.Variable;
 import YADLL.Optimizers.GradOpt;
-
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
@@ -458,8 +459,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
+		Iterator<D> iter = onlyX ? data.getData().iterator(DataFilter.All) : data.getData().iterator(DataFilter.OnlyLabeled);
 		// FIXME int numNonZeroFeatures = 0;
-		for (D datum : data.getData()) {
+		while (iter.hasNext()) {
+			D datum = iter.next();
 			Map<Integer, Double> datumFeatureMap = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 			featureMaps.add(datumFeatureMap);
 			// FIXME numNonZeroFeatures += datumFeatureMap.size();
