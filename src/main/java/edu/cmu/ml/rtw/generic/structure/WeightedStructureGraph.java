@@ -239,6 +239,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					WeightedStructureRelationUnary currentNode = this.nodes.get(node.getId()).keySet().iterator().next();
 					if (this.nodeMode == RelationMode.MULTI) {
 						this.nodes.get(node.getId()).put(node, w);
+						this.itemCount++;
 					} else if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getNodeWeight(currentNode)) > 0) {
 						this.nodes.get(node.getId()).remove(currentNode);
 						this.nodes.get(node.getId()).put(node, w);

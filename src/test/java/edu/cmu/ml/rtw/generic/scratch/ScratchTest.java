@@ -1,6 +1,13 @@
 package edu.cmu.ml.rtw.generic.scratch;
 
-import org.junit.Test;
+import java.util.Random;
+
+import libsvm.svm;
+import libsvm.svm_model;
+import libsvm.svm_node;
+import libsvm.svm_parameter;
+import libsvm.svm_problem;
+
 
 /*
 import java.io.ByteArrayInputStream;
@@ -29,9 +36,86 @@ import weka.core.SparseInstance;
 import weka.classifiers.functions.LibSVM;*/
 
 public class ScratchTest {
-	@Test
-	public void testMateTools() {
+	public void testLibSVM() {
+		int dataCount = 100;
 		
+		svm_problem prob = new svm_problem();
+		prob.y = new double[dataCount];
+		prob.l = dataCount;
+		prob.x = new svm_node[dataCount][];     
+		
+		Random r = new Random();
+		
+		for (int i = 0; i < dataCount; i++){  
+			prob.x[i] = new svm_node[2];
+			
+			svm_node f0 = new svm_node();
+			f0.index = 0;
+			f0.value = 1.0 + (r.nextDouble() - .5)*.05;
+			prob.x[i][0] = f0;
+			
+			svm_node f1 = new svm_node();
+			f1.index = 1;
+			f1.value = .5 + (r.nextDouble() - .5)*.05;
+			prob.x[i][1] = f1;
+			
+			prob.y[i] = 1.0;
+		}      
+		
+		svm_parameter param = new svm_parameter();
+	    param.probability = 1; // Determines whether p is estimated
+	    param.gamma = 0.5; // Adjust
+	    param.nu = 0.5; // Adjust
+	    param.C = 1;
+	    param.svm_type = svm_parameter.ONE_CLASS;
+	    param.kernel_type = svm_parameter.LINEAR;       
+	    param.cache_size = 20000;
+	    param.eps = 0.001;     
+		
+		svm_model model = svm.svm_train(prob, param);
+		
+		
+		// Evaluate
+		
+		svm_node[] pinstance = new svm_node[2];
+		svm_node f0 = new svm_node();
+		f0.index = 0;
+		f0.value = 1.0;
+		pinstance[0] = f0;
+		svm_node f1 = new svm_node();
+		f1.index = 1;
+		f1.value = .5;
+		pinstance[1] = f1;
+		
+		svm_node[] ninstance = new svm_node[2];
+		svm_node f0n = new svm_node();
+		f0.index = 0;
+		f0.value = -100.0;
+		ninstance[0] = f0n;
+		svm_node f1n = new svm_node();
+		f1.index = 1;
+		f1.value = 1000.0;
+		ninstance[1] = f1n;
+
+	    int totalClasses = 2;       
+	    int[] labels = new int[totalClasses];
+	    svm.svm_get_labels(model,labels);
+
+	    double[] prob_estimates = new double[totalClasses];
+	    double v = svm.svm_predict_probability(model, pinstance, prob_estimates);
+	    
+	    for (int i = 0; i < totalClasses; i++){
+	        System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	    }
+	    System.out.println("(Actual:" + 1 + " Prediction:" + v + ")");  
+	    
+	    prob_estimates = new double[totalClasses];
+	    v = svm.svm_predict_probability(model, ninstance, prob_estimates);
+	    
+	    for (int i = 0; i < totalClasses; i++){
+	        System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	    }
+	    System.out.println("(Actual:" + -1 + " Prediction:" + v + ")");  
 	}
 	
 	/*@Test

@@ -44,6 +44,7 @@ import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelCreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLGApproximation;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLabelDistribution;
+import edu.cmu.ml.rtw.generic.model.SupervisedModelLibSVM;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGramression;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelPartition;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelSVM;
@@ -325,6 +326,7 @@ public abstract class Datum<L> {
 			addGenericModel(new SupervisedModelYADLL<D, L>());
 			addGenericModel(new SupervisedModelWekaOneClass<D, L>());
 			addGenericModel(new SupervisedModelWekaSVMOneClass<D, L>());
+			addGenericModel(new SupervisedModelLibSVM<D, L>());
 			
 			addGenericEvaluation(new SupervisedModelEvaluationAccuracy<D, L>());
 			addGenericEvaluation(new SupervisedModelEvaluationPrecision<D, L>());
