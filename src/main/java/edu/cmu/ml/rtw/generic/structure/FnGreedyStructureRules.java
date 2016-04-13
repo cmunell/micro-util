@@ -59,7 +59,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 			if (this.rulesRefs != null) {
 				this.rules = new ArrayList<>();
 				for (int i = 0; i < this.rulesRefs.size(); i++)
-					this.rules.add(this.context.getMatchRuleSet(parameterValue));
+					this.rules.add(this.context.getMatchRuleSet(this.rulesRefs.get(i)));
 			} else {
 				this.rules = null;
 			}
@@ -68,7 +68,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 			if (this.splitFnsRefs != null) {
 				this.splitFns = new ArrayList<>();
 				for (int i = 0; i < this.splitFnsRefs.size(); i++)
-					this.splitFns.add((Fn<S, ?>)this.context.getMatchStructureFn(parameterValue));
+					this.splitFns.add((Fn<S, ?>)this.context.getMatchStructureFn(this.splitFnsRefs.get(i)));
 			} else {
 				this.splitFns = null;
 			}
