@@ -105,7 +105,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			String id2 = edge.getSecond().getId();
 			if (hasEdge(edge)) {
 				if (this.overwriteOperator == OverwriteOperator.MAX
-						&& w >= getEdgeWeight(edge)) {
+						&& Double.compare(w, getEdgeWeight(edge)) > 0) {
 					this.edges.get(id1).get(id2).put(edge, w);
 					if (!edge.isOrdered())
 						this.edges.get(id2).get(id1).put(edge.getReverse(), w);
@@ -115,7 +115,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			} else if (hasEdge(id1, id2)) {
 				if (this.edgeMode == RelationMode.SINGLE) {
 					WeightedStructureRelationBinary currentEdge = this.edges.get(id1).get(id2).keySet().iterator().next();
-					if (this.overwriteOperator == OverwriteOperator.MAX && w >= getEdgeWeight(currentEdge)) {
+					if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getEdgeWeight(currentEdge)) > 0) {
 						if (edge.isOrdered()) {
 							if (!remove(currentEdge))
 								return this;
@@ -178,7 +178,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 						this.edges.get(id2).get(id1).put(edge.getReverse(), w);
 					}
 				}
-			} else {			
+			} else {
 				if (edge.isOrdered()) {
 					if (!this.edges.containsKey(id1))
 						this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
@@ -204,7 +204,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					this.edges.get(id2).get(id1).put(edge.getReverse(), w);
 				} else { // There's a reverse edge and mode is single
 					WeightedStructureRelationBinary currentReverseEdge = this.edges.get(id2).get(id1).keySet().iterator().next();
-					if (this.overwriteOperator == OverwriteOperator.MAX && w >= getEdgeWeight(currentReverseEdge)) {
+					if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getEdgeWeight(currentReverseEdge)) > 0) {
 						if (!remove(currentReverseEdge))
 							return this;
 						if (!this.edges.containsKey(id1))
@@ -230,7 +230,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 		} else {
 			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
 			if (hasNode(node)) {
-				if (this.overwriteOperator == OverwriteOperator.MAX && w >= getNodeWeight(node))
+				if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getNodeWeight(node)) > 0)
 					this.nodes.get(node.getId()).put(node, w);
 				else 
 					return this;
@@ -239,7 +239,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					WeightedStructureRelationUnary currentNode = this.nodes.get(node.getId()).keySet().iterator().next();
 					if (this.nodeMode == RelationMode.MULTI) {
 						this.nodes.get(node.getId()).put(node, w);
-					} else if (this.overwriteOperator == OverwriteOperator.MAX && w >= getNodeWeight(currentNode)) {
+					} else if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getNodeWeight(currentNode)) > 0) {
 						this.nodes.get(node.getId()).remove(currentNode);
 						this.nodes.get(node.getId()).put(node, w);
 					} else
@@ -461,5 +461,25 @@ public class WeightedStructureGraph extends WeightedStructure {
 		}
 		
 		return list;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		for (Entry<String, Map<WeightedStructureRelationUnary, Double>> entry : this.nodes.entrySet()) {
+			for (Entry<WeightedStructureRelationUnary, Double> entry2 : entry.getValue().entrySet()) {
+				str.append(entry.getKey() + " " + entry2.getKey().toParse(false) + " " + entry2.getValue() + "\n");
+			}
+		}
+		
+		for (Entry<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> entry : this.edges.entrySet()) {
+			for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry2 : entry.getValue().entrySet()) {
+				for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
+					str.append(entry.getKey() + " " + entry2.getKey() + " " + entry3.getKey() + " " + entry3.getValue() + "\n");
+				}
+			}
+		}
+		
+		return str.toString();
 	}
 }
