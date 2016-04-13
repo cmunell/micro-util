@@ -76,14 +76,14 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 		}
 	}
 	
-	private L targetLabel;
-	private L outlierLabel;
+	private L positiveLabel;
+	private L negativeLabel;
 	private SVMType svmType = SVMType.ONE_CLASS;
 	private KernelType kernelType = KernelType.RBF;
 	private Double gamma = null;
 	private double nu = 0.5;
 	private double C = 1;
-	private String[] parameterNames = { "targetLabel", "outlierLabel", "svmType", "kernelType", "gamma", "nu", "C" };
+	private String[] parameterNames = { "positiveLabel", "negativeLabel", "svmType", "kernelType", "gamma", "nu", "C" };
 	
 	private svm_model model;
 	
@@ -102,10 +102,10 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("targetLabel"))
-			return Obj.stringValue(String.valueOf(this.targetLabel.toString()));
-		else if (parameter.equals("outlierLabel"))
-			return Obj.stringValue(String.valueOf(this.outlierLabel.toString()));
+		if (parameter.equals("positiveLabel"))
+			return Obj.stringValue(String.valueOf(this.positiveLabel.toString()));
+		else if (parameter.equals("negativeLabel"))
+			return Obj.stringValue(String.valueOf(this.negativeLabel.toString()));
 		else if (parameter.equals("svmType"))
 			return Obj.stringValue(this.svmType.toString());
 		else if (parameter.equals("kernelType"))
@@ -122,10 +122,10 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("targetLabel"))
-			this.targetLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("outlierLabel"))
-			this.outlierLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
+		if (parameter.equals("positiveLabel"))
+			this.positiveLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("negativeLabel"))
+			this.negativeLabel = this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("svmType"))
 			this.svmType = SVMType.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("kernelType"))
@@ -258,9 +258,9 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 			double v = svm.svm_predict_probability(this.model, svmDatum, prob_estimates);
 			L label = null;
 			if (Double.compare(v, 0) >= 0)
-				label = this.targetLabel;
+				label = this.positiveLabel;
 			else
-				label = this.outlierLabel;
+				label = this.negativeLabel;
 			out.put(datum, label);
 		}
 		
@@ -293,13 +293,13 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 			prob.x[i] = constructSVMDatumVector(data, datum);
 			if (includeLabels) {
 				if (this.svmType == SVMType.ONE_CLASS) {
-					if (this.targetLabel.equals(datum.getLabel()))
+					if (this.positiveLabel.equals(datum.getLabel()))
 						prob.y[i] = 1.0;
 				} else {
-					if (this.targetLabel.equals(datum.getLabel()))
+					if (this.positiveLabel.equals(datum.getLabel()))
 						prob.y[i] = 1.0;
-					else if (this.outlierLabel.equals(datum.getLabel()))
-						prob.y[i] = 0.0;
+					else if (this.negativeLabel.equals(datum.getLabel()))
+						prob.y[i] = -1.0;
 				}
 			}
 			i++;
