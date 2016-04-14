@@ -365,6 +365,16 @@ public class DataTools {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
 		
+		addCommand("CloneSearch", new Command<Search>() {
+			@Override
+			public Search run(Context context, List<String> modifiers,
+					String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				Search search = context.getMatchSearch(parameters.get("search").getValue());
+				return search.clone();
+			}
+		});
+		
 		addCommand("ConcatenateArrays", new Command<List<String>>() {
 			@Override
 			public List<String> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {

@@ -1,7 +1,8 @@
 package edu.cmu.ml.rtw.generic.scratch;
 
-import java.util.Random;
+import java.io.IOException;
 
+import edu.cmu.ml.rtw.generic.util.StringUtil;
 import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
@@ -36,6 +37,7 @@ import weka.core.SparseInstance;
 import weka.classifiers.functions.LibSVM;*/
 
 public class ScratchTest {
+
 	public void testLibSVM() {
 		int dataCount = 100;
 		
@@ -44,19 +46,19 @@ public class ScratchTest {
 		prob.l = dataCount;
 		prob.x = new svm_node[dataCount][];     
 		
-		Random r = new Random();
+		//Random r = new Random();
 		
 		for (int i = 0; i < dataCount; i++){  
 			prob.x[i] = new svm_node[2];
 			
 			svm_node f0 = new svm_node();
 			f0.index = 0;
-			f0.value = 1.0 + (r.nextDouble() - .5)*.05;
+			f0.value = 1.0;// + (r.nextDouble() - .5)*.05;
 			prob.x[i][0] = f0;
 			
 			svm_node f1 = new svm_node();
 			f1.index = 1;
-			f1.value = .5 + (r.nextDouble() - .5)*.05;
+			f1.value = .5;// + (r.nextDouble() - .5)*.05;
 			prob.x[i][1] = f1;
 			
 			prob.y[i] = 1.0;
@@ -101,6 +103,16 @@ public class ScratchTest {
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(model,labels);
 
+	    try {
+			model = (svm_model)StringUtil.deserializeFromBase64String(StringUtil.serializeToBase64String(model));
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
 	    double[] prob_estimates = new double[totalClasses];
 	    double v = svm.svm_predict_probability(model, pinstance, prob_estimates);
 	    
