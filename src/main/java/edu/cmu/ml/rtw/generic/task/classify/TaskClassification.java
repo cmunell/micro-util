@@ -151,4 +151,15 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	public String getGenericName() {
 		return "Classification";
 	}
+	
+	public TaskClassification<D, L> clone() {
+		return clone(this.referenceName);
+	}
+		
+	public TaskClassification<D, L> clone(String referenceName) {
+		TaskClassification<D, L> clone = new TaskClassification<D, L>(this.context);
+		if (!clone.fromParse(this.modifiers, referenceName, toParse()))
+			return null;
+		return clone;
+	}
 }

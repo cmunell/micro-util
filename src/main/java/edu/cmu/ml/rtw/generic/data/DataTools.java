@@ -371,7 +371,7 @@ public class DataTools {
 					String referenceName, Function fnObj) {
 				AssignmentList parameters = fnObj.getParameters();
 				Search search = context.getMatchSearch(parameters.get("search").getValue());
-				return search.clone();
+				return search.clone(referenceName);
 			}
 		});
 		

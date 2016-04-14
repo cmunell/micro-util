@@ -33,7 +33,7 @@ public abstract class EvaluationClassificationMeasure<D extends Datum<L>, L> ext
 
 	@Override
 	public boolean lastStageRequiresCloning() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -49,6 +49,8 @@ public abstract class EvaluationClassificationMeasure<D extends Datum<L>, L> ext
 			return null;
 		
 		clone.method = this.method.clone();
+		clone.task = this.task.clone();
+		
 		return clone;
 	}
 	

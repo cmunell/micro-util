@@ -254,9 +254,9 @@ public abstract class Search extends CtxParsableFunction {
 		return assignmentList;
 	}
 	
-	public Search clone() {
+	public Search clone(String referenceName) {
 		Search clone = this.makeInstance(this.context);
-		if (!clone.fromParse(toParse()))
+		if (!clone.fromParse(this.modifiers, referenceName, toParse()))
 			return null;
 		return clone;
 	}

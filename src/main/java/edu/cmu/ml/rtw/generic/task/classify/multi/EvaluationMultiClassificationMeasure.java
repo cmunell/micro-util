@@ -32,7 +32,7 @@ public abstract class EvaluationMultiClassificationMeasure extends EvaluationMul
 
 	@Override
 	public boolean lastStageRequiresCloning() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -48,6 +48,8 @@ public abstract class EvaluationMultiClassificationMeasure extends EvaluationMul
 			return null;
 		
 		clone.method = this.method.clone();
+		clone.task = this.task.clone();
+		
 		return clone;
 	}
 	

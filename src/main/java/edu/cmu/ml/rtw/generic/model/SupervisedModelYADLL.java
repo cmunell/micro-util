@@ -603,11 +603,14 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		Matrix X = dataMatrices.getFirst();
 		L[] labels = (L[])this.validLabels.toArray();
 		
-		this.model.flush_stats(false);
-		this.model.clamp_("x", X);
-		this.model.eval();
-		
-		float[] outputY = this.model.getOutput(this.targetFnNode).getData();
+		float[] outputY = null;
+		synchronized (this.model) {
+			this.model.flush_stats(false);
+			this.model.clamp_("x", X);
+			this.model.eval();
+			outputY = this.model.getOutput(this.targetFnNode).getData();
+			this.model.flush_stats(false);
+		}
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		int i = 0;
@@ -633,9 +636,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			posteriors.put(datum, p);
 			i++;
 		}
-		
-		this.model.flush_stats(false);
-		
+	
 		return posteriors;
 	}
 	
@@ -649,11 +650,15 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		Matrix X = dataMatrices.getFirst();
 		L[] labels = (L[])this.validLabels.toArray();
 		
-		this.model.flush_stats(false);
-		this.model.clamp_("x", X);
-		this.model.eval();
-		
-		float[] outputY = this.model.getOutput(this.targetFnNode).getData();
+		float[] outputY = null;
+		synchronized (this.model) {
+			this.model.flush_stats(false);
+			this.model.clamp_("x", X);
+			this.model.eval();
+			
+			outputY = this.model.getOutput(this.targetFnNode).getData();
+			this.model.flush_stats(false);
+		}
 		
 		Map<D, L> classifications = new HashMap<D, L>();
 		int i = 0;
@@ -675,7 +680,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			i++;
 		}
 		
-		this.model.flush_stats(false);
+		
 		
 		return classifications;
 	}
