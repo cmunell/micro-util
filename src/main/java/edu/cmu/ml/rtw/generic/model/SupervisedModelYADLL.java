@@ -179,15 +179,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			
 			str.append(this.fnType.getYADLLName());
 			if (this.fnType.getType() != YADLLFunctionType.PARAMETER_INITIALIZATION) {
-				str.append("(");
-				for (String paramName : this.fnType.getArgNames())
-					str.append(this.parameterValues.get(paramName)).append(",");
-				
-				if (this.fnType.getType() == YADLLFunctionType.LOSS)
-					str.append(" y");
-				else
-					str.delete(str.length() - 1, str.length());
-				str.append(")");
+				if (this.fnType.getArgNames().length > 0) {
+					str.append("(");
+					for (String paramName : this.fnType.getArgNames())
+						str.append(this.parameterValues.get(paramName)).append(",");
+					
+					if (this.fnType.getType() == YADLLFunctionType.LOSS)
+						str.append(" y");
+					else
+						str.delete(str.length() - 1, str.length());
+					str.append(")");
+				}
 			}
 			
 			return str.toString();
@@ -412,7 +414,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				this.model.clamp_("y", testY);
 				this.model.eval();
 				testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-				this.model.flush_stats(false);
+				this.model.flush_stats_(false);
 			}
 			
 			this.model.clamp_("x", X);
@@ -427,7 +429,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				
 			optimizer.accum_grad(1f); 
 			optimizer.update_graph();
-			this.model.flush_stats(false);
+			this.model.flush_stats_(false);
 			
 			//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 
@@ -605,11 +607,11 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		float[] outputY = null;
 		synchronized (this.model) {
-			this.model.flush_stats(false);
+			this.model.flush_stats_(false);
 			this.model.clamp_("x", X);
 			this.model.eval();
 			outputY = this.model.getOutput(this.targetFnNode).getData();
-			this.model.flush_stats(false);
+			this.model.flush_stats_(false);
 		}
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
@@ -652,12 +654,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		float[] outputY = null;
 		synchronized (this.model) {
-			this.model.flush_stats(false);
+			this.model.flush_stats_(false);
 			this.model.clamp_("x", X);
 			this.model.eval();
 			
 			outputY = this.model.getOutput(this.targetFnNode).getData();
-			this.model.flush_stats(false);
+			this.model.flush_stats_(false);
 		}
 		
 		Map<D, L> classifications = new HashMap<D, L>();
