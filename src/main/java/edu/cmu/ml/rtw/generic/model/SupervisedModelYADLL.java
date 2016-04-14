@@ -17,6 +17,7 @@ import YADLL.FunctionGraphs.FunctionGraph;
 import YADLL.FunctionGraphs.Functions.Function;
 import YADLL.FunctionGraphs.Functions.Variable;
 import YADLL.Optimizers.GradOpt;
+
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
@@ -400,12 +401,12 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		Matrix testY = testDataMatrices.getSecond();
 		
 		Estimator estimator = new BP(this.model); // FIXME: Add other estimators
-		GradOpt optimizer = new GradOpt(estimator);
+		GradOpt optimizer = new GradOpt(estimator); 
 		optimizer.setStepSize(this.stepSize);
 		optimizer.setOptType("descent");
-		
+	
 		List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
-		
+		this.model.flush_stats_(false);
 		int epoch = 0;
 		while(epoch < this.numEpochs) {
 			double testLoss = 0.0;
@@ -506,8 +507,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); */
 	}
 	
-	private boolean buildModelFromParameters(int inputVectorSize) {
-		
+	private boolean buildModelFromParameters(int inputVectorSize) {	
 		Variable x = new Variable("x", inputVectorSize, null);
 		Variable y = new Variable("y", this.validLabels.size(), null);
 
