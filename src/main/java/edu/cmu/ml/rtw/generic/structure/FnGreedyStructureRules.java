@@ -83,7 +83,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	protected <C extends Collection<S>> C compute(Collection<S> input, C output) {
 		for (S structure : input) {
 			int iterations = 0;
-			int addedObjs = 0;
+			boolean changed = false;
 			do {
 				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
 				for (int i = 0; i < this.splitFns.size(); i++) {
@@ -111,7 +111,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 					
 				});
 				
-				addedObjs = 0;
+				changed = false;
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (List<Obj> objList : objs.values())
@@ -119,11 +119,12 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							int oldCount = structure.getItemCount();
 							structure.add(newStructurePart, structurePart.getSecond());
-							addedObjs = structure.getItemCount() - oldCount;
+							if (structure.getItemCount() - oldCount > 0)
+								changed = true;
 						}
 				}
 				iterations++;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && addedObjs > 0);
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && changed);
 			
 			output.add(structure);
 		}
