@@ -119,7 +119,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							int oldCount = structure.getItemCount();
 							structure.add(newStructurePart, structurePart.getSecond());
-							if (structure.getItemCount() - oldCount > 0)
+							if (structure.getItemCount() - oldCount != 0)
 								changed = true;
 						}
 				}
