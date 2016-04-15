@@ -133,13 +133,13 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			int addedStructureItems = 0;
 			for (Entry entry : structures.entrySet()) {
 				startStructureItems += ((WeightedStructure)entry.getValue()).getItemCount();
-
+				//System.out.println("BEFORE TRANSFORM:\n " + entry.getValue());
 				List transformedStructures = ((Fn)this.structureTransformFn).listCompute(entry.getValue());
 				WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 				for (int j = 1; j < transformedStructures.size(); j++)
 					firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 				entry.setValue(firstTransformed);
-				
+				//System.out.println("AFTER TRANSFORM:\n " + entry.getValue());
 				addedStructureItems += firstTransformed.getItemCount();
 			}
 			

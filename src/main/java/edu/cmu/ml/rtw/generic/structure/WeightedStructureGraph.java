@@ -96,164 +96,192 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return true;
 	}
 
-	// FIXME This is spaghetti
 	@Override
 	public WeightedStructure add(CtxParsable item, double w) {
 		if (item instanceof WeightedStructureRelationBinary) {
-			WeightedStructureRelationBinary edge = (WeightedStructureRelationBinary)item;
-			String id1 = edge.getFirst().getId();
-			String id2 = edge.getSecond().getId();
-			if (hasEdge(edge)) {
-				if (this.overwriteOperator == OverwriteOperator.MAX
-						&& Double.compare(w, getEdgeWeight(edge)) > 0) {
-					this.edges.get(id1).get(id2).put(edge, w);
-					if (!edge.isOrdered())
-						this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-				} else {
-					return this;
-				}
-			} else if (hasEdge(id1, id2)) {
-				if (this.edgeMode == RelationMode.SINGLE) {
-					WeightedStructureRelationBinary currentEdge = this.edges.get(id1).get(id2).keySet().iterator().next();
-					if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getEdgeWeight(currentEdge)) > 0) {
-						if (edge.isOrdered()) {
-							if (!remove(currentEdge))
-								return this;
-							if (!this.edges.containsKey(id1))
-								this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-							if (!this.edges.get(id1).containsKey(id2))
-								this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
-							
-							this.edges.get(id1).get(id2).put(edge, w);
-						} else {
-							if (!hasEdge(id2, id1)) {
-								if (!remove(currentEdge))
-									return this;
-								this.edges.get(id1).get(id2).put(edge, w);
-								
-								if (!this.edges.containsKey(id2))
-									this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-								if (!this.edges.get(id2).containsKey(id1))
-									this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
-								this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-								this.itemCount++;
-							} else {
-								WeightedStructureRelationBinary currentReverseEdge = this.edges.get(id2).get(id1).keySet().iterator().next();
-								if (w >= getWeight(currentReverseEdge)) {
-									if (!remove(currentEdge)) 
-										return this;
-									remove(currentReverseEdge); // Don't check for true because may fail if undirected
-									
-									if (!this.edges.containsKey(id2))
-										this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-									if (!this.edges.get(id2).containsKey(id1))
-										this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
-									if (!this.edges.containsKey(id1))
-										this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-									if (!this.edges.get(id1).containsKey(id2))
-										this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
-									
-									this.edges.get(id1).get(id2).put(edge, w);
-									this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-								} else {
-									return this;
-								}
-							}
-						}
-					} else {
-						return this;
-					}
-				} else {
-					if (!this.edges.get(id1).get(id2).containsKey(edge))
-						this.itemCount++;
-					this.edges.get(id1).get(id2).put(edge, w);
-					if (!edge.isOrdered()) {
-						if (!this.edges.containsKey(id2))
-							this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-						if (!this.edges.get(id2).containsKey(id1))
-							this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
-						if (!this.edges.get(id2).get(id1).containsKey(edge))
-							this.itemCount++;
-						
-						this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-					}
-				}
-			} else {
-				if (edge.isOrdered()) {
-					if (!this.edges.containsKey(id1))
-						this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-					if (!this.edges.get(id1).containsKey(id2))
-						this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
-					this.edges.get(id1).get(id2).put(edge, w);
-					this.itemCount++;
-				} else if (!hasEdge(id2, id1) || this.edgeMode == RelationMode.MULTI) {
-					if (!this.edges.containsKey(id1))
-						this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-					if (!this.edges.get(id1).containsKey(id2))
-						this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
-					this.edges.get(id1).get(id2).put(edge, w);
-					this.itemCount++;
-					
-					if (!this.edges.containsKey(id2))
-						this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-					if (!this.edges.get(id2).containsKey(id1))
-						this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
-					if (!this.edges.get(id2).get(id1).containsKey(edge))
-						this.itemCount++;
-					
-					this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-				} else { // There's a reverse edge and mode is single
-					WeightedStructureRelationBinary currentReverseEdge = this.edges.get(id2).get(id1).keySet().iterator().next();
-					if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getEdgeWeight(currentReverseEdge)) > 0) {
-						if (!remove(currentReverseEdge))
-							return this;
-						if (!this.edges.containsKey(id1))
-							this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-						if (!this.edges.get(id1).containsKey(id2))
-							this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
-						this.edges.get(id1).get(id2).put(edge, w);
-						this.itemCount++;
-						
-						if (!this.edges.containsKey(id2))
-							this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
-						if (!this.edges.get(id2).containsKey(id1))
-							this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
-						if (!this.edges.get(id2).get(id1).containsKey(edge))
-							this.itemCount++;
-						
-						this.edges.get(id2).get(id1).put(edge.getReverse(), w);
-					} else {
-						return this;
-					}
-				}
-			}
-		} else {
-			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
-			if (hasNode(node)) {
-				if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getNodeWeight(node)) > 0)
-					this.nodes.get(node.getId()).put(node, w);
-				else 
-					return this;
-			} else {
-				if (this.nodes.containsKey(node.getId())) {
-					WeightedStructureRelationUnary currentNode = this.nodes.get(node.getId()).keySet().iterator().next();
-					if (this.nodeMode == RelationMode.MULTI) {
-						this.nodes.get(node.getId()).put(node, w);
-						this.itemCount++;
-					} else if (this.overwriteOperator == OverwriteOperator.MAX && Double.compare(w, getNodeWeight(currentNode)) > 0) {
-						this.nodes.get(node.getId()).remove(currentNode);
-						this.nodes.get(node.getId()).put(node, w);
-					} else
-						return this;
-				} else {
-					this.nodes.put(node.getId(), new HashMap<WeightedStructureRelationUnary, Double>());
-					this.nodes.get(node.getId()).put(node, w);
-					this.itemCount++;	
-				}
-			}
+			addEdge((WeightedStructureRelationBinary)item, w);
+		} else if (item instanceof WeightedStructureRelationUnary) {
+			addNode((WeightedStructureRelationUnary)item, w);
 		}
 		
 		return this;
+	}
+	
+	private boolean addEdge(WeightedStructureRelationBinary edge, double w) {
+		String id1 = edge.getFirst().getId();
+		String id2 = edge.getSecond().getId();
+		if (this.edgeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.CONSERVE) {
+			return addEdgeMultiConserve(id1, id2, edge, w);
+		} else if (this.edgeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.MAX) {
+			return addEdgeMultiMax(id1, id2, edge, w);
+		} else if (this.edgeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.CONSERVE) {
+			return addEdgeSingleConserve(id1, id2, edge, w);
+		} else if (this.edgeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.MAX) {
+			return addEdgeSingleMax(id1, id2, edge, w);
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+	
+	private boolean addEdgeMultiMax(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		if (hasEdge(edge)) {
+			if (Double.compare(w, getEdgeWeight(edge)) > 0) {
+				return replaceEdge(id1, id2, edge, w);
+			} else {
+				return false;
+			}
+		} else {
+			return putEdge(id1, id2, edge, w);
+		}
+	}
+	
+	private boolean addEdgeMultiConserve(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		if (hasEdge(edge))
+			return false;
+		return putEdge(id1, id2, edge, w);
+	}
+	
+	private boolean addEdgeSingleMax(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		if (edge.isOrdered()) {
+			if (hasEdge(id1, id2)) {
+				WeightedStructureRelationBinary currentEdge = this.edges.get(id1).get(id2).keySet().iterator().next();
+				if (Double.compare(w, getEdgeWeight(currentEdge)) > 0) {
+					remove(currentEdge);
+					return putEdge(id1, id2, edge, w);
+				} else {
+					return false;
+				}
+			} else {
+				return putEdge(id1, id2, edge, w);
+			}
+		} else {
+			WeightedStructureRelationBinary currentEdge = null;
+			WeightedStructureRelationBinary currentReverseEdge = null;
+			if (hasEdge(id1, id2)) {
+				currentEdge = this.edges.get(id1).get(id2).keySet().iterator().next();
+				if (Double.compare(w, getEdgeWeight(currentEdge)) <= 0)
+					return false;
+			}
+				
+			if (hasEdge(id2, id1)) {
+				currentReverseEdge = this.edges.get(id2).get(id1).keySet().iterator().next();
+				if (Double.compare(w, getEdgeWeight(currentReverseEdge)) <= 0)
+					return false;
+			}
+				
+			if (currentEdge != null)
+				remove(currentEdge);
+			if (currentReverseEdge != null)
+				remove(currentReverseEdge);
+			
+			return putEdge(id1, id2, edge, w);
+		}
+	}
+	
+	private boolean addEdgeSingleConserve(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		if (hasEdge(id1, id2))
+			return false;
+		else if (!edge.isOrdered() && hasEdge(id2, id1))
+			return false;
+		else 
+			return putEdge(id1, id2, edge, w);
+	}
+	
+	private boolean replaceEdge(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		this.edges.get(id1).get(id2).put(edge, w);
+		if (!edge.isOrdered())
+			this.edges.get(id2).get(id1).put(edge.getReverse(), w);
+		return true;
+	}
+	
+	private boolean putEdge(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		if (!this.edges.containsKey(id1))
+			this.edges.put(id1, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
+		if (!this.edges.get(id1).containsKey(id2))
+			this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
+		this.edges.get(id1).get(id2).put(edge, w);
+		this.itemCount++;
+		
+		if (!edge.isOrdered()) {
+			if (!this.edges.containsKey(id2))
+				this.edges.put(id2, new HashMap<String, Map<WeightedStructureRelationBinary, Double>>());
+			if (!this.edges.get(id2).containsKey(id1))
+				this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
+			this.edges.get(id2).get(id1).put(edge.getReverse(), w);
+			this.itemCount++;
+		}
+		
+		return true;
+	}
+	
+	private boolean addNode(WeightedStructureRelationUnary node, double w) {
+		if (this.nodeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.CONSERVE) {
+			return addNodeMultiConserve(node, w);
+		} else if (this.nodeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.MAX) {
+			return addNodeMultiMax(node, w);
+		} else if (this.nodeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.CONSERVE) {
+			return addNodeSingleConserve(node, w);
+		} else if (this.nodeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.MAX) {
+			return addNodeSingleMax(node, w);
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+	
+	private boolean addNodeMultiMax(WeightedStructureRelationUnary node, double w) {
+		if (hasNode(node)) {
+			if (Double.compare(w, getNodeWeight(node)) > 0)
+				return replaceNode(node, w);
+			else
+				return false;
+		} else {
+			return putNode(node, w);
+		}
+	}
+	
+	private boolean addNodeMultiConserve(WeightedStructureRelationUnary node, double w) {
+		if (hasNode(node))
+			return false;
+		return putNode(node, w);
+	}
+	
+	private boolean addNodeSingleMax(WeightedStructureRelationUnary node, double w) {
+		if (hasNode(node)) {
+			if (Double.compare(w, getNodeWeight(node)) > 0)
+				return replaceNode(node, w);
+			else 
+				return false;
+		} else if (this.nodes.containsKey(node.getId())) {
+			WeightedStructureRelationUnary currentNode = this.nodes.get(node.getId()).keySet().iterator().next();
+			if (Double.compare(w, getNodeWeight(currentNode)) > 0) {
+				remove(currentNode);
+				return putNode(node, w);
+			} else {
+				return false;
+			}
+		} else {
+			return putNode(node, w);
+		}
+
+	}
+	
+	private boolean addNodeSingleConserve(WeightedStructureRelationUnary node, double w) {
+		if (this.nodes.containsKey(node.getId()))
+			return false;
+		return putNode(node, w);
+	}
+	
+	private boolean replaceNode(WeightedStructureRelationUnary node, double w) {
+		this.nodes.get(node.getId()).put(node, w);
+		return true;
+	}
+	
+	private boolean putNode(WeightedStructureRelationUnary node, double w) {
+		if (!this.nodes.containsKey(node.getId()))
+			this.nodes.put(node.getId(), new HashMap<WeightedStructureRelationUnary, Double>());
+		this.nodes.get(node.getId()).put(node, w);
+		this.itemCount++;
+		return true;
 	}
 
 	@Override
@@ -467,16 +495,17 @@ public class WeightedStructureGraph extends WeightedStructure {
 	@Override
 	public String toString() {
 		StringBuilder str = new StringBuilder();
+		str.append("Size: " + this.itemCount + "\n");
 		for (Entry<String, Map<WeightedStructureRelationUnary, Double>> entry : this.nodes.entrySet()) {
 			for (Entry<WeightedStructureRelationUnary, Double> entry2 : entry.getValue().entrySet()) {
-				str.append(entry.getKey() + " " + entry2.getKey().toParse(false) + " " + entry2.getValue() + "\n");
+				str.append(entry.getKey() + " " + entry2.getKey().getType() + " " + entry2.getValue() + "\n");
 			}
 		}
 		
 		for (Entry<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> entry : this.edges.entrySet()) {
 			for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry2 : entry.getValue().entrySet()) {
 				for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
-					str.append(entry.getKey() + " " + entry2.getKey() + " " + entry3.getKey() + " " + entry3.getValue() + "\n");
+					str.append(entry.getKey() + " " + entry2.getKey() + " " + entry3.getKey().getType() + " " + entry3.getValue() + "\n");
 				}
 			}
 		}
