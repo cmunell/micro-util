@@ -516,7 +516,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			Variable y = new Variable("y", this.validLabels.size(), null);
 	
 			this.model = new FunctionGraph();
-			this.model.setSeed(1);
+			//this.model.setSeed(1); FIXME
 			this.model.defineVariable(x);
 			this.model.defineLabel(y);
 			
