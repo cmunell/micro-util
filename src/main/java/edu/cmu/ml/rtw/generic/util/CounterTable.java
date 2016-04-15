@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,11 +50,14 @@ public class CounterTable<T>{
 	}
 	
 	public Map<T, Integer> buildIndex() {
-		HashMap<T, Integer> index = new HashMap<T, Integer>(this.counts.size());
+		HashMap<T, Integer> index = new HashMap<T, Integer>();
 		int i = 0;
 		
-		for (Entry<T, Integer> entry : this.counts.entrySet()) {
-			index.put(entry.getKey(), i);
+		TreeSet<T> sortedIndex = new TreeSet<T>();
+		sortedIndex.addAll(this.counts.keySet());
+		
+		for (T item : sortedIndex) {
+			index.put(item, i);
 			i++;
 		}
 		

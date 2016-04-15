@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import YADLL.Data.FMatrix;
 import YADLL.Data.Matrix;
@@ -17,7 +18,6 @@ import YADLL.FunctionGraphs.FunctionGraph;
 import YADLL.FunctionGraphs.Functions.Function;
 import YADLL.FunctionGraphs.Functions.Variable;
 import YADLL.Optimizers.GradOpt;
-
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
@@ -406,7 +406,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		optimizer.setOptType("descent");
 	
 		List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
-		this.model.flush_stats_(false);
+
 		int epoch = 0;
 		while(epoch < this.numEpochs) {
 			double testLoss = 0.0;
@@ -580,22 +580,37 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		this.model.compile();
-		
+
 		return true;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private Map<L, Integer> getLabelIndices() {
 		Map<L, Integer> labelMap = new HashMap<L, Integer>();
-
-		L[] labels = (L[])this.validLabels.toArray();
-		for (int i = 0; i < labels.length; i++)
-			labelMap.put(labels[i], i);
+	
+		Set<String> validLabels = new TreeSet<String>();
+		for (L label : this.validLabels)
+			validLabels.add(label.toString());
+		
+		int i = 0;
+		for (String validLabel : validLabels) {
+			labelMap.put(this.context.getDatumTools().labelFromString(validLabel), i);
+			i++;
+		}
 		
 		return labelMap;
 	}
+	
+	private List<L> getLabels() {
+		Set<String> validLabels = new TreeSet<String>();
+		for (L label : this.validLabels)
+			validLabels.add(label.toString());
+		List<L> labels = new ArrayList<L>();
+		for (String label : validLabels)
+			labels.add(this.context.getDatumTools().labelFromString(label));
+		return labels;
+	
+	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
@@ -603,7 +618,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		L[] labels = (L[])this.validLabels.toArray();
+		List<L> labels = getLabels();
 		
 		float[] outputY = null;
 		synchronized (this.model) {
@@ -620,19 +635,19 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
 			
-			for (int j = 0; j < labels.length; j++) {
-				double value = Double.valueOf(outputY[i*labels.length + j]);
-				p.put(labels[j], value);
-				norm += outputY[i*labels.length + j];
+			for (int j = 0; j < labels.size(); j++) {
+				double value = Double.valueOf(outputY[i*labels.size() + j]);
+				p.put(labels.get(j), value);
+				norm += outputY[i*labels.size() + j];
 			}
 
-			for (int j = 0; j < labels.length; j++) {
-				double normValue = p.get(labels[j])/norm;
+			for (int j = 0; j < labels.size(); j++) {
+				double normValue = p.get(labels.get(j))/norm;
 
 				if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(normValue, this.classificationThreshold) >= 0)
-					p.put(labels[j], normValue);
+					p.put(labels.get(j), normValue);
 				else
-					p.remove(labels[j]);
+					p.remove(labels.get(j));
 			}
 			
 			posteriors.put(datum, p);
@@ -642,7 +657,6 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		return posteriors;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
@@ -650,8 +664,8 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		L[] labels = (L[])this.validLabels.toArray();
-		
+		List<L> labels = getLabels();
+		int numLabels = labels.size();
 		float[] outputY = null;
 		synchronized (this.model) {
 			this.model.flush_stats_(false);
@@ -668,16 +682,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			double maxValue = 0.0;
 			int maxIndex = 0;
 			double norm = 0.0;
-			for (int j = 0; j < labels.length; j++) {
-				if (Double.compare(outputY[i*labels.length + j], maxValue) >= 0) {
+			
+			for (int j = 0; j < numLabels; j++) {
+				if (Double.compare(outputY[i*numLabels + j], maxValue) >= 0) {
 					maxIndex = j;
-					maxValue = outputY[i*labels.length + j];
+					maxValue = outputY[i*numLabels + j];
 				}
-				norm += outputY[i*labels.length + j];
+				norm += outputY[i*numLabels + j];
 			}
 			
 			if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(maxValue/norm, this.classificationThreshold) >= 0) {
-				classifications.put(datum, labels[maxIndex]);
+				classifications.put(datum, labels.get(maxIndex));
 			}
 			i++;
 		}
