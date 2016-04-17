@@ -84,6 +84,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPrepositionOfClause;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
@@ -310,6 +311,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnDependencyRelation());
 		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
 		this.addGenericTokenSpanFn(new FnPredicateArgument());
+		this.addGenericTokenSpanFn(new FnPrepositionOfClause());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
