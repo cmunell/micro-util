@@ -30,6 +30,7 @@ public class FnNGramContext extends FnNGram {
 		AFTER_INCLUDING,
 	}
 	
+	private boolean allowSqueeze = false;
 	private Type type = Type.BEFORE;
 	
 	public FnNGramContext() {
@@ -39,22 +40,23 @@ public class FnNGramContext extends FnNGram {
 	public FnNGramContext(Context context) {
 		super(context);
 		
-		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 1);
+		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 2);
 		this.parameterNames[this.parameterNames.length - 1] = "type";
+		this.parameterNames[this.parameterNames.length - 2] = "allowSqueeze";
 	}
 	
 	@Override
 	protected boolean getNGrams(TokenSpan tokenSpan, Collection<TokenSpan> ngrams) {
-		if ((this.type == Type.BEFORE || this.type == Type.BEFORE_INCLUDING) && tokenSpan.getStartTokenIndex() - this.n >= 0) {
+		if ((this.type == Type.BEFORE || this.type == Type.BEFORE_INCLUDING) && (this.allowSqueeze || tokenSpan.getStartTokenIndex() - this.n >= 0)) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 									 tokenSpan.getSentenceIndex(), 
-									 tokenSpan.getStartTokenIndex() - this.n, 
+									 Math.max(0, tokenSpan.getStartTokenIndex() - this.n), 
 									 tokenSpan.getStartTokenIndex() + ((this.type == Type.BEFORE) ? 0 : tokenSpan.getLength())));
-		} else if ((this.type == Type.AFTER || this.type == Type.AFTER_INCLUDING) && tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex())) {
+		} else if ((this.type == Type.AFTER || this.type == Type.AFTER_INCLUDING) && (this.allowSqueeze || tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 					 				 tokenSpan.getSentenceIndex(), 
 					 				 tokenSpan.getEndTokenIndex() - ((this.type == Type.AFTER) ? 0 : tokenSpan.getLength()), 
-					 				 tokenSpan.getEndTokenIndex() + this.n));
+					 				 Math.min(tokenSpan.getEndTokenIndex() + this.n, tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))));
 		}
 		
 		return true;
@@ -75,6 +77,8 @@ public class FnNGramContext extends FnNGram {
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("type"))
 			return Obj.stringValue(String.valueOf(this.type));
+		else if (parameter.equals("allowSqueeze"))
+			return Obj.stringValue(String.valueOf(this.allowSqueeze));
 		else 
 			return super.getParameterValue(parameter);
 	}
@@ -83,6 +87,8 @@ public class FnNGramContext extends FnNGram {
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("type"))
 			this.type = Type.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("allowSqueeze"))
+			this.allowSqueeze = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return super.setParameterValue(parameter, parameterValue);
 		return true;
