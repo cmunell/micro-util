@@ -30,6 +30,7 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramDep;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramSentence;
+import edu.cmu.ml.rtw.generic.data.feature.FeaturePredicateArgumentPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureStringForm;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenCount;
@@ -314,6 +315,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureConstituencyParseRelation<D, L>());
 			addGenericFeature(new FeatureWord2Vec<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnComparison<D, L>());
+			addGenericFeature(new FeaturePredicateArgumentPath<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());

@@ -25,7 +25,9 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 public class FnNGramContext extends FnNGram {
 	public enum Type {
 		BEFORE,
-		AFTER
+		AFTER,
+		BEFORE_INCLUDING,
+		AFTER_INCLUDING,
 	}
 	
 	private Type type = Type.BEFORE;
@@ -43,15 +45,15 @@ public class FnNGramContext extends FnNGram {
 	
 	@Override
 	protected boolean getNGrams(TokenSpan tokenSpan, Collection<TokenSpan> ngrams) {
-		if (this.type == Type.BEFORE && tokenSpan.getStartTokenIndex() - this.n >= 0) {
+		if ((this.type == Type.BEFORE || this.type == Type.BEFORE_INCLUDING) && tokenSpan.getStartTokenIndex() - this.n >= 0) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 									 tokenSpan.getSentenceIndex(), 
 									 tokenSpan.getStartTokenIndex() - this.n, 
-									 tokenSpan.getStartTokenIndex()));
-		} else if (this.type == Type.AFTER && tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex())) {
+									 tokenSpan.getStartTokenIndex() + ((this.type == Type.BEFORE) ? 0 : tokenSpan.getLength())));
+		} else if ((this.type == Type.AFTER || this.type == Type.AFTER_INCLUDING) && tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex())) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 					 				 tokenSpan.getSentenceIndex(), 
-					 				 tokenSpan.getEndTokenIndex(), 
+					 				 tokenSpan.getEndTokenIndex() - ((this.type == Type.AFTER) ? 0 : tokenSpan.getLength()), 
 					 				 tokenSpan.getEndTokenIndex() + this.n));
 		}
 		
