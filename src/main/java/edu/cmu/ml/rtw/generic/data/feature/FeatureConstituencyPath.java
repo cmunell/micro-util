@@ -54,7 +54,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
 	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
 	protected boolean useRelationTypes = true;
-	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes"};
+	protected boolean noLeaves = false;
+	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes", "noLeaves"};
 	
 	public FeatureConstituencyPath() {
 		
@@ -113,7 +114,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 		ConstituencyParse parse = sourceSpan.getDocument().getConstituencyParse(sentenceIndex);
 		for (int i = sourceSpan.getStartTokenIndex(); i < sourceSpan.getEndTokenIndex(); i++){
 			for (int j = targetSpan.getStartTokenIndex(); j < targetSpan.getEndTokenIndex(); j++){
-				ConstituentPath path = parse.getPath(i, j);
+				ConstituentPath path = parse.getPath(i, j, this.noLeaves);
+				
 				if (shortestPath == null || (path != null && path.getLength() < shortestPath.getLength()))
 					shortestPath = path;
 			}
@@ -171,6 +173,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			return Obj.stringValue((this.targetTokenExtractor == null) ? "" : this.targetTokenExtractor.toString());
 		else if (parameter.equals("useRelationTypes"))
 			return Obj.stringValue(String.valueOf(this.useRelationTypes));
+		else if (parameter.equals("noLeaves"))
+			return Obj.stringValue(String.valueOf(this.noLeaves));
 		return null;
 	}
 	
@@ -184,6 +188,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			this.targetTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("useRelationTypes"))
 			this.useRelationTypes = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("noLeaves"))
+			this.noLeaves = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
