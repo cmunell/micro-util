@@ -28,6 +28,8 @@ public class FnNGramContext extends FnNGram {
 		AFTER,
 		BEFORE_INCLUDING,
 		AFTER_INCLUDING,
+		BEFORE_AND_AFTER,
+		BEFORE_AND_AFTER_INCLUDING
 	}
 	
 	private boolean allowSqueeze = false;
@@ -47,15 +49,17 @@ public class FnNGramContext extends FnNGram {
 	
 	@Override
 	protected boolean getNGrams(TokenSpan tokenSpan, Collection<TokenSpan> ngrams) {
-		if ((this.type == Type.BEFORE || this.type == Type.BEFORE_INCLUDING) && (this.allowSqueeze || tokenSpan.getStartTokenIndex() - this.n >= 0)) {
+		if ((this.type != Type.AFTER) && (this.allowSqueeze || tokenSpan.getStartTokenIndex() - this.n >= 0)) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 									 tokenSpan.getSentenceIndex(), 
 									 Math.max(0, tokenSpan.getStartTokenIndex() - this.n), 
-									 tokenSpan.getStartTokenIndex() + ((this.type == Type.BEFORE) ? 0 : tokenSpan.getLength())));
-		} else if ((this.type == Type.AFTER || this.type == Type.AFTER_INCLUDING) && (this.allowSqueeze || tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))) {
+									 tokenSpan.getStartTokenIndex() + ((this.type == Type.BEFORE || this.type == Type.BEFORE_AND_AFTER) ? 0 : tokenSpan.getLength())));
+		} 
+		
+		if ((this.type != Type.BEFORE) && (this.allowSqueeze || tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 					 				 tokenSpan.getSentenceIndex(), 
-					 				 tokenSpan.getEndTokenIndex() - ((this.type == Type.AFTER) ? 0 : tokenSpan.getLength()), 
+					 				 tokenSpan.getEndTokenIndex() - ((this.type == Type.AFTER || this.type == Type.BEFORE_AND_AFTER) ? 0 : tokenSpan.getLength()), 
 					 				 Math.min(tokenSpan.getEndTokenIndex() + this.n, tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))));
 		}
 		
