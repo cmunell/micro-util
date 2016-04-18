@@ -31,10 +31,17 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  * @param <L> datum label type
  */
 public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
+	public enum Mode {
+		EQUALITY,
+		PRODUCT
+	}
+	
 	private BidirectionalLookupTable<String, Integer> vocabulary;
+	
+	private Mode mode = Mode.PRODUCT;
 	private int minFeatureOccurrence;
 	private Obj.Array features;
-	private String[] parameterNames = {"minFeatureOccurrence", "features"};
+	private String[] parameterNames = {"minFeatureOccurrence", "features", "mode"};
 	
 	public FeatureConjunction() {
 		
@@ -76,6 +83,59 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 	
 	private Map<String, Double> conjunctionForDatum(D datum) {
+		if (this.mode == Mode.PRODUCT)
+			return productForDatum(datum);
+		else
+			return equalityForDatum(datum);
+	}
+	
+	private Map<String, Double> equalityForDatum(D datum) {
+		Map<String, Double> conjunction = new HashMap<String, Double>();
+		boolean equal = true;
+		Map<Integer, Double> prevValues = null;
+		Map<Integer, String> prevVocab = null;
+		for (int i = 0; i < this.features.size(); i++) {
+			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
+			Map<Integer, Double> values = feature.computeVector(datum, 0, new HashMap<Integer, Double>());
+			Map<Integer, String> vocab = feature.getVocabularyForIndices(values.keySet());
+		
+			if (prevValues != null) {
+				if (values.size() != prevValues.size()) {
+					equal = false;
+					break;
+				}
+				
+				for (Entry<Integer, Double> entry : values.entrySet()) {
+					if (!prevValues.containsKey(entry.getKey())) {
+						equal = false;
+						break;
+					}
+					
+					if (!prevValues.get(entry.getKey()).equals(entry.getValue())) {
+						equal = false;
+						break;
+					}
+					
+					if (!prevVocab.get(entry.getKey()).equals(vocab.get(entry.getKey()))) {
+						equal = false;
+						break;
+					}
+				}
+				
+				if (!equal)
+					break;
+			} else {
+				prevValues = values;
+				prevVocab = vocab;
+			}
+		}
+		
+		conjunction.put("eq", (equal) ? 1.0 : 0.0);
+		
+		return conjunction;
+	}
+	
+	private Map<String, Double> productForDatum(D datum) {
 		Map<String, Double> conjunction = new HashMap<String, Double>();
 		conjunction.put("", 1.0);
 		for (int i = 0; i < this.features.size(); i++) {
@@ -128,6 +188,8 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
 		else if (parameter.equals("features")) {
 			return this.features;		
+		} else if (parameter.equals("mode")) {
+			return Obj.stringValue(this.mode.toString());
 		}
 
 		return null;
@@ -140,6 +202,8 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		 	this.minFeatureOccurrence = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("features")) {
 			this.features = (Obj.Array)parameterValue;
+		} else if (parameter.equals("mode")) {
+			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
