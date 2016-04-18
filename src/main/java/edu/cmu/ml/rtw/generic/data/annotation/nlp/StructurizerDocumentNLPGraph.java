@@ -12,10 +12,17 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelation;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.OverwriteOperator;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.RelationMode;
 
 public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extends Structurizer<D, L, WeightedStructureGraph>  {
 	protected LabelMapping<L> labelMapping;
-	protected String[] parameterNames = { "labelMapping" };
+
+	private RelationMode graphEdgeMode = RelationMode.SINGLE;
+	private RelationMode graphNodeMode = RelationMode.SINGLE;
+	private OverwriteOperator graphOverwriteOperator = OverwriteOperator.MAX;
+	
+	protected String[] parameterNames = { "labelMapping", "graphEdgeMode", "graphNodeMode", "graphOverwriteOperator" };
 	
 	public StructurizerDocumentNLPGraph() {
 		
@@ -34,6 +41,12 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("labelMapping"))
 			return Obj.stringValue(this.labelMapping.toString());
+		else if (parameter.equals("graphEdgeMode"))
+			return Obj.stringValue(this.graphEdgeMode.toString());
+		else if (parameter.equals("graphNodeMode"))
+			return Obj.stringValue(this.graphNodeMode.toString());
+		else if (parameter.equals("graphOverwriteOperator"))
+			return Obj.stringValue(this.graphOverwriteOperator.toString());
 		return null;
 	}
 
@@ -41,6 +54,12 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("labelMapping"))
 			this.labelMapping = this.context.getDatumTools().getLabelMapping(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("graphEdgeMode"))
+			this.graphEdgeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("graphNodeMode"))
+			this.graphNodeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("graphOverwriteOperator"))
+			this.graphOverwriteOperator = OverwriteOperator.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;

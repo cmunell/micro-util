@@ -6,7 +6,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 
 public abstract class WeightedStructureRelation extends WeightedStructure {	
 	protected boolean ordered = true;
-	protected String id;
+	protected String id = "";
 	protected String type;
 
 	private static String[] parameterNames = { "ordered", "id" };

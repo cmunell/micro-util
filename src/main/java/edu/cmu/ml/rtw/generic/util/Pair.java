@@ -57,8 +57,24 @@ public class Pair<F, S> {
 	@Override
     public boolean equals(Object o) {
     	Pair<F, S> p = (Pair<F, S>)o;
-    	return ((p.getFirst() == null && this.getFirst() == null) || p.getFirst().equals(this.getFirst())) 
-    			&& ((p.getSecond() == null && this.getSecond() == null) || p.getSecond().equals(this.getSecond()));
+    	
+    	if (p.getFirst() == null || this.getFirst() == null) {
+	    	if ((p.getFirst() == null && this.getFirst() != null)
+	    			|| (p.getFirst() != null && this.getFirst() == null))
+	    		return false;
+    	} else if (!p.getFirst().equals(this.getFirst())) {
+    		return false;
+    	}
+    	
+    	if (p.getSecond() == null || this.getSecond() == null) {
+	    	if ((p.getSecond() == null && this.getSecond() != null)
+	    			|| (p.getSecond() != null && this.getSecond() == null))
+	    		return false;
+    	} else if (!p.getSecond().equals(this.getSecond())) {
+    		return false;
+    	}
+    
+    	return true;
     }
     
     @Override

@@ -224,11 +224,11 @@ public class ConstituencyParse implements StringSerializable {
 		return cons1 != null && cons1.getTokenSpan().containsToken(this.sentenceIndex, targetTokenIndex);
 	}
 	
-	public ConstituentPath getPath(int sourceTokenIndex, int targetTokenIndex) {
-		return getPath(getTokenConstituent(sourceTokenIndex), getTokenConstituent(targetTokenIndex));
+	public ConstituentPath getPath(int sourceTokenIndex, int targetTokenIndex, boolean noLeaves) {
+		return getPath(getTokenConstituent(sourceTokenIndex), getTokenConstituent(targetTokenIndex), noLeaves);
 	}
 	
-	public ConstituentPath getPath(Constituent source, Constituent target) {
+	public ConstituentPath getPath(Constituent source, Constituent target, boolean noLeaves) {
 		if (source == null || target == null)
 			return null;
 		
@@ -242,7 +242,8 @@ public class ConstituencyParse implements StringSerializable {
 				List<Constituent> path = new ArrayList<Constituent>();
 				Constituent pathCurrent = current;
 				while (pathCurrent != null) {
-					path.add(pathCurrent);
+					if (!noLeaves || !pathCurrent.isLeaf())
+						path.add(pathCurrent);
 					pathCurrent = paths.get(pathCurrent);
 				}
 				
@@ -275,7 +276,7 @@ public class ConstituencyParse implements StringSerializable {
 		if (source.equals(target))
 			return false;
 		
-		ConstituentPath constituentPath = getPath(source, target);
+		ConstituentPath constituentPath = getPath(source, target, false);
 		if (constituentPath == null)
 			return false;
 		
@@ -294,7 +295,7 @@ public class ConstituencyParse implements StringSerializable {
 		if (source.equals(target))
 			return false;
 		
-		ConstituentPath constituentPath = getPath(source, target);
+		ConstituentPath constituentPath = getPath(source, target, false);
 		if (constituentPath == null)
 			return false;
 		

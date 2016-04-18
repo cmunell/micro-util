@@ -30,6 +30,7 @@ import edu.cmu.ml.rtw.generic.data.feature.FeatureDependencyPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramContext;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramDep;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureNGramSentence;
+import edu.cmu.ml.rtw.generic.data.feature.FeaturePredicateArgumentPath;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureStringForm;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureTokenCount;
@@ -44,6 +45,7 @@ import edu.cmu.ml.rtw.generic.model.SupervisedModelAreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelCreg;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLGApproximation;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLabelDistribution;
+import edu.cmu.ml.rtw.generic.model.SupervisedModelLibSVM;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelLogistmarGramression;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelPartition;
 import edu.cmu.ml.rtw.generic.model.SupervisedModelSVM;
@@ -313,6 +315,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureConstituencyParseRelation<D, L>());
 			addGenericFeature(new FeatureWord2Vec<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnComparison<D, L>());
+			addGenericFeature(new FeaturePredicateArgumentPath<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());
@@ -325,6 +328,7 @@ public abstract class Datum<L> {
 			addGenericModel(new SupervisedModelYADLL<D, L>());
 			addGenericModel(new SupervisedModelWekaOneClass<D, L>());
 			addGenericModel(new SupervisedModelWekaSVMOneClass<D, L>());
+			addGenericModel(new SupervisedModelLibSVM<D, L>());
 			
 			addGenericEvaluation(new SupervisedModelEvaluationAccuracy<D, L>());
 			addGenericEvaluation(new SupervisedModelEvaluationPrecision<D, L>());

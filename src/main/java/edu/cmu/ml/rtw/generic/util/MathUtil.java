@@ -105,6 +105,31 @@ public class MathUtil {
 		return sum;
 	}
 	
+	public static double computeSum(double[] dist) {
+		double sum = 0.0;
+		for (double d : dist)
+			sum += d;
+		return sum;
+	}
+	
+	public static double[] add(double[] dist1, double[] dist2) {
+		if (dist1.length != dist2.length)
+			throw new IllegalArgumentException();
+		double[] result = new double[dist1.length];
+		for (int i = 0; i < dist1.length; i++)
+			result[i] = dist1[i] + dist2[i];
+		return result;
+	}
+	
+	public static double[] subtract(double[] dist1, double[] dist2) {
+		if (dist1.length != dist2.length)
+			throw new IllegalArgumentException();
+		double[] result = new double[dist1.length];
+		for (int i = 0; i < dist1.length; i++)
+			result[i] = dist1[i] - dist2[i];
+		return result;
+	}
+	
 	/**
 	 * @param dist
 	 * @param norm
@@ -114,6 +139,12 @@ public class MathUtil {
 		for (Entry<T, Double> entry : dist.entrySet()) {
 			entry.setValue(entry.getValue() / norm);
 		}
+		return dist;
+	}
+	
+	public static double[] normalize(double[] dist, double norm) {
+		for (int i = 0; i < dist.length; i++)
+			dist[i] /= norm;
 		return dist;
 	}
 	
@@ -127,5 +158,18 @@ public class MathUtil {
 			entry.setValue(entry.getValue() * scale);
 		}
 		return dist;
+	}
+	
+	public static double[] scale(double[] dist, double scale) {
+		for (int i = 0; i < dist.length; i++)
+			dist[i] *= scale;
+		return dist;
+	}
+	
+	public static double computeMagnitude(double[] dist) {
+		double mag = 0.0;
+		for (double d : dist)
+			mag += d*d;
+		return Math.sqrt(mag);
 	}
 }

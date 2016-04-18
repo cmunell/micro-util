@@ -1,67 +1,41 @@
 package edu.cmu.ml.rtw.generic.data.feature;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
-import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse;
+import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.Predicate;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
-import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse.ConstituentPath;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
 import edu.cmu.ml.rtw.generic.util.CounterTable;
+import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
-/**
- * FeatureConstituencyPath computes paths in constituency parse trees
- * between token spans
- * associated with a datum. For a datum d with source token span extractor S,
- * and target token span extractor T, FeatureConstituencyPath computes vector:
- * 
- * <1(p_1 \in P(S(d),T(d)), 1(p_2 \in P(S(d),T(d))), ... , 1(p_n \in P(S(d),T(d)))>
- * 
- * Where P(S(d),T(d)) gives the set of shortest constituency paths between token spans
- * in S(d) and token spans in T(d), and p_i is the ith constituency path in the vocabulary
- * of possible paths from the full data set containing d.
- *
- * Parameters:
- *  minFeatureOccurrence - determines the minimum number of times a
- *  path p_i must appear in the full data set for it to have a component in the 
- *  returned vectors.
- * 
- *  useRelationTypes - determines whether the constituency paths corresponding
- *  to components in the returned vector should be typed.
- * 
- *  sourceTokenExtractor - token span extractor used to extract the source token spans
- * 
- *  targetTokenExtractor - token span extractor used to extract the target token spans
- * 
- * @author Jesse Dodge, Bill McDowell
- *
- * @param <D> datum type
- * @param <L> datum label type
- * 
- */
-public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L> {
+public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature<D, L> {
+	private static final TokenSpan.Relation[] SPAN_RELATIONS = new TokenSpan.Relation[] { TokenSpan.Relation.CONTAINED_BY, TokenSpan.Relation.CONTAINS };
+	
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	
 	protected int minFeatureOccurrence;
 	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
 	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
-	protected boolean useRelationTypes = true;
-	protected boolean noLeaves = false;
-	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes", "noLeaves"};
+	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor" };
 	
-	public FeatureConstituencyPath() {
+	public FeaturePredicateArgumentPath() {
 		
 	}
 	
-	public FeatureConstituencyPath(DatumContext<D, L> context) {
+	public FeaturePredicateArgumentPath(DatumContext<D, L> context) {
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		this.context = context;
 	}
@@ -82,7 +56,6 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 		
 		counter.removeCountsLessThan(this.minFeatureOccurrence);
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
-		
 		return true;
 	}
 	
@@ -94,35 +67,84 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 		
 		for (TokenSpan sourceSpan : sourceTokenSpans) {
 			for (TokenSpan targetSpan : targetTokenSpans){
-				ConstituentPath path = getShortestPath(sourceSpan, targetSpan);
-				if (path == null)
+				Set<String> spanPaths = getPaths(sourceSpan, targetSpan);
+				if (spanPaths == null)
 					continue;
-				paths.add(path.toString(this.useRelationTypes));
+				paths.addAll(spanPaths);
 			}
 		}
 		return paths;
 	}
 	
-	private ConstituentPath getShortestPath(TokenSpan sourceSpan, TokenSpan targetSpan){
+	private Set<String> getPaths(TokenSpan sourceSpan, TokenSpan targetSpan){
 		if (sourceSpan.getSentenceIndex() < 0 
 				|| targetSpan.getSentenceIndex() < 0 
 				|| sourceSpan.getSentenceIndex() != targetSpan.getSentenceIndex())
 			return null;
 		
-		ConstituentPath shortestPath = null;
-		int sentenceIndex = sourceSpan.getSentenceIndex();
-		ConstituencyParse parse = sourceSpan.getDocument().getConstituencyParse(sentenceIndex);
-		for (int i = sourceSpan.getStartTokenIndex(); i < sourceSpan.getEndTokenIndex(); i++){
-			for (int j = targetSpan.getStartTokenIndex(); j < targetSpan.getEndTokenIndex(); j++){
-				ConstituentPath path = parse.getPath(i, j, this.noLeaves);
+		Set<String> paths = new HashSet<String>();
+		List<Pair<TokenSpan, Predicate>> preds = sourceSpan.getDocument().getTokenSpanAnnotations(AnnotationTypeNLP.PREDICATE);
+		List<TokenSpan> visited = new ArrayList<>();
+		Stack<Pair<String, TokenSpan>> toVisit = new Stack<>();
+		toVisit.push(new Pair<String, TokenSpan>("", sourceSpan));
+		while (!toVisit.isEmpty()) {
+			Pair<String, TokenSpan> cur = toVisit.pop();
+			TokenSpan curSpan = cur.getSecond();
+			visited.add(curSpan);
+			
+			List<Pair<TokenSpan, String>> neighbors = getRelations(curSpan, preds);
+			for (Pair<TokenSpan, String> neighbor : neighbors) {
+				TokenSpan neighborSpan = neighbor.getFirst();
+				if (visitedHasSpan(neighborSpan, visited))
+					continue;
 				
-				if (shortestPath == null || (path != null && path.getLength() < shortestPath.getLength()))
-					shortestPath = path;
+				String path = cur.getFirst() + "_" + neighbor.getSecond();
+				if (neighborSpan.hasRelationTo(targetSpan, SPAN_RELATIONS)) {
+					paths.add(path);
+				} else {
+					toVisit.push(new Pair<String, TokenSpan>(path, neighborSpan));
+				}
+				
 			}
 		}
-
-		return shortestPath;
+		
+		return paths;
 	}
+	
+	private boolean visitedHasSpan(TokenSpan span, List<TokenSpan> visited) {
+		for (TokenSpan v : visited)
+			if (span.hasRelationTo(v, SPAN_RELATIONS))
+				return true;
+		return false;
+	}
+	
+	private List<Pair<TokenSpan, String>> getRelations(TokenSpan span, List<Pair<TokenSpan, Predicate>> preds) {
+		List<Pair<TokenSpan, String>> relations = new ArrayList<>();
+		
+		for (Pair<TokenSpan, Predicate> predPair : preds) {
+			TokenSpan predSpan = predPair.getFirst();
+			Predicate pred = predPair.getSecond();
+			Set<String> argTags = pred.getArgumentTags();
+			if (span.hasRelationTo(predSpan, SPAN_RELATIONS)) {
+				for (String argTag : argTags) {
+					TokenSpan[] argSpans = pred.getArgument(argTag);
+					for (TokenSpan argSpan : argSpans)
+						relations.add(new Pair<TokenSpan, String>(argSpan, pred.getSense() + "_" + argTag));
+				}
+			}
+			
+			for (String argTag : argTags) {
+				TokenSpan[] argSpans = pred.getArgument(argTag);
+				for (TokenSpan argSpan : argSpans) {
+					if (span.hasRelationTo(argSpan, SPAN_RELATIONS))
+						relations.add(new Pair<TokenSpan, String>(predSpan, argTag + "_" + pred.getSense()));
+				}
+			}
+		}
+		
+		return relations;
+	}
+	
 	
 	@Override
 	public Map<Integer, Double> computeVector(D datum, int offset, Map<Integer, Double> vector) {
@@ -139,7 +161,7 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 
 	@Override
 	public String getGenericName() {
-		return "ConstituencyPath";
+		return "PredicateArgumentPath";
 	}
 	
 	@Override
@@ -171,10 +193,6 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			return Obj.stringValue((this.sourceTokenExtractor == null) ? "" : this.sourceTokenExtractor.toString());
 		else if (parameter.equals("targetTokenExtractor"))
 			return Obj.stringValue((this.targetTokenExtractor == null) ? "" : this.targetTokenExtractor.toString());
-		else if (parameter.equals("useRelationTypes"))
-			return Obj.stringValue(String.valueOf(this.useRelationTypes));
-		else if (parameter.equals("noLeaves"))
-			return Obj.stringValue(String.valueOf(this.noLeaves));
 		return null;
 	}
 	
@@ -186,10 +204,6 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			this.sourceTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("targetTokenExtractor"))
 			this.targetTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("useRelationTypes"))
-			this.useRelationTypes = Boolean.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("noLeaves"))
-			this.noLeaves = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -197,18 +211,18 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 
 	@Override
 	public Feature<D, L> makeInstance(DatumContext<D, L> context) {
-		return new FeatureConstituencyPath<D, L>(context);
+		return new FeaturePredicateArgumentPath<D, L>(context);
 	}
 
 	@Override
 	protected <T extends Datum<Boolean>> Feature<T, Boolean> makeBinaryHelper(
 			DatumContext<T, Boolean> context, LabelIndicator<L> labelIndicator,
 			Feature<T, Boolean> binaryFeature) {
-		FeatureConstituencyPath<T, Boolean> binaryFeatureConst = (FeatureConstituencyPath<T,Boolean>)binaryFeature;
+		FeaturePredicateArgumentPath<T, Boolean> binaryFeaturePred = (FeaturePredicateArgumentPath<T, Boolean>)binaryFeature;
 		
-		binaryFeatureConst.vocabulary = this.vocabulary;
+		binaryFeaturePred.vocabulary = this.vocabulary;
 		
-		return binaryFeatureConst;
+		return binaryFeaturePred;
 	}
 
 	@Override
@@ -224,9 +238,9 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 	
 	@Override
 	protected boolean cloneHelper(Feature<D, L> clone) {
-		FeatureConstituencyPath<D, L> cloneConst = (FeatureConstituencyPath<D, L>)clone;
-		cloneConst.vocabulary = this.vocabulary;
+		FeaturePredicateArgumentPath<D, L> cloneDep = (FeaturePredicateArgumentPath<D, L>)clone;
+		cloneDep.vocabulary = this.vocabulary;
 		return true;
 	}
-	
+
 }

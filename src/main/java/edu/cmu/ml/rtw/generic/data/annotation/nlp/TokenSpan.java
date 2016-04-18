@@ -148,6 +148,14 @@ public class TokenSpan {
 			return Relation.NONE;
 	}
 	
+	public boolean hasRelationTo(TokenSpan tokenSpan, Relation[] relations) {
+		Relation r = getRelationTo(tokenSpan);
+		for (int i = 0; i < relations.length; i++)
+			if (relations[i] == r)
+				return true;
+		return false;
+	}
+	
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		

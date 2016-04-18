@@ -20,7 +20,8 @@ import edu.cmu.ml.rtw.generic.util.MathUtil;
 public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 	public enum Mode {
 		SIMILARITY,
-		VECTOR
+		VECTOR,
+		DIFFERENCE
 	}
 	
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
@@ -48,7 +49,7 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 		Word2Vec w2v = this.context.getDataTools().getWord2Vec();
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
 		
-		if (this.mode == Mode.VECTOR) {
+		if (this.mode == Mode.VECTOR || this.mode == Mode.DIFFERENCE) {
 			int vectorSize = w2v.getVectorSize();
 			for (int i = 0; i < vectorSize; i++)
 				this.vocabulary.put(String.valueOf(i), i);
@@ -75,34 +76,70 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 		return results;
 	}
 	
+	private double computeSimilarity(Word2Vec w2v, List<Map<String, Double>> spanStrVectors) {
+		double count = 0.0;
+		double similarity = 0.0;
+		for (int i = 0; i < spanStrVectors.size(); i++) {
+			for (int j = 0; j < spanStrVectors.size(); j++) {
+				if (i >= j)
+					continue;
+				for (Entry<String, Double> entry1 : spanStrVectors.get(i).entrySet()) {
+					for (Entry<String, Double> entry2 : spanStrVectors.get(j).entrySet()) {
+						similarity += entry1.getValue() * entry2.getValue() * w2v.computeSimilarity(entry1.getKey(), entry2.getKey());
+					}
+				}
+
+				count++;
+			}
+		}
+		
+		similarity /= count;
+		return similarity;
+	}
+	
+	private double[] computeDifference(Word2Vec w2v, List<Map<String, Double>> spanStrVectors) {
+		double[] difference = null;
+		double count = 0.0;
+		for (int i = 0; i < spanStrVectors.size(); i++) {
+			for (int j = 0; j < spanStrVectors.size(); j++) {
+				if (i >= j)
+					continue;
+				for (Entry<String, Double> entry1 : spanStrVectors.get(i).entrySet()) {
+					for (Entry<String, Double> entry2 : spanStrVectors.get(j).entrySet()) {
+						double[] vec1 = w2v.computeVector(entry1.getKey());
+						double[] vec2 = w2v.computeVector(entry2.getKey());
+						
+						double[] diff1_2 = MathUtil.subtract(vec1, vec2);
+						diff1_2 = MathUtil.normalize(diff1_2, MathUtil.computeMagnitude(diff1_2) / (entry1.getValue() * entry2.getValue()));
+						difference = MathUtil.add(diff1_2, difference);					
+					}
+				}
+
+				count++;
+			}
+		}
+		
+		
+		return MathUtil.normalize(difference, count);
+	}
+	
 	@Override
 	public Map<Integer, Double> computeVector(D datum, int offset, Map<Integer, Double> vector) {
 		Word2Vec w2v = this.context.getDataTools().getWord2Vec();
 		TokenSpan[] spans = this.tokenExtractor.extract(datum);
-		if (this.mode == Mode.SIMILARITY) {
+		if (this.mode == Mode.SIMILARITY || this.mode == Mode.DIFFERENCE) {
 			List<Map<String, Double>> spanStrVectors = new ArrayList<>();
 			for (TokenSpan span : spans) {
 				spanStrVectors.add(applyFnToSpan(span));
 			}
 			
-			double count = 0.0;
-			double similarity = 0.0;
-			for (int i = 0; i < spanStrVectors.size(); i++) {
-				for (int j = 0; j < spanStrVectors.size(); j++) {
-					if (i >= j)
-						continue;
-					for (Entry<String, Double> entry1 : spanStrVectors.get(i).entrySet()) {
-						for (Entry<String, Double> entry2 : spanStrVectors.get(j).entrySet()) {
-							similarity += entry1.getValue() * entry2.getValue() * w2v.computeSimilarity(entry1.getKey(), entry2.getKey());
-						}
-					}
-	
-					count++;
-				}
+			if (this.mode == Mode.SIMILARITY)
+				vector.put(offset, computeSimilarity(w2v, spanStrVectors));
+			else {
+				double[] diff = computeDifference(w2v, spanStrVectors);
+				for (int i = 0; i < diff.length; i++)
+					vector.put(i + offset, diff[i]);
 			}
-			
-			similarity /= count;
-			vector.put(offset, similarity);
 		} else if (this.mode == Mode.VECTOR) {
 			Map<String, Double> spanStrs = new HashMap<String, Double>();
 			for (TokenSpan span : spans) {

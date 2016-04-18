@@ -84,6 +84,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPrepositionOfClause;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
@@ -310,6 +311,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnDependencyRelation());
 		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
 		this.addGenericTokenSpanFn(new FnPredicateArgument());
+		this.addGenericTokenSpanFn(new FnPrepositionOfClause());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
@@ -364,6 +366,30 @@ public class DataTools {
 		this.addConstructionCommand(new RuleSet(null), new MakeInstanceFn<RuleSet>() {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
+		
+		addCommand("CloneSearch", new Command<Search>() {
+			@Override
+			public Search run(Context context, List<String> modifiers,
+					String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				Search search = context.getMatchSearch(parameters.get("search").getValue());
+				return search.clone(referenceName);
+			}
+		});
+		
+		addCommand("ConcatenateArrays", new Command<List<String>>() {
+			@Override
+			public List<String> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				List<String> arr1 = context.getMatchArray(parameters.get("a1").getValue());
+				List<String> arr2 = context.getMatchArray(parameters.get("a2").getValue());
+				List<String> ret = new ArrayList<String>();
+				ret.addAll(arr1);
+				ret.addAll(arr2);
+				return ret;
+			}
+		});
+		
 		
 		addCommand("SizeArray", new Command<String>() {
 			@Override

@@ -3,10 +3,12 @@ package edu.cmu.ml.rtw.generic.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import YADLL.Data.FMatrix;
 import YADLL.Data.Matrix;
@@ -16,8 +18,8 @@ import YADLL.FunctionGraphs.FunctionGraph;
 import YADLL.FunctionGraphs.Functions.Function;
 import YADLL.FunctionGraphs.Functions.Variable;
 import YADLL.Optimizers.GradOpt;
-
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
@@ -178,15 +180,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			
 			str.append(this.fnType.getYADLLName());
 			if (this.fnType.getType() != YADLLFunctionType.PARAMETER_INITIALIZATION) {
-				str.append("(");
-				for (String paramName : this.fnType.getArgNames())
-					str.append(this.parameterValues.get(paramName)).append(",");
-				
-				if (this.fnType.getType() == YADLLFunctionType.LOSS)
-					str.append(" y");
-				else
-					str.delete(str.length() - 1, str.length());
-				str.append(")");
+				if (this.fnType.getArgNames().length > 0) {
+					str.append("(");
+					for (String paramName : this.fnType.getArgNames())
+						str.append(this.parameterValues.get(paramName)).append(",");
+					
+					if (this.fnType.getType() == YADLLFunctionType.LOSS)
+						str.append(" y");
+					else
+						str.delete(str.length() - 1, str.length());
+					str.append(")");
+				}
 			}
 			
 			return str.toString();
@@ -395,54 +399,56 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		Matrix Y = dataMatrices.getSecond();
 		Matrix testX = testDataMatrices.getFirst();
 		Matrix testY = testDataMatrices.getSecond();
+		synchronized (this.context) {
+			Estimator estimator = new BP(this.model); // FIXME: Add other estimators
+			GradOpt optimizer = new GradOpt(estimator); 
+			optimizer.setStepSize(this.stepSize);
+			optimizer.setOptType("descent");
 		
-		Estimator estimator = new BP(this.model); // FIXME: Add other estimators
-		GradOpt optimizer = new GradOpt(estimator);
-		optimizer.setStepSize(this.stepSize);
-		optimizer.setOptType("descent");
-		
-		List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
-		
-		int epoch = 0;
-		while(epoch < this.numEpochs) {
-			double testLoss = 0.0;
-			if (this.lossFnNode != null) {
-				this.model.clamp_("x", testX);
-				this.model.clamp_("y", testY);
-				this.model.eval();
-				testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-				this.model.flush_stats(false);
-			}
-			
-			this.model.clamp_("x", X);
-			this.model.clamp_("y", Y);
-			this.model.eval();
-			
-			double trainLoss = 0.0;
-			if (this.lossFnNode != null) {
-				trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-				iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
-			}
+			List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
+	
+			int epoch = 0;
+			while(epoch < this.numEpochs) {
+				double testLoss = 0.0;
+				if (this.lossFnNode != null) {
+					this.model.clamp_("x", testX);
+					this.model.clamp_("y", testY);
+					this.model.eval();
+					testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+					this.model.flush_stats_(false);
+				}
 				
-			optimizer.accum_grad(1f); 
-			optimizer.update_graph();
-			this.model.flush_stats(false);
+				this.model.clamp_("x", X);
+				this.model.clamp_("y", Y);
+				this.model.eval();
 			
-			//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
-
-			epoch = epoch + 1;
-		}
-		
-		if (this.lossFnNode != null) {
-			StringBuilder iterativeOutput = new StringBuilder();
-			iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
-			for (int i = 0; i < iterativeEvaluations.size(); i++) {
-				iterativeOutput.append("Epoch " + i + " " + 
-					this.lossFnNode + ": " + 
-						iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+			
+				double trainLoss = 0.0;
+				if (this.lossFnNode != null) {
+					trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+					iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
+				}
+			
+				optimizer.accum_grad(1f); 
+				optimizer.update_graph();
+				this.model.flush_stats_(false);
+				
+				//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
+	
+				epoch = epoch + 1;
 			}
-			iterativeOutput.append("End of training for model " + this.toParse(false)); 
-			output.debugWriteln(iterativeOutput.toString());
+			
+			if (this.lossFnNode != null) {
+				StringBuilder iterativeOutput = new StringBuilder();
+				iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
+				for (int i = 0; i < iterativeEvaluations.size(); i++) {
+					iterativeOutput.append("Epoch " + i + " " + 
+						this.lossFnNode + ": " + 
+							iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+				}
+				iterativeOutput.append("End of training for model " + this.toParse(false)); 
+				output.debugWriteln(iterativeOutput.toString());
+			}
 		}
 		
 		return true;
@@ -458,8 +464,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
+		Iterator<D> iter = onlyX ? data.getData().iterator(DataFilter.All) : data.getData().iterator(DataFilter.OnlyLabeled);
 		// FIXME int numNonZeroFeatures = 0;
-		for (D datum : data.getData()) {
+		while (iter.hasNext()) {
+			D datum = iter.next();
 			Map<Integer, Double> datumFeatureMap = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
 			featureMaps.add(datumFeatureMap);
 			// FIXME numNonZeroFeatures += datumFeatureMap.size();
@@ -479,9 +487,10 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				X[i*datumFeatureCount + entry.getKey()] = entry.getValue().floatValue();
 		}
 		
-		return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
+		synchronized (this.context) {
+			return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
 				(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
-		
+		}
 		/*int[] featureIndices = new int[numNonZeroFeatures];
 		int[] datumIndices = new int[numNonZeroFeatures];
 		float[] values = new float[numNonZeroFeatures];
@@ -501,96 +510,112 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 										(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); */
 	}
 	
-	private boolean buildModelFromParameters(int inputVectorSize) {
-		
-		Variable x = new Variable("x", inputVectorSize, null);
-		Variable y = new Variable("y", this.validLabels.size(), null);
-
-		this.model = new FunctionGraph();
-		this.model.setSeed(1);
-		this.model.defineVariable(x);
-		this.model.defineLabel(y);
-		
-		for (int i = 0; i < this.fnNodes.size(); i++) {
-			String fnNodeStr = this.fnNodes.get(i);
-			String fnNodeStrAndIndex = fnNodeStr + "_" + i;
-			Map<String, Obj> fnNodeParamMap = new HashMap<String, Obj>();
+	private boolean buildModelFromParameters(int inputVectorSize) {	
+		synchronized (this.context) {
+			Variable x = new Variable("x", inputVectorSize, null);
+			Variable y = new Variable("y", this.validLabels.size(), null);
+	
+			this.model = new FunctionGraph();
+			//this.model.setSeed(1); FIXME
+			this.model.defineVariable(x);
+			this.model.defineLabel(y);
 			
-			// FIXME This is slow, but okay for now
-			for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
-				if (!entry.getKey().startsWith(fnNodeStrAndIndex))
-					continue;
-				fnNodeParamMap.put(entry.getKey().substring(fnNodeStrAndIndex.length() + 1), entry.getValue());
+			for (int i = 0; i < this.fnNodes.size(); i++) {
+				String fnNodeStr = this.fnNodes.get(i);
+				String fnNodeStrAndIndex = fnNodeStr + "_" + i;
+				Map<String, Obj> fnNodeParamMap = new HashMap<String, Obj>();
+				
+				// FIXME This is slow, but okay for now
+				for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
+					if (!entry.getKey().startsWith(fnNodeStrAndIndex))
+						continue;
+					fnNodeParamMap.put(entry.getKey().substring(fnNodeStrAndIndex.length() + 1), entry.getValue());
+				}
+				
+				Obj fnNodeObj = this.possibleFnNodes.get(fnNodeStr).clone();
+				if (!fnNodeObj.resolveValues(fnNodeParamMap)) {
+					System.out.println("FAILED TO RESOLVE VALUES " + fnNodeParamMap);
+					return false;
+				}
+				
+				YADLLFunctionNode fnNode = new YADLLFunctionNode(this.context);
+				if (!fnNode.fromParse(fnNodeObj))
+					return false;
+				
+				if (!fnNode.replaceFnParameterValues("%i",String.valueOf(i))
+						|| !fnNode.replaceFnParameterValues("%(i-1)", String.valueOf(i-1))
+						|| !fnNode.replaceFnParameterValues("%(i+1)", String.valueOf(i-1)))
+					return false;
+				
+				Function yadllFn = fnNode.getYADLLModelFunctionObject(fnNodeStrAndIndex);
+				this.model.defineFunction(yadllFn);
+				this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed node " + fnNodeStrAndIndex + ": " + fnNode.getYADLLFunctionString() + " (" + fnNode.getSize() + ")");
 			}
 			
-			Obj fnNodeObj = this.possibleFnNodes.get(fnNodeStr).clone();
-			if (!fnNodeObj.resolveValues(fnNodeParamMap)) {
-				System.out.println("FAILED TO RESOLVE VALUES " + fnNodeParamMap);
-				return false;
+			for (int i = 0; i < this.fnParameters.size(); i++) {
+				String fnParameterStr = this.fnParameters.get(i);
+				String fnParameterStrAndIndex = fnParameterStr + "_" + i;
+				Map<String, Obj> fnParameterParamMap = new HashMap<String, Obj>();
+				
+				// FIXME This is slow, but okay for now
+				for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
+					if (!entry.getKey().startsWith(fnParameterStrAndIndex))
+						continue;
+					fnParameterParamMap.put(entry.getKey().substring(fnParameterStrAndIndex.length() + 1), entry.getValue());
+				}
+				
+				Obj fnParameterObj = this.possibleFnParameters.get(fnParameterStr).clone();
+				if (!fnParameterObj.resolveValues(fnParameterParamMap))
+					return false;
+				
+				YADLLParameter fnParameter = new YADLLParameter(this.context);
+				if (!fnParameter.fromParse(fnParameterObj))
+					return false;
+				
+				if (!fnParameter.replaceInitFnParameterValues("%i",String.valueOf(i))
+						|| !fnParameter.replaceInitFnParameterValues("%(i-1)", String.valueOf(i-1))
+						|| !fnParameter.replaceInitFnParameterValues("%(i+1)", String.valueOf(i-1)))
+					return false;
+				
+				this.model.defineParamInit_(fnParameterStrAndIndex, fnParameter.getYADLLInitFnString());
+				this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed parameters " + fnParameterStrAndIndex + ": " + fnParameter.getYADLLInitFnString());
+	
+				// FIXME Build model from existing weights when available from deserialization
 			}
 			
-			YADLLFunctionNode fnNode = new YADLLFunctionNode(this.context);
-			if (!fnNode.fromParse(fnNodeObj))
-				return false;
-			
-			if (!fnNode.replaceFnParameterValues("%i",String.valueOf(i))
-					|| !fnNode.replaceFnParameterValues("%(i-1)", String.valueOf(i-1))
-					|| !fnNode.replaceFnParameterValues("%(i+1)", String.valueOf(i-1)))
-				return false;
-			
-			Function yadllFn = fnNode.getYADLLModelFunctionObject(fnNodeStrAndIndex);
-			this.model.defineFunction(yadllFn);
-			this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed node " + fnNodeStrAndIndex + ": " + fnNode.getYADLLFunctionString() + " (" + fnNode.getSize() + ")");
+			this.model.compile();
 		}
-		
-		for (int i = 0; i < this.fnParameters.size(); i++) {
-			String fnParameterStr = this.fnParameters.get(i);
-			String fnParameterStrAndIndex = fnParameterStr + "_" + i;
-			Map<String, Obj> fnParameterParamMap = new HashMap<String, Obj>();
-			
-			// FIXME This is slow, but okay for now
-			for (Entry<String, Obj> entry : this.additionalParameters.entrySet()) {
-				if (!entry.getKey().startsWith(fnParameterStrAndIndex))
-					continue;
-				fnParameterParamMap.put(entry.getKey().substring(fnParameterStrAndIndex.length() + 1), entry.getValue());
-			}
-			
-			Obj fnParameterObj = this.possibleFnParameters.get(fnParameterStr).clone();
-			if (!fnParameterObj.resolveValues(fnParameterParamMap))
-				return false;
-			
-			YADLLParameter fnParameter = new YADLLParameter(this.context);
-			if (!fnParameter.fromParse(fnParameterObj))
-				return false;
-			
-			if (!fnParameter.replaceInitFnParameterValues("%i",String.valueOf(i))
-					|| !fnParameter.replaceInitFnParameterValues("%(i-1)", String.valueOf(i-1))
-					|| !fnParameter.replaceInitFnParameterValues("%(i+1)", String.valueOf(i-1)))
-				return false;
-			
-			this.model.defineParamInit_(fnParameterStrAndIndex, fnParameter.getYADLLInitFnString());
-			this.context.getDataTools().getOutputWriter().debugWriteln("YADLL constructed parameters " + fnParameterStrAndIndex + ": " + fnParameter.getYADLLInitFnString());
 
-			// FIXME Build model from existing weights when available from deserialization
-		}
-		
-		this.model.compile();
-		
 		return true;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private Map<L, Integer> getLabelIndices() {
 		Map<L, Integer> labelMap = new HashMap<L, Integer>();
-
-		L[] labels = (L[])this.validLabels.toArray();
-		for (int i = 0; i < labels.length; i++)
-			labelMap.put(labels[i], i);
+	
+		Set<String> validLabels = new TreeSet<String>();
+		for (L label : this.validLabels)
+			validLabels.add(label.toString());
+		
+		int i = 0;
+		for (String validLabel : validLabels) {
+			labelMap.put(this.context.getDatumTools().labelFromString(validLabel), i);
+			i++;
+		}
 		
 		return labelMap;
 	}
+	
+	private List<L> getLabels() {
+		Set<String> validLabels = new TreeSet<String>();
+		for (L label : this.validLabels)
+			validLabels.add(label.toString());
+		List<L> labels = new ArrayList<L>();
+		for (String label : validLabels)
+			labels.add(this.context.getDatumTools().labelFromString(label));
+		return labels;
+	
+	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
@@ -598,13 +623,16 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		L[] labels = (L[])this.validLabels.toArray();
+		List<L> labels = getLabels();
 		
-		this.model.flush_stats(false);
-		this.model.clamp_("x", X);
-		this.model.eval();
-		
-		float[] outputY = this.model.getOutput(this.targetFnNode).getData();
+		float[] outputY = null;
+		synchronized (this.context) {
+			this.model.flush_stats_(false);
+			this.model.clamp_("x", X);
+			this.model.eval();
+			outputY = this.model.getOutput(this.targetFnNode).getData();
+			this.model.flush_stats_(false);
+		}
 		
 		Map<D, Map<L, Double>> posteriors = new HashMap<D, Map<L, Double>>();
 		int i = 0;
@@ -612,31 +640,28 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			Map<L, Double> p = new HashMap<L, Double>();
 			double norm = 0.0;
 			
-			for (int j = 0; j < labels.length; j++) {
-				double value = Double.valueOf(outputY[i*labels.length + j]);
-				p.put(labels[j], value);
-				norm += outputY[i*labels.length + j];
+			for (int j = 0; j < labels.size(); j++) {
+				double value = Double.valueOf(outputY[i*labels.size() + j]);
+				p.put(labels.get(j), value);
+				norm += outputY[i*labels.size() + j];
 			}
 
-			for (int j = 0; j < labels.length; j++) {
-				double normValue = p.get(labels[j])/norm;
+			for (int j = 0; j < labels.size(); j++) {
+				double normValue = p.get(labels.get(j))/norm;
 
 				if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(normValue, this.classificationThreshold) >= 0)
-					p.put(labels[j], normValue);
+					p.put(labels.get(j), normValue);
 				else
-					p.remove(labels[j]);
+					p.remove(labels.get(j));
 			}
 			
 			posteriors.put(datum, p);
 			i++;
 		}
-		
-		this.model.flush_stats(false);
-		
+	
 		return posteriors;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
@@ -644,13 +669,17 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
 		Matrix X = dataMatrices.getFirst();
-		L[] labels = (L[])this.validLabels.toArray();
-		
-		this.model.flush_stats(false);
-		this.model.clamp_("x", X);
-		this.model.eval();
-		
-		float[] outputY = this.model.getOutput(this.targetFnNode).getData();
+		List<L> labels = getLabels();
+		int numLabels = labels.size();
+		float[] outputY = null;
+		synchronized (this.context) {
+			this.model.flush_stats_(false);
+			this.model.clamp_("x", X);
+			this.model.eval();
+			
+			outputY = this.model.getOutput(this.targetFnNode).getData();
+			this.model.flush_stats_(false);
+		}
 		
 		Map<D, L> classifications = new HashMap<D, L>();
 		int i = 0;
@@ -658,21 +687,22 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			double maxValue = 0.0;
 			int maxIndex = 0;
 			double norm = 0.0;
-			for (int j = 0; j < labels.length; j++) {
-				if (Double.compare(outputY[i*labels.length + j], maxValue) >= 0) {
+			
+			for (int j = 0; j < numLabels; j++) {
+				if (Double.compare(outputY[i*numLabels + j], maxValue) >= 0) {
 					maxIndex = j;
-					maxValue = outputY[i*labels.length + j];
+					maxValue = outputY[i*numLabels + j];
 				}
-				norm += outputY[i*labels.length + j];
+				norm += outputY[i*numLabels + j];
 			}
 			
 			if (Double.compare(this.classificationThreshold, 0.0) <= 0 || Double.compare(maxValue/norm, this.classificationThreshold) >= 0) {
-				classifications.put(datum, labels[maxIndex]);
+				classifications.put(datum, labels.get(maxIndex));
 			}
 			i++;
 		}
 		
-		this.model.flush_stats(false);
+		
 		
 		return classifications;
 	}

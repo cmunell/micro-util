@@ -16,9 +16,13 @@ public abstract class EvaluationClassification<D extends Datum<L>, L, E> extends
 	
 	protected DatumContext<D, L> context;
 	
+	private Obj taskRef;
+	private Obj methodRef;
+
+	private String[] parameterNames = { "task", "method" };
+	
 	protected TaskClassification<D, L> task;
 	protected MethodClassification<D, L> method;
-	private String[] parameterNames = { "task", "method" };
 	
 	public EvaluationClassification() {
 		this(null);
@@ -42,21 +46,23 @@ public abstract class EvaluationClassification<D extends Datum<L>, L, E> extends
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("task"))
-			return (this.task == null) ? null : Obj.curlyBracedValue(this.task.getReferenceName());
-		else if (parameter.equals("method"))
-			return (this.method == null) ? null : Obj.curlyBracedValue(this.method.getReferenceName());
+		if (parameter.equals("task")) {
+			return (this.task == null) ? null : this.taskRef;
+		} else if (parameter.equals("method"))
+			return (this.method == null) ? null : this.methodRef;
 		else
 			return this.method.getParameterValue(parameter);
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("task"))
+		if (parameter.equals("task")) {
+			this.taskRef = parameterValue;
 			this.task = (parameterValue == null) ? null : this.context.getMatchClassifyTask(parameterValue);
-		else if (parameter.equals("method"))
+		} else if (parameter.equals("method")) {
+			this.methodRef = parameterValue;
 			this.method = (parameterValue == null) ? null : this.context.getMatchClassifyMethod(parameterValue);
-		else
+		} else
 			return this.method.setParameterValue(parameter, parameterValue);
 		return true;
 	}

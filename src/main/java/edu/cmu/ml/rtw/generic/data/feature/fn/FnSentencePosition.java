@@ -17,7 +17,9 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 public class FnSentencePosition extends Fn<TokenSpan, String> {
 	public enum Position {
 		START,
+		ALMOST_START,
 		END,
+		ALMOST_END,
 		MIDDLE,
 		ALL,
 		NONE
@@ -63,8 +65,14 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 				output.add(Position.START.toString());
 			else if (tokenSpan.getEndTokenIndex() == sentenceTokenCount)
 				output.add(Position.END.toString());
-			else
+			else {
+				if (tokenSpan.getStartTokenIndex() == 1)
+					output.add(Position.ALMOST_START.toString());
+				if (tokenSpan.getEndTokenIndex() == sentenceTokenCount - 1)
+					output.add(Position.ALMOST_END.toString());
+				
 				output.add(Position.MIDDLE.toString());
+			}
 		}
 		
 		return output;

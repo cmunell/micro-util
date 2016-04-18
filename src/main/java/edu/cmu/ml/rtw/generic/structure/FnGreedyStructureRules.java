@@ -14,14 +14,17 @@ import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S> {
 	private Context context;
 	
-	private RuleSet rules;
-	private Fn<S, ?> splitFn;
+	private Obj.Array rulesRefs;
+	private List<RuleSet> rules;
+	private Obj.Array splitFnsRefs;
+	private List<Fn<S, ?>> splitFns;
 	private int maxIterations = 0;
-	private String[] parameterNames = { "rules", "splitFn", "maxIterations" };
+	private String[] parameterNames = { "rules", "splitFns", "maxIterations" };
 	
 	public FnGreedyStructureRules() {
 		
@@ -38,11 +41,11 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("rules"))
-			return (this.rules == null) ? null : Obj.curlyBracedValue(this.rules.getReferenceName());
-		else if (parameter.equals("splitFn"))
-			return (this.splitFn == null) ? null : Obj.curlyBracedValue(this.splitFn.getReferenceName());
-		else if (parameter.equals("maxIterations"))
+		if (parameter.equals("rules")) {
+			return (this.rulesRefs == null) ? null : this.rulesRefs;
+		} else if (parameter.equals("splitFns")) {
+			return (this.splitFnsRefs == null) ? null : this.splitFnsRefs;
+		} else if (parameter.equals("maxIterations"))
 			return Obj.stringValue(String.valueOf(this.maxIterations));
 		else 
 			return null;
@@ -51,11 +54,25 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("rules"))
-			this.rules = (parameterValue == null) ? null : this.context.getMatchRuleSet(parameterValue);
-		else if (parameter.equals("splitFn"))
-			this.splitFn = (parameterValue == null) ? null : (Fn<S, ?>)this.context.getMatchStructureFn(parameterValue);
-		else if (parameter.equals("maxIterations"))
+		if (parameter.equals("rules")) {
+			this.rulesRefs = (Obj.Array)parameterValue;
+			if (this.rulesRefs != null) {
+				this.rules = new ArrayList<>();
+				for (int i = 0; i < this.rulesRefs.size(); i++)
+					this.rules.add(this.context.getMatchRuleSet(this.rulesRefs.get(i)));
+			} else {
+				this.rules = null;
+			}
+		} else if (parameter.equals("splitFns")) {
+			this.splitFnsRefs = (Obj.Array)parameterValue;
+			if (this.splitFnsRefs != null) {
+				this.splitFns = new ArrayList<>();
+				for (int i = 0; i < this.splitFnsRefs.size(); i++)
+					this.splitFns.add((Fn<S, ?>)this.context.getMatchStructureFn(this.splitFnsRefs.get(i)));
+			} else {
+				this.splitFns = null;
+			}
+		} else if (parameter.equals("maxIterations"))
 			this.maxIterations = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		else 
 			return false;
@@ -66,20 +83,24 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	protected <C extends Collection<S>> C compute(Collection<S> input, C output) {
 		for (S structure : input) {
 			int iterations = 0;
-			int addedObjs = 0;
+			boolean changed = false;
 			do {
-				List<?> splitStructure = this.splitFn.listCompute(structure);
-				List<Pair<List<CtxParsable>, Double>> orderedStructureParts = new ArrayList<Pair<List<CtxParsable>, Double>>();
-				
-				for (Object o : splitStructure) {
-					WeightedStructure structurePart = (WeightedStructure)o;
-					List<CtxParsable> structurePartList = structurePart.toList();
-					double weight = 0.0;
+				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
+				for (int i = 0; i < this.splitFns.size(); i++) {
+					Fn<S, ?> splitFn = this.splitFns.get(i);
 					
-					for (CtxParsable part : structurePartList) {
-						weight += structurePart.getWeight(part);
+					List<?> splitStructure = splitFn.listCompute(structure);
+					
+					for (Object o : splitStructure) {
+						WeightedStructure structurePart = (WeightedStructure)o;
+						List<CtxParsable> structurePartList = structurePart.toList();
+						double weight = 0.0;
+						
+						for (CtxParsable part : structurePartList) {
+							weight += structurePart.getWeight(part);
+						}
+						orderedStructureParts.add(new Triple<>(structurePartList, weight / (double)structurePartList.size(), i));
 					}
-					orderedStructureParts.add(new Pair<>(structurePartList, weight / (double)structurePartList.size()));
 				}
 				
 				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Double>>() {
@@ -90,19 +111,20 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 					
 				});
 				
-				addedObjs = 0;
-				for (Pair<List<CtxParsable>, Double> structurePart : orderedStructureParts) {
-					Map<String, List<Obj>> objs = this.rules.apply(structurePart.getFirst());
+				changed = false;
+				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
+					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (List<Obj> objList : objs.values())
 						for (Obj obj : objList) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							int oldCount = structure.getItemCount();
 							structure.add(newStructurePart, structurePart.getSecond());
-							addedObjs = structure.getItemCount() - oldCount;
+							if (structure.getItemCount() - oldCount != 0)
+								changed = true;
 						}
 				}
 				iterations++;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && addedObjs > 0);
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && changed);
 			
 			output.add(structure);
 		}

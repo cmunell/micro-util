@@ -57,6 +57,8 @@ public class FnTokenAnnotation extends Fn<TokenSpan, String> {
 	@Override
 	public <C extends Collection<String>> C compute(Collection<TokenSpan> input, C output) {
 		for (TokenSpan tokenSpan : input) {
+			if (tokenSpan.getStartTokenIndex() < 0 || tokenSpan.getSentenceIndex() < 0)
+				continue;
 			StringBuilder str = new StringBuilder();
 			DocumentNLP document = tokenSpan.getDocument();
 			for (int i = tokenSpan.getStartTokenIndex(); i < tokenSpan.getEndTokenIndex(); i++)

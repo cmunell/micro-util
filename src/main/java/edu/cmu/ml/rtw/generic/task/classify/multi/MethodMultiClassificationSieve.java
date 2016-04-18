@@ -129,18 +129,25 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
 			
+			int startStructureItems = 0;
+			int addedStructureItems = 0;
 			for (Entry entry : structures.entrySet()) {
+				startStructureItems += ((WeightedStructure)entry.getValue()).getItemCount();
+				//System.out.println("BEFORE TRANSFORM:\n " + entry.getValue());
 				List transformedStructures = ((Fn)this.structureTransformFn).listCompute(entry.getValue());
 				WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 				for (int j = 1; j < transformedStructures.size(); j++)
 					firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 				entry.setValue(firstTransformed);
+				//System.out.println("AFTER TRANSFORM:\n " + entry.getValue());
+				addedStructureItems += firstTransformed.getItemCount();
 			}
+			
+			this.context.getDataTools().getOutputWriter().debugWriteln("Structure transform changed item count from " + startStructureItems + " to " + addedStructureItems);
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");
 
-		
 		List<Map<Datum<?>, ?>> classifications = new ArrayList<Map<Datum<?>, ?>>();
 		for (int i = 0; i < data.size(); i++) {
 			Structurizer structurizer = null;

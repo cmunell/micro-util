@@ -78,6 +78,9 @@ public class TaskMultiClassification extends CtxParsableFunction {
 			Map<Object, Map<?, List<?>>> actualToPredicted = new HashMap<Object, Map<?, List<?>>>();
 			for (Datum<?> datum : data) {
 				Object actual = datum.getLabel();
+				if (actual == null)
+					continue;
+				
 				Object predicted = predictions.get(datum);
 				
 				if (!actualToPredicted.containsKey(actual))
@@ -186,5 +189,16 @@ public class TaskMultiClassification extends CtxParsableFunction {
 	@Override
 	public String getGenericName() {
 		return "MultiClassification";
+	}
+	
+	public TaskMultiClassification clone() {
+		return clone(this.referenceName);
+	}
+	
+	public TaskMultiClassification clone(String referenceName) {
+		TaskMultiClassification clone = new TaskMultiClassification(this.context);
+		if (!clone.fromParse(this.modifiers, referenceName, toParse()))
+			return null;
+		return clone;
 	}
 }
