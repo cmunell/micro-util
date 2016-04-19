@@ -881,7 +881,7 @@ public class DataTools {
 	public boolean addGenericContext(Context context) {
 		this.genericContexts.put(context.getGenericName(), context);
 		
-		return addConstructionCommand(context, new MakeInstanceFn<Context>() {
+		return addContextConstructionCommand(context, new MakeInstanceFn<Context>() {
 			public Context make(String name, Context parentContext) {
 				return makeContext(name, parentContext); } }
 		);
@@ -938,6 +938,33 @@ public class DataTools {
 			@Override
 			public T run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 				T instance = makeInstanceFn.make(obj.getGenericName(), context);
+				if (instance.fromParse(modifiers, referenceName, fnObj))
+					return instance;
+				return null;
+			}
+		});
+	}
+	
+	public boolean addContextConstructionCommand(CtxParsableFunction obj, MakeInstanceFn<Context> makeInstanceFn) {
+		return addCommand(obj.getGenericName(), new Command<Context>() {
+			@Override
+			public Context run(Context context, List<String> modifiers, String referenceName, Function fnObj) {				
+				if (fnObj.getParameters().contains("initScript")) {
+					boolean initOnce = (fnObj.getParameters().contains("initOnce")) ? Boolean.valueOf(context.getMatchValue(fnObj.getParameters().get("initOnce").getValue())) : true;
+					boolean initOverrideByName = (fnObj.getParameters().contains("initOverrideByName")) ? Boolean.valueOf(context.getMatchValue(fnObj.getParameters().get("initOnce").getValue())) : false;
+					String initScript = context.getMatchValue(fnObj.getParameters().get("initScript").getValue());
+					if (initOnce) {
+						Context existingContext = null;
+						if (initOverrideByName)
+							existingContext = context.getInitOnceContextForName(referenceName);
+						if (existingContext == null)
+							existingContext = context.getInitOnceContextForScript(initScript);
+						if (existingContext != null)
+							return existingContext;
+					}
+				}
+				
+				Context instance = makeInstanceFn.make(obj.getGenericName(), context);
 				if (instance.fromParse(modifiers, referenceName, fnObj))
 					return instance;
 				return null;
