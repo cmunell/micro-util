@@ -107,10 +107,13 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 				for (Entry<String, Double> entry1 : spanStrVectors.get(i).entrySet()) {
 					for (Entry<String, Double> entry2 : spanStrVectors.get(j).entrySet()) {
 						double[] vec1 = w2v.computeVector(entry1.getKey());
-						double[] vec2 = w2v.computeVector(entry2.getKey());
-						
+						double[] vec2 = w2v.computeVector(entry2.getKey());						
 						double[] diff1_2 = MathUtil.subtract(vec1, vec2);
-						diff1_2 = MathUtil.normalize(diff1_2, MathUtil.computeMagnitude(diff1_2) / (entry1.getValue() * entry2.getValue()));
+						double norm = MathUtil.computeMagnitude(diff1_2) / (entry1.getValue() * entry2.getValue());
+						if (Double.compare(norm, 0.0) == 0)
+							norm = 1.0;
+						
+						diff1_2 = MathUtil.normalize(diff1_2, norm);
 						difference = MathUtil.add(diff1_2, difference);					
 					}
 				}
