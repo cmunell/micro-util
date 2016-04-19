@@ -99,6 +99,13 @@
   		<groupId>edu.stanford.nlp</groupId>
   		<artifactId>stanford-corenlp</artifactId>
   		<version>3.5.2</version>
+<exclusions>
+  <exclusion>
+    <!-- This directly contains an old and ancient version of java-cup.  Excluding it altogether doesn't seem to be problematic so far -->
+    <groupId>xalan</groupId>
+    <artifactId>xalan</artifactId>
+  </exclusion>
+</exclusions> 
   	</dependency>
   	<dependency>
   		<groupId>edu.stanford.nlp</groupId>
@@ -126,6 +133,16 @@
 		<groupId>nz.ac.waikato.cms.weka</groupId>
 		<artifactId>weka-dev</artifactId>
 		<version>3.7.13</version>
+<exclusions>
+  <exclusion> 
+    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+    <artifactId>java-cup-11b</artifactId>
+  </exclusion>
+  <exclusion> 
+    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+    <artifactId>java-cup-11b-runtime</artifactId>
+  </exclusion>
+</exclusions> 
 	</dependency> 
 	<dependency>
 		<groupId>nz.ac.waikato.cms.weka</groupId>
