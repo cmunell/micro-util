@@ -985,69 +985,60 @@ public class Context extends CtxParsableFunction {
 	}
 	
 	public Context getInitOnceContextForScript(String initScript) {
-		if (this.initOnce && this.initScript != null && this.initScript.equals(initScript))
-			return this;
-		
 		Set<Context> visited = new HashSet<Context>();
-		Stack<Context> toVisit = new Stack<Context>();
-		
-		if (this.parentContext != null)
-			toVisit.push(this.parentContext);
-		for (Context child : this.contexts.values())
-			toVisit.push(child);
+		Stack<Pair<Boolean, Context>> toVisit = new Stack<Pair<Boolean, Context>>();
+		toVisit.push(new Pair<Boolean, Context>(true, this));
 		
 		while (!toVisit.isEmpty()) {
-			Context cur = toVisit.pop();
+			Pair<Boolean, Context> cur = toVisit.pop();
+			Context curContext = cur.getSecond();
+			boolean curFromBelow = cur.getFirst();
 			
-			if (cur.initOnce) {
-				if (cur.initScript != null && cur.initScript.equals(initScript)) {
-					return cur;
-				}
-				
-				for (Context child : cur.contexts.values())
-					if (!visited.contains(child))
-						toVisit.push(child);
+			if (curContext.initOnce && curContext.initScript != null && curContext.initScript.equals(initScript)) {
+				return curContext;
 			}
 			
-			if (cur.parentContext != null && !visited.contains(cur.parentContext))
-				toVisit.add(cur.parentContext);
+			if (curContext.initOnce || curFromBelow) {
+				for (Context child : curContext.contexts.values())
+					if (!visited.contains(child))
+						toVisit.push(new Pair<Boolean, Context>(false, child));
+			}
 			
-			visited.add(cur);
+			if (curContext.parentContext != null && !visited.contains(curContext.parentContext))
+				toVisit.add(new Pair<Boolean, Context>(true, curContext.parentContext));
+			
+			visited.add(curContext);
 		}
 		
 		return null;
 	}
 	
 	public Context getInitOnceContextForName(String name) {
-		if (this.initOnce && this.referenceName != null && this.referenceName.equals(name))
-			return this;
-		
 		Set<Context> visited = new HashSet<Context>();
-		Stack<Context> toVisit = new Stack<Context>();
-		
-		if (this.parentContext != null)
-			toVisit.push(this.parentContext);
-		for (Context child : this.contexts.values())
-			toVisit.push(child);
+		Stack<Pair<Boolean, Context>> toVisit = new Stack<Pair<Boolean, Context>>();
+		toVisit.push(new Pair<Boolean, Context>(true, this));
 		
 		while (!toVisit.isEmpty()) {
-			Context cur = toVisit.pop();
+			Pair<Boolean, Context> cur = toVisit.pop();
+			Context curContext = cur.getSecond();
+			boolean curFromBelow = cur.getFirst();
 			
-			if (cur.initOnce) {
-				if (cur.referenceName != null && cur.referenceName.equals(name)) {
-					return cur;
-				}
-				
-				for (Context child : cur.contexts.values())
-					if (!visited.contains(child))
-						toVisit.push(child);
+			if (curContext.initOnce && curContext.referenceName != null && curContext.referenceName.equals(name)) {
+				return curContext;
 			}
 			
-			if (cur.parentContext != null && !visited.contains(cur.parentContext))
-				toVisit.add(cur.parentContext);
+			if (curContext.initOnce || curFromBelow) {
+				for (Context child : curContext.contexts.values())
+					if (!visited.contains(child))
+						toVisit.push(new Pair<Boolean, Context>(false, child));
+			}
 			
-			visited.add(cur);
+			if (curContext.parentContext != null && !visited.contains(curContext.parentContext))
+				toVisit.add(new Pair<Boolean, Context>(true, curContext.parentContext));
+			
+			visited.add(curContext);
 		}
+		
 		
 		return null;
 	}
