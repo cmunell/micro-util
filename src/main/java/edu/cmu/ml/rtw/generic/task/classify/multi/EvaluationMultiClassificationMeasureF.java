@@ -145,7 +145,7 @@ public class EvaluationMultiClassificationMeasureF extends EvaluationMultiClassi
 
 	@Override
 	public String getGenericName() {
-		return "F";
+		return "MultiF";
 	}
 
 	@Override

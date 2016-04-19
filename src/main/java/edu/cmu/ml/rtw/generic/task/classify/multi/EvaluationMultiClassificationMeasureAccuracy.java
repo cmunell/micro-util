@@ -48,7 +48,7 @@ public class EvaluationMultiClassificationMeasureAccuracy extends EvaluationMult
 
 	@Override
 	public String getGenericName() {
-		return "Accuracy";
+		return "MultiAccuracy";
 	}
 
 	@Override

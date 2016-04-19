@@ -129,7 +129,7 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 
 	@Override
 	public String getGenericName() {
-		return "Precision";
+		return "MultiPrecision";
 	}
 
 	@Override

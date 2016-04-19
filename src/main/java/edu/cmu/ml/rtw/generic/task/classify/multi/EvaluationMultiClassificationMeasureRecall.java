@@ -129,7 +129,7 @@ public class EvaluationMultiClassificationMeasureRecall extends EvaluationMultiC
 
 	@Override
 	public String getGenericName() {
-		return "Recall";
+		return "MultiRecall";
 	}
 
 	@Override
