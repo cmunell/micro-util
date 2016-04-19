@@ -98,7 +98,7 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 	
 	private double[] computeDifference(Word2Vec w2v, List<Map<String, Double>> spanStrVectors) {
-		double[] difference = null;
+		double[] difference = new double[w2v.getVectorSize()];
 		double count = 0.0;
 		for (int i = 0; i < spanStrVectors.size(); i++) {
 			for (int j = 0; j < spanStrVectors.size(); j++) {
