@@ -994,7 +994,7 @@ public class Context extends CtxParsableFunction {
 			Context curContext = cur.getSecond();
 			boolean curFromBelow = cur.getFirst();
 			
-			if (curContext.initOnce && curContext.initScript != null && curContext.initScript.equals(initScript)) {
+			if (curContext.initScript != null && curContext.initScript.equals(initScript)) {
 				return curContext;
 			}
 			
@@ -1023,7 +1023,7 @@ public class Context extends CtxParsableFunction {
 			Context curContext = cur.getSecond();
 			boolean curFromBelow = cur.getFirst();
 			
-			if (curContext.initOnce && curContext.referenceName != null && curContext.referenceName.equals(name)) {
+			if (curContext.referenceName != null && curContext.referenceName.equals(name)) {
 				return curContext;
 			}
 			
