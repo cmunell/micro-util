@@ -55,7 +55,7 @@ public abstract class EvaluationMultiClassificationMeasure extends EvaluationMul
 	
 	@Override
 	public String toString() {
-		return getReferenceName() + ": " + compute();
+		return getReferenceName() + ":\t" + compute();
 	}
 	
 	protected abstract EvaluationMultiClassificationMeasure makeInstance();
