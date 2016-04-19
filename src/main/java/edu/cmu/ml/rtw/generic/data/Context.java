@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -77,7 +80,9 @@ public class Context extends CtxParsableFunction {
 		}
 	}
 	
+	private boolean initOverrideByName = false;
 	private String initScript;
+	private boolean initOnce = true;
 	
 	protected DataTools dataTools;
 	protected String genericName;
@@ -945,13 +950,17 @@ public class Context extends CtxParsableFunction {
 
 	@Override
 	public String[] getParameterNames() {
-		return new String[] { "initScript" };
+		return new String[] { "initScript", "initOnce", "initOverrideByName" };
 	}
 
 	@Override
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("initScript"))
 			return Obj.stringValue(this.initScript);
+		else if (parameter.equals("initOnce"))
+			return Obj.stringValue(String.valueOf(this.initOnce));
+		else if (parameter.equals("initOverrideByName"))
+			return Obj.stringValue(String.valueOf(this.initOverrideByName));
 		return null;
 	}
 
@@ -959,6 +968,10 @@ public class Context extends CtxParsableFunction {
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("initScript"))
 			this.initScript = (this.parentContext == null || parameterValue == null) ? null : this.parentContext.getMatchValue(parameterValue);
+		else if (parameter.equals("initOnce"))
+			this.initOnce = (this.parentContext == null || parameterValue == null) ? true : Boolean.valueOf(this.parentContext.getMatchValue(parameterValue));
+		else if (parameter.equals("initOverrideByName"))
+			this.initOverrideByName = (this.parentContext == null || parameterValue == null) ? false :  Boolean.valueOf(this.parentContext.getMatchValue(parameterValue));
 		else 
 			return false;
 		
@@ -972,5 +985,73 @@ public class Context extends CtxParsableFunction {
 	
 	public Context makeInstance(Context parentContext) {
 		return new Context(this.dataTools, this.genericName, parentContext);
+	}
+	
+	public Context getInitOnceContextForScript(String initScript) {
+		if (this.initOnce && this.initScript != null && this.initScript.equals(initScript))
+			return this;
+		
+		Set<Context> visited = new HashSet<Context>();
+		Stack<Context> toVisit = new Stack<Context>();
+		
+		if (this.parentContext != null)
+			toVisit.push(this.parentContext);
+		for (Context child : this.contexts.values())
+			toVisit.push(child);
+		
+		while (!toVisit.isEmpty()) {
+			Context cur = toVisit.pop();
+			
+			if (cur.initOnce) {
+				if (cur.initScript != null && cur.initScript.equals(initScript)) {
+					return cur;
+				}
+				
+				for (Context child : cur.contexts.values())
+					if (!visited.contains(child))
+						toVisit.push(child);
+			}
+			
+			if (cur.parentContext != null && !visited.contains(cur.parentContext))
+				toVisit.add(cur.parentContext);
+			
+			visited.add(cur);
+		}
+		
+		return null;
+	}
+	
+	public Context getInitOnceContextForName(String name) {
+		if (this.initOnce && this.referenceName != null && this.referenceName.equals(name))
+			return this;
+		
+		Set<Context> visited = new HashSet<Context>();
+		Stack<Context> toVisit = new Stack<Context>();
+		
+		if (this.parentContext != null)
+			toVisit.push(this.parentContext);
+		for (Context child : this.contexts.values())
+			toVisit.push(child);
+		
+		while (!toVisit.isEmpty()) {
+			Context cur = toVisit.pop();
+			
+			if (cur.initOnce) {
+				if (cur.referenceName != null && cur.referenceName.equals(name)) {
+					return cur;
+				}
+				
+				for (Context child : cur.contexts.values())
+					if (!visited.contains(child))
+						toVisit.push(child);
+			}
+			
+			if (cur.parentContext != null && !visited.contains(cur.parentContext))
+				toVisit.add(cur.parentContext);
+			
+			visited.add(cur);
+		}
+		
+		return null;
 	}
 }
