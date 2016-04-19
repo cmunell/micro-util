@@ -313,19 +313,11 @@ public class Context extends CtxParsableFunction {
 		return result;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> List<T> getAssignedMatches(Obj obj) {
-		List<T> assignedMatches = new ArrayList<T>();
-		if (obj.getObjType() == Obj.Type.VALUE) {
-			for (Map<String, ?> map : this.storageMaps) {
-				List<?> mapMatches = getAssignedMatches(obj, map);
-				if (mapMatches.size() > 0)
-					assignedMatches.addAll((List<T>)mapMatches);
-			}
-		}
-		return assignedMatches;
+		return getAssignedMatches(obj, null);
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected <T> List<T> getAssignedMatches(Obj obj, Map<String, T> storageMap) {
 		List<T> assignedMatches = new ArrayList<T>();
 		if (obj.getObjType() == Obj.Type.VALUE) {
@@ -337,9 +329,14 @@ public class Context extends CtxParsableFunction {
 					String restOfReference = reference.substring(referenceParts[0].length() + 1);
 					if (this.contexts.containsKey(referenceParts[0]))
 						assignedMatches.addAll(this.contexts.get(referenceParts[0]).getAssignedMatches(Obj.curlyBracedValue(restOfReference)));
-				} else if (storageMap.containsKey(reference)) {
+				} else if (storageMap != null && storageMap.containsKey(reference)) {
 					assignedMatches.add(storageMap.get(reference));
-				} 
+				} else if (storageMap == null){
+					for (Map<String, ?> map : this.storageMaps) {
+						if (map.containsKey(reference))
+							assignedMatches.add((T)map.get(reference));
+					}
+				}
 				
 				if (assignedMatches.size() == 0 && this.parentContext != null)
 					assignedMatches.addAll(this.parentContext.getAssignedMatches(vObj));
