@@ -21,7 +21,7 @@ public class NamedIterable<I extends Iterable<O>, O> {
 		StringBuilder str = new StringBuilder();
 		
 		for (O item : this.iterable)
-			str.append(item.toString()).append("\n\n");
+			str.append(item.toString()).append("\n");
 		
 		return str.toString();
 	}
