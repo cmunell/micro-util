@@ -26,10 +26,12 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 	
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	
+	protected boolean useSenses = true;
+	protected boolean useTags = true;
 	protected int minFeatureOccurrence;
 	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
 	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
-	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor" };
+	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useSenses", "useTags" };
 	
 	public FeaturePredicateArgumentPath() {
 		
@@ -127,18 +129,24 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 				for (String argTag : argTags) {
 					TokenSpan[] argSpans = pred.getArgument(argTag);
 					for (TokenSpan argSpan : argSpans) {
-						if (!visitedHasSpan(argSpan, visited))
-							relations.add(new Pair<TokenSpan, String>(argSpan, pred.getSense() + "_" + argTag));
+						if (!visitedHasSpan(argSpan, visited)) {
+							String p = (this.useSenses) ? pred.getSense() : "p";
+							String a = (this.useTags) ? argTag : "a";
+							relations.add(new Pair<TokenSpan, String>(argSpan, p + "_" + a));
+						}
 					}
 				}
 			}
-				
+			
 			if (!visitedHasSpan(predSpan, visited)) {
 				for (String argTag : argTags) {
 					TokenSpan[] argSpans = pred.getArgument(argTag);
 					for (TokenSpan argSpan : argSpans) {
-						if (span.hasRelationTo(argSpan, SPAN_RELATIONS))
-							relations.add(new Pair<TokenSpan, String>(predSpan, argTag + "_" + pred.getSense()));
+						if (span.hasRelationTo(argSpan, SPAN_RELATIONS)) {
+							String p = (this.useSenses) ? pred.getSense() : "p";
+							String a = (this.useTags) ? argTag : "a";
+							relations.add(new Pair<TokenSpan, String>(predSpan, a + "_" + p));
+						}
 					}
 				}
 			}
@@ -195,6 +203,10 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 			return Obj.stringValue((this.sourceTokenExtractor == null) ? "" : this.sourceTokenExtractor.toString());
 		else if (parameter.equals("targetTokenExtractor"))
 			return Obj.stringValue((this.targetTokenExtractor == null) ? "" : this.targetTokenExtractor.toString());
+		else if (parameter.equals("useTags"))
+			return Obj.stringValue(String.valueOf(this.useTags));
+		else if (parameter.equals("useSenses"))
+			return Obj.stringValue(String.valueOf(this.useSenses));
 		return null;
 	}
 	
@@ -206,6 +218,10 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 			this.sourceTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("targetTokenExtractor"))
 			this.targetTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("useTags"))
+			this.useTags = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("useSenses"))
+			this.useSenses = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
