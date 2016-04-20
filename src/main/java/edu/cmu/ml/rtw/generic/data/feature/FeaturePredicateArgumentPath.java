@@ -22,7 +22,7 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature<D, L> {
-	private static final TokenSpan.Relation[] SPAN_RELATIONS = new TokenSpan.Relation[] { TokenSpan.Relation.CONTAINED_BY, TokenSpan.Relation.CONTAINS };
+	private static final TokenSpan.Relation[] SPAN_RELATIONS = new TokenSpan.Relation[] { TokenSpan.Relation.CONTAINED_BY, TokenSpan.Relation.CONTAINS, TokenSpan.Relation.EQUAL };
 	
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	
@@ -83,7 +83,7 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 			return null;
 		
 		Set<String> paths = new HashSet<String>();
-		List<Pair<TokenSpan, Predicate>> preds = sourceSpan.getDocument().getTokenSpanAnnotations(AnnotationTypeNLP.PREDICATE);
+		List<Pair<TokenSpan, Predicate>> preds = sourceSpan.getDocument().getTokenSpanAnnotations(AnnotationTypeNLP.PREDICATE, sourceSpan.getSentenceIndex());
 		List<TokenSpan> visited = new ArrayList<>();
 		Stack<Pair<String, TokenSpan>> toVisit = new Stack<>();
 		toVisit.push(new Pair<String, TokenSpan>("", sourceSpan));
@@ -92,12 +92,10 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 			TokenSpan curSpan = cur.getSecond();
 			visited.add(curSpan);
 			
-			List<Pair<TokenSpan, String>> neighbors = getRelations(curSpan, preds);
+			List<Pair<TokenSpan, String>> neighbors = getRelations(curSpan, preds, visited);
 			for (Pair<TokenSpan, String> neighbor : neighbors) {
 				TokenSpan neighborSpan = neighbor.getFirst();
-				if (visitedHasSpan(neighborSpan, visited))
-					continue;
-				
+
 				String path = cur.getFirst() + "_" + neighbor.getSecond();
 				if (neighborSpan.hasRelationTo(targetSpan, SPAN_RELATIONS)) {
 					paths.add(path);
@@ -118,7 +116,7 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 		return false;
 	}
 	
-	private List<Pair<TokenSpan, String>> getRelations(TokenSpan span, List<Pair<TokenSpan, Predicate>> preds) {
+	private List<Pair<TokenSpan, String>> getRelations(TokenSpan span, List<Pair<TokenSpan, Predicate>> preds, List<TokenSpan> visited) {
 		List<Pair<TokenSpan, String>> relations = new ArrayList<>();
 		
 		for (Pair<TokenSpan, Predicate> predPair : preds) {
@@ -128,16 +126,20 @@ public class FeaturePredicateArgumentPath<D extends Datum<L>, L> extends Feature
 			if (span.hasRelationTo(predSpan, SPAN_RELATIONS)) {
 				for (String argTag : argTags) {
 					TokenSpan[] argSpans = pred.getArgument(argTag);
-					for (TokenSpan argSpan : argSpans)
-						relations.add(new Pair<TokenSpan, String>(argSpan, pred.getSense() + "_" + argTag));
+					for (TokenSpan argSpan : argSpans) {
+						if (!visitedHasSpan(argSpan, visited))
+							relations.add(new Pair<TokenSpan, String>(argSpan, pred.getSense() + "_" + argTag));
+					}
 				}
 			}
-			
-			for (String argTag : argTags) {
-				TokenSpan[] argSpans = pred.getArgument(argTag);
-				for (TokenSpan argSpan : argSpans) {
-					if (span.hasRelationTo(argSpan, SPAN_RELATIONS))
-						relations.add(new Pair<TokenSpan, String>(predSpan, argTag + "_" + pred.getSense()));
+				
+			if (!visitedHasSpan(predSpan, visited)) {
+				for (String argTag : argTags) {
+					TokenSpan[] argSpans = pred.getArgument(argTag);
+					for (TokenSpan argSpan : argSpans) {
+						if (span.hasRelationTo(argSpan, SPAN_RELATIONS))
+							relations.add(new Pair<TokenSpan, String>(predSpan, argTag + "_" + pred.getSense()));
+					}
 				}
 			}
 		}
