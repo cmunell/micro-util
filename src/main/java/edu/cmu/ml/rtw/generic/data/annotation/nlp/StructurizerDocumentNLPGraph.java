@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
@@ -114,7 +115,7 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	private WeightedStructureGraph getOrConstructStructure(D datum, Map<String, WeightedStructureGraph> structures) {
 		String id = getDocumentNLPStructureId(datum);
 		if (!structures.containsKey(id)) {
-			WeightedStructureGraph graph = (WeightedStructureGraph)this.context.getDataTools().makeWeightedStructure("Graph", this.context);
+			WeightedStructureGraph graph = new WeightedStructureGraph(this.context, this.graphEdgeMode, this.graphNodeMode, this.graphOverwriteOperator);
 			structures.put(id, graph);
 		}
 		
