@@ -10,12 +10,12 @@ import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelation;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelationBinary;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelationUnary;
 
-public class StructurizerDocumentNLPGraphTokenSpans<L> extends StructurizerDocumentNLPGraph<TokenSpansDatum<L>, L> {
-	public StructurizerDocumentNLPGraphTokenSpans() {
+public class StructurizerGraphTokenSpans<L> extends StructurizerGraph<TokenSpansDatum<L>, L> {
+	public StructurizerGraphTokenSpans() {
 		super();
 	}
 	
-	public StructurizerDocumentNLPGraphTokenSpans(DatumContext<TokenSpansDatum<L>, L> context) {
+	public StructurizerGraphTokenSpans(DatumContext<TokenSpansDatum<L>, L> context) {
 		super(context);
 	}
 	
@@ -40,7 +40,7 @@ public class StructurizerDocumentNLPGraphTokenSpans<L> extends StructurizerDocum
 	}
 
 	@Override
-	protected String getDocumentNLPStructureId(TokenSpansDatum<L> datum) {
+	protected String getStructureId(TokenSpansDatum<L> datum) {
 		TokenSpan[] spans = datum.getTokenSpans();
 		if (spans.length == 1) {
 			return spans[0].getDocument().getName();
@@ -77,12 +77,12 @@ public class StructurizerDocumentNLPGraphTokenSpans<L> extends StructurizerDocum
 
 	@Override
 	public Structurizer<TokenSpansDatum<L>, L, WeightedStructureGraph> makeInstance(DatumContext<TokenSpansDatum<L>, L> context) {
-		return new StructurizerDocumentNLPGraphTokenSpans<L>(context);
+		return new StructurizerGraphTokenSpans<L>(context);
 	}
 
 	@Override
 	public String getGenericName() {
-		return "DocumentNLPGraphTokenSpans";
+		return "GraphTokenSpans";
 	}
 
 	private String getTokenSpanId(TokenSpan span) {

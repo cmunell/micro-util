@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
@@ -16,7 +15,7 @@ import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelation;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.OverwriteOperator;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.RelationMode;
 
-public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extends Structurizer<D, L, WeightedStructureGraph>  {
+public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structurizer<D, L, WeightedStructureGraph>  {
 	protected LabelMapping<L> labelMapping;
 
 	private RelationMode graphEdgeMode = RelationMode.SINGLE;
@@ -25,11 +24,11 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	
 	protected String[] parameterNames = { "labelMapping", "graphEdgeMode", "graphNodeMode", "graphOverwriteOperator" };
 	
-	public StructurizerDocumentNLPGraph() {
+	public StructurizerGraph() {
 		
 	}
 	
-	public StructurizerDocumentNLPGraph(DatumContext<D, L> context) {
+	public StructurizerGraph(DatumContext<D, L> context) {
 		this.context = context;
 	}
 	
@@ -113,7 +112,7 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	}
 	
 	private WeightedStructureGraph getOrConstructStructure(D datum, Map<String, WeightedStructureGraph> structures) {
-		String id = getDocumentNLPStructureId(datum);
+		String id = getStructureId(datum);
 		if (!structures.containsKey(id)) {
 			WeightedStructureGraph graph = new WeightedStructureGraph(this.context, this.graphEdgeMode, this.graphNodeMode, this.graphOverwriteOperator);
 			structures.put(id, graph);
@@ -123,6 +122,6 @@ public abstract class StructurizerDocumentNLPGraph<D extends Datum<L>, L> extend
 	}
 	
 	protected abstract WeightedStructureRelation makeDatumStructure(D datum, L label);
-	protected abstract String getDocumentNLPStructureId(D datum);
+	protected abstract String getStructureId(D datum);
 	protected abstract List<WeightedStructureRelation> getDatumRelations(D datum, WeightedStructureGraph graph);
 }

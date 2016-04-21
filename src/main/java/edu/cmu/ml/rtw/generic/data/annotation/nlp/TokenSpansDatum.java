@@ -213,7 +213,7 @@ public class TokenSpansDatum<L> extends Datum<L> {
 				}
 			});
 			
-			this.addGenericStructurizer(new StructurizerDocumentNLPGraphTokenSpans<L>());
+			this.addGenericStructurizer(new StructurizerGraphTokenSpans<L>());
 		}
 		
 
