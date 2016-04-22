@@ -464,7 +464,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	public List<WeightedStructureSequence> getEdgePaths(int length) {
 		return getEdgePaths(length, null);
 	}
-	
+
 	public List<WeightedStructureSequence> getEdgePaths(int length, Set<String> ignoreTypes) {
 		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
 		if (length <= 0)
@@ -473,6 +473,25 @@ public class WeightedStructureGraph extends WeightedStructure {
 		for (String nodeId : this.edges.keySet())
 			getEdgePaths(nodeId, length, paths, ignoreTypes);
 		return paths;
+	}
+	
+	public List<WeightedStructureSequence> getOpenTriangles() {
+		return getOpenTriangles(null);
+	}
+	
+	public List<WeightedStructureSequence> getOpenTriangles(Set<String> ignoreTypes) {
+		List<WeightedStructureSequence> paths = getEdgePaths(2, ignoreTypes);
+		List<WeightedStructureSequence> openPaths = new ArrayList<>();
+		
+		for (WeightedStructureSequence path : paths) {
+			String sourceId = ((WeightedStructureRelationBinary)path.get(0)).getFirst().getId();
+			String targetId = ((WeightedStructureRelationBinary)path.get(1)).getSecond().getId();
+			
+			if (!hasEdge(sourceId, targetId))
+				openPaths.add(path);
+		}
+		
+		return openPaths;
 	}
 
 	@Override

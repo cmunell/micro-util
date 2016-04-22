@@ -26,6 +26,7 @@ import edu.cmu.ml.rtw.generic.str.StringTransformStem;
 import edu.cmu.ml.rtw.generic.str.StringTransformToLowerCase;
 import edu.cmu.ml.rtw.generic.str.StringTransformTrim;
 import edu.cmu.ml.rtw.generic.str.StringTransformUnderscoreToSpace;
+import edu.cmu.ml.rtw.generic.structure.FnGraphOpenTriangles;
 import edu.cmu.ml.rtw.generic.structure.FnGraphPaths;
 import edu.cmu.ml.rtw.generic.structure.FnGreedyStructureRules;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
@@ -339,6 +340,7 @@ public class DataTools {
 		
 		this.addGenericStructureFn(new FnGreedyStructureRules<WeightedStructureGraph>());
 		this.addGenericStructureFn(new FnGraphPaths());
+		this.addGenericStructureFn(new FnGraphOpenTriangles());
 		
 		this.addGenericSearch(new SearchGrid());
 		
