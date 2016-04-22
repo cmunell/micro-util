@@ -69,8 +69,8 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	public Map<String, WeightedStructureGraph> addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures) {
 		WeightedStructureGraph graph = getOrConstructStructure(datum, structures);
 		WeightedStructureRelation rel = makeDatumStructure(datum, label);
-		
-		graph.add(rel, weight);
+		if (rel != null)
+			graph.add(rel, weight);
 	 
 		return structures;
 	}

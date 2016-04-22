@@ -21,6 +21,9 @@ public class StructurizerGraphTokenSpans<L> extends StructurizerGraph<TokenSpans
 	
 	@Override
 	protected WeightedStructureRelation makeDatumStructure(TokenSpansDatum<L> datum, L label) {
+		if (label == null)
+			return null;
+		
 		TokenSpan[] spans = datum.getTokenSpans();
 		if (spans.length == 1) {
 			return new WeightedStructureRelationUnary(
