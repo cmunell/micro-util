@@ -63,7 +63,8 @@ public class WeightedStructureSequence extends WeightedStructure {
 	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
 		this.items.add(item);
 		this.weights.add(w);
-		((Collection<CtxParsable>)changes).add(item);
+		if (changes != null)
+			((Collection<CtxParsable>)changes).add(item);
 		return this;
 	}
 

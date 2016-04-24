@@ -125,8 +125,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 			throw new UnsupportedOperationException();
 		}
 		
-		if (changed)
-			changes.add(edge);
+		if (changed) {
+			if (changes != null)
+				changes.add(edge);
+		}
 		return changed;
 	}
 	
@@ -235,8 +237,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 			throw new UnsupportedOperationException();
 		}
 		
-		if (changed)
-			changes.add(node);
+		if (changed) {
+			if (changes != null)
+				changes.add(node);
+		}
 		return changed;
 	}
 	
