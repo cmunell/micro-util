@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.structure;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.Context;
@@ -103,7 +104,7 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	}
 
 	@Override
-	public WeightedStructure add(CtxParsable item, double w) {
+	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
 		throw new UnsupportedOperationException(); // FIXME Add this later (weighted nodes)
 	}
 

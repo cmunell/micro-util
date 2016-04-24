@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -10,10 +12,12 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.Structurizer;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureRelation;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.OverwriteOperator;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph.RelationMode;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structurizer<D, L, WeightedStructureGraph>  {
 	protected LabelMapping<L> labelMapping;
@@ -66,12 +70,17 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	}
 
 	@Override
-	public Map<String, WeightedStructureGraph> addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures) {
-		WeightedStructureGraph graph = getOrConstructStructure(datum, structures);
+	public Map<String, WeightedStructureGraph> addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures, Map<String, Collection<WeightedStructure>> changes) {
+		Pair<String, WeightedStructureGraph> pair = getOrConstructStructure(datum, structures);
+		WeightedStructureGraph graph = pair.getSecond();
 		WeightedStructureRelation rel = makeDatumStructure(datum, label);
-		if (rel != null)
+		if (!changes.containsKey(pair.getFirst()))
+			changes.put(pair.getFirst(), new HashSet<WeightedStructure>());
+		
+		if (rel != null) {
+			changes.get(pair.getFirst()).add(rel);
 			graph.add(rel, weight);
-	 
+		}
 		return structures;
 	}
 
@@ -82,7 +91,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 
 	@Override
 	public Map<L, Double> getLabels(D datum, Map<String, WeightedStructureGraph> structures) {
-		WeightedStructureGraph graph = getOrConstructStructure(datum, structures);
+		WeightedStructureGraph graph = getOrConstructStructure(datum, structures).getSecond();
 		List<WeightedStructureRelation> rels = getDatumRelations(datum, graph);
 		
 		Map<L, Double> labels = new HashMap<L, Double>();
@@ -111,14 +120,14 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 		return null;
 	}
 	
-	private WeightedStructureGraph getOrConstructStructure(D datum, Map<String, WeightedStructureGraph> structures) {
+	private Pair<String, WeightedStructureGraph> getOrConstructStructure(D datum, Map<String, WeightedStructureGraph> structures) {
 		String id = getStructureId(datum);
 		if (!structures.containsKey(id)) {
 			WeightedStructureGraph graph = new WeightedStructureGraph(this.context, this.graphEdgeMode, this.graphNodeMode, this.graphOverwriteOperator);
 			structures.put(id, graph);
 		}
 		
-		return structures.get(id);
+		return new Pair<String, WeightedStructureGraph>(id, structures.get(id));
 	}
 	
 	protected abstract WeightedStructureRelation makeDatumStructure(D datum, L label);

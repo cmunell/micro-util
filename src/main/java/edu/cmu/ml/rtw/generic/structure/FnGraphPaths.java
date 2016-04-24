@@ -9,7 +9,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
-public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSequence> {
+public class FnGraphPaths extends FnStructure<WeightedStructureGraph, WeightedStructureSequence> {
 	private Context context;
 	
 	private int length = 1;
@@ -58,11 +58,11 @@ public class FnGraphPaths extends Fn<WeightedStructureGraph, WeightedStructureSe
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	protected <C extends Collection<WeightedStructureSequence>> C compute(
-			Collection<WeightedStructureGraph> input, C output) {
+	protected <C extends Collection<WeightedStructureSequence>, F extends WeightedStructure> C compute(Collection<WeightedStructureGraph> input, C output, Collection<F> filter) {
 		for (WeightedStructureGraph g : input) {
-			output.addAll(g.getEdgePaths(this.length, this.ignoreTypes));
+			output.addAll(g.getEdgePaths(this.length, this.ignoreTypes, (Collection<WeightedStructureRelation>)filter));
 		}
 		return output;
 	}

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -16,13 +17,13 @@ import edu.cmu.ml.rtw.generic.rule.RuleSet;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
-public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S> {
+public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStructure<S, S> {
 	private Context context;
 	
 	private Obj.Array rulesRefs;
 	private List<RuleSet> rules;
 	private Obj.Array splitFnsRefs;
-	private List<Fn<S, ?>> splitFns;
+	private List<FnStructure<S, ?>> splitFns;
 	private int maxIterations = 0;
 	private String[] parameterNames = { "rules", "splitFns", "maxIterations" };
 	
@@ -68,7 +69,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 			if (this.splitFnsRefs != null) {
 				this.splitFns = new ArrayList<>();
 				for (int i = 0; i < this.splitFnsRefs.size(); i++)
-					this.splitFns.add((Fn<S, ?>)this.context.getMatchStructureFn(this.splitFnsRefs.get(i)));
+					this.splitFns.add((FnStructure<S, ?>)this.context.getMatchStructureFn(this.splitFnsRefs.get(i)));
 			} else {
 				this.splitFns = null;
 			}
@@ -80,16 +81,15 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 	}
 
 	@Override
-	protected <C extends Collection<S>> C compute(Collection<S> input, C output) {
+	protected <C extends Collection<S>, F extends WeightedStructure> C compute(Collection<S> input, C output, Collection<F> filter) {
 		for (S structure : input) {
 			int iterations = 0;
-			boolean changed = false;
 			do {
 				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
 				for (int i = 0; i < this.splitFns.size(); i++) {
-					Fn<S, ?> splitFn = this.splitFns.get(i);
+					FnStructure<S, ?> splitFn = this.splitFns.get(i);
 					
-					List<?> splitStructure = splitFn.listCompute(structure);
+					List<?> splitStructure = splitFn.listCompute(structure, filter);
 					
 					for (Object o : splitStructure) {
 						WeightedStructure structurePart = (WeightedStructure)o;
@@ -111,20 +111,17 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends Fn<S, S
 					
 				});
 				
-				changed = false;
+				filter = new HashSet<F>();
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (List<Obj> objList : objs.values())
 						for (Obj obj : objList) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
-							int oldCount = structure.getItemCount();
-							structure.add(newStructurePart, structurePart.getSecond());
-							if (structure.getItemCount() - oldCount != 0)
-								changed = true;
+							structure.add(newStructurePart, structurePart.getSecond(), filter);
 						}
 				}
 				iterations++;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && changed);
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0);
 			
 			output.add(structure);
 		}

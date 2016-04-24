@@ -9,7 +9,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
-public class FnGraphOpenTriangles extends Fn<WeightedStructureGraph, WeightedStructureSequence> {
+public class FnGraphOpenTriangles extends FnStructure<WeightedStructureGraph, WeightedStructureSequence> {
 	private Context context;
 	
 	private Set<String> ignoreTypes;
@@ -53,11 +53,11 @@ public class FnGraphOpenTriangles extends Fn<WeightedStructureGraph, WeightedStr
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	protected <C extends Collection<WeightedStructureSequence>> C compute(
-			Collection<WeightedStructureGraph> input, C output) {
+	protected <C extends Collection<WeightedStructureSequence>, F extends WeightedStructure> C compute(Collection<WeightedStructureGraph> input, C output, Collection<F> filter) {
 		for (WeightedStructureGraph g : input) {
-			output.addAll(g.getOpenTriangles(this.ignoreTypes));
+			output.addAll(g.getOpenTriangles(this.ignoreTypes, (Collection<WeightedStructureRelation>)filter));
 		}
 		return output;
 	}

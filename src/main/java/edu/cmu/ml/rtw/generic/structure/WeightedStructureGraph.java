@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.structure;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,31 +97,37 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public WeightedStructure add(CtxParsable item, double w) {
+	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
 		if (item instanceof WeightedStructureRelationBinary) {
-			addEdge((WeightedStructureRelationBinary)item, w);
+			addEdge((WeightedStructureRelationBinary)item, w, (Collection<WeightedStructureRelation>)changes);
 		} else if (item instanceof WeightedStructureRelationUnary) {
-			addNode((WeightedStructureRelationUnary)item, w);
+			addNode((WeightedStructureRelationUnary)item, w, (Collection<WeightedStructureRelation>)changes);
 		}
 		
 		return this;
 	}
 	
-	private boolean addEdge(WeightedStructureRelationBinary edge, double w) {
+	private boolean addEdge(WeightedStructureRelationBinary edge, double w, Collection<WeightedStructureRelation> changes) {
 		String id1 = edge.getFirst().getId();
 		String id2 = edge.getSecond().getId();
+		boolean changed = true;
 		if (this.edgeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.CONSERVE) {
-			return addEdgeMultiConserve(id1, id2, edge, w);
+			changed = addEdgeMultiConserve(id1, id2, edge, w);
 		} else if (this.edgeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.MAX) {
-			return addEdgeMultiMax(id1, id2, edge, w);
+			changed = addEdgeMultiMax(id1, id2, edge, w);
 		} else if (this.edgeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.CONSERVE) {
-			return addEdgeSingleConserve(id1, id2, edge, w);
+			changed = addEdgeSingleConserve(id1, id2, edge, w);
 		} else if (this.edgeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.MAX) {
-			return addEdgeSingleMax(id1, id2, edge, w);
+			changed = addEdgeSingleMax(id1, id2, edge, w);
 		} else {
 			throw new UnsupportedOperationException();
 		}
+		
+		if (changed)
+			changes.add(edge);
+		return changed;
 	}
 	
 	private boolean addEdgeMultiMax(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
@@ -214,18 +221,23 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return true;
 	}
 	
-	private boolean addNode(WeightedStructureRelationUnary node, double w) {
+	private boolean addNode(WeightedStructureRelationUnary node, double w, Collection<WeightedStructureRelation> changes) {
+		boolean changed = false;
 		if (this.nodeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.CONSERVE) {
-			return addNodeMultiConserve(node, w);
+			changed = addNodeMultiConserve(node, w);
 		} else if (this.nodeMode == RelationMode.MULTI && this.overwriteOperator == OverwriteOperator.MAX) {
-			return addNodeMultiMax(node, w);
+			changed = addNodeMultiMax(node, w);
 		} else if (this.nodeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.CONSERVE) {
-			return addNodeSingleConserve(node, w);
+			changed = addNodeSingleConserve(node, w);
 		} else if (this.nodeMode == RelationMode.SINGLE && this.overwriteOperator == OverwriteOperator.MAX) {
-			return addNodeSingleMax(node, w);
+			changed = addNodeSingleMax(node, w);
 		} else {
 			throw new UnsupportedOperationException();
 		}
+		
+		if (changed)
+			changes.add(node);
+		return changed;
 	}
 	
 	private boolean addNodeMultiMax(WeightedStructureRelationUnary node, double w) {
@@ -422,9 +434,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return nodes;
 	}
 	
-	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths, Set<String> ignoreTypes) {
+	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths, Set<String> ignoreTypes, Collection<WeightedStructureRelation> filter) {
 		List<WeightedStructureSequence> currentPaths = new ArrayList<WeightedStructureSequence>();
-
+		
 		Map<String, Map<WeightedStructureRelationBinary, Double>> neighbors = this.edges.get(startNodeId);
 		for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : neighbors.entrySet()) {
 			for (Entry<WeightedStructureRelationBinary, Double> edge : entry.getValue().entrySet()) {
@@ -432,6 +444,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					continue;
 				WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 				seq.add(edge.getKey(), edge.getValue());
+				
 				currentPaths.add(seq);
 			}
 		}
@@ -456,31 +469,55 @@ public class WeightedStructureGraph extends WeightedStructure {
 			
 			currentPaths = nextPaths;
 		}
-
-		paths.addAll(currentPaths);
+		
+		if (filter != null) {
+			for (WeightedStructureSequence path : currentPaths) {
+				boolean matchesFilter = false;
+				for (int i = 0; i < path.getItemCount(); i++) {
+					if (filter.contains(path.get(i))) {
+						matchesFilter = true;
+						break;
+					}
+				}
+				
+				if (matchesFilter)
+					paths.add(path);
+			}
+		} else {
+			paths.addAll(currentPaths);
+		}
+		
 		return paths;
 	}
 	
 	public List<WeightedStructureSequence> getEdgePaths(int length) {
 		return getEdgePaths(length, null);
 	}
-
+	
 	public List<WeightedStructureSequence> getEdgePaths(int length, Set<String> ignoreTypes) {
+		return getEdgePaths(length, ignoreTypes, null);
+	}
+	
+	public List<WeightedStructureSequence> getEdgePaths(int length, Set<String> ignoreTypes, Collection<WeightedStructureRelation> filter) {
 		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
 		if (length <= 0)
 			return paths;
 		
 		for (String nodeId : this.edges.keySet())
-			getEdgePaths(nodeId, length, paths, ignoreTypes);
+			getEdgePaths(nodeId, length, paths, ignoreTypes, filter);
 		return paths;
 	}
 	
 	public List<WeightedStructureSequence> getOpenTriangles() {
 		return getOpenTriangles(null);
 	}
-	
+
 	public List<WeightedStructureSequence> getOpenTriangles(Set<String> ignoreTypes) {
-		List<WeightedStructureSequence> paths = getEdgePaths(2, ignoreTypes);
+		return getOpenTriangles(ignoreTypes, null);
+	}
+	
+	public List<WeightedStructureSequence> getOpenTriangles(Set<String> ignoreTypes, Collection<WeightedStructureRelation> filter) {
+		List<WeightedStructureSequence> paths = getEdgePaths(2, ignoreTypes, filter);
 		List<WeightedStructureSequence> openPaths = new ArrayList<>();
 		
 		for (WeightedStructureSequence path : paths) {

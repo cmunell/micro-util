@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.task.classify.multi;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.Structurizer;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.structure.FnStructure;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasure;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
@@ -116,13 +118,14 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			MethodClassification<?, ?> method = this.methods.get(i);
 			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
 			int addedLinks = 0;
+			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
 			for (int j = 0; j < data.size(); j++) {
 				if (!method.matchesData(data.get(j)))
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
 				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
 					double weight = (indexAndWeight.getSecond() != null) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
-					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures);
+					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
 					addedLinks++;
 				}
 			}
@@ -134,7 +137,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			for (Entry entry : structures.entrySet()) {
 				startStructureItems += ((WeightedStructure)entry.getValue()).getItemCount();
 				//System.out.println("BEFORE TRANSFORM:\n " + entry.getValue());
-				List transformedStructures = ((Fn)this.structureTransformFn).listCompute(entry.getValue());
+				List transformedStructures = ((FnStructure)this.structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
 				WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 				for (int j = 1; j < transformedStructures.size(); j++)
 					firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		

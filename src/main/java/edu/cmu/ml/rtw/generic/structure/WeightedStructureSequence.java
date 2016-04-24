@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.structure;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.Context;
@@ -57,10 +58,12 @@ public class WeightedStructureSequence extends WeightedStructure {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public WeightedStructure add(CtxParsable item, double w) {
+	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
 		this.items.add(item);
 		this.weights.add(w);
+		((Collection<CtxParsable>)changes).add(item);
 		return this;
 	}
 
