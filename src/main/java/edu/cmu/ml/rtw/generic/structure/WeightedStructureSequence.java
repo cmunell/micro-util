@@ -13,6 +13,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 	private Context context;
 	private List<CtxParsable> items;
 	private List<Double> weights;
+	private double totalWeight = 0.0;
 	
 	private static String[] parameterNames = { };
 	
@@ -54,7 +55,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 	public boolean remove(CtxParsable item) {
 		int index = this.items.indexOf(item);
 		this.items.remove(index);
-		this.weights.remove(index);
+		this.totalWeight -= this.weights.remove(index);
 		return true;
 	}
 
@@ -63,6 +64,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
 		this.items.add(item);
 		this.weights.add(w);
+		this.totalWeight += w;
 		if (changes != null)
 			((Collection<CtxParsable>)changes).add(item);
 		return this;
@@ -127,5 +129,10 @@ public class WeightedStructureSequence extends WeightedStructure {
 	@Override
 	public int getItemCount() {
 		return this.items.size();
+	}
+	
+	@Override
+	public double getTotalWeight() {
+		return this.totalWeight;
 	}
 }

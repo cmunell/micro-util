@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
@@ -18,6 +19,8 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStructure<S, S> {
+	//private static final double EPSILON = 10;
+	
 	private Context context;
 	
 	private Obj.Array rulesRefs;
@@ -84,6 +87,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 	protected <C extends Collection<S>, F extends WeightedStructure> C compute(Collection<S> input, C output, Collection<F> filter) {
 		for (S structure : input) {
 			int iterations = 0;
+			int prevFilterSize = (filter != null) ? filter.size() : 0;
+			double weightChange = 0;
 			do {
 				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
 				for (int i = 0; i < this.splitFns.size(); i++) {
@@ -111,17 +116,20 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					
 				});
 				
+				prevFilterSize = (filter != null) ? filter.size() : 0;
 				filter = new HashSet<F>();
+				double totalWeight = structure.getTotalWeight();
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
-					for (List<Obj> objList : objs.values())
-						for (Obj obj : objList) {
+					for (Entry<String, List<Obj>> objList : objs.entrySet())
+						for (Obj obj : objList.getValue()) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							structure.add(newStructurePart, structurePart.getSecond(), filter);
 						}
 				}
 				iterations++;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0);
+				weightChange = structure.getTotalWeight() - totalWeight;
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize)); //|| weightChange > EPSILON));
 			
 			output.add(structure);
 		}

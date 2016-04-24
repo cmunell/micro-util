@@ -15,6 +15,7 @@ public abstract class WeightedStructure extends CtxParsableFunction {
 	public abstract WeightedStructure makeInstance(Context context);
 	public abstract List<CtxParsable> toList();
 	public abstract int getItemCount();
+	public abstract double getTotalWeight();
 	
 	public WeightedStructure add(CtxParsable item, double w) {
 		return add(item, w, null);

@@ -33,6 +33,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 	private Map<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> edges;
 	private Context context;
 	private int itemCount = 0;
+	private double totalWeight = 0.0;
 	
 	public WeightedStructureGraph() {
 		this(null);
@@ -57,6 +58,11 @@ public class WeightedStructureGraph extends WeightedStructure {
 	}
 	
 	@Override
+	public double getTotalWeight() {
+		return this.totalWeight;
+	}
+	
+	@Override
 	public boolean remove(CtxParsable item) {
 		if (item instanceof WeightedStructureRelationBinary) {
 			WeightedStructureRelationBinary edge = (WeightedStructureRelationBinary)item;
@@ -64,6 +70,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 				return false;
 			String id1 = edge.getFirst().getId();
 			String id2 = edge.getSecond().getId();
+			
+			this.totalWeight -= this.edges.get(id1).get(id2).get(edge);
 			this.edges.get(id1).get(id2).remove(edge);
 			this.itemCount--;
 			if (this.edges.get(id1).get(id2).size() == 0) {
@@ -76,6 +84,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 				WeightedStructureRelationBinary reverseEdge = edge.getReverse();
 				String rid1 = reverseEdge.getFirst().getId();
 				String rid2 = reverseEdge.getSecond().getId();
+				
+				this.totalWeight -= this.edges.get(rid1).get(rid2).get(reverseEdge);
 				this.edges.get(rid1).get(rid2).remove(reverseEdge);
 				this.itemCount--;
 				if (this.edges.get(rid1).get(rid2).size() == 0) {
@@ -88,10 +98,13 @@ public class WeightedStructureGraph extends WeightedStructure {
 			WeightedStructureRelationUnary node = (WeightedStructureRelationUnary)item;
 			if (!hasNode(node))
 				return false;
+			
+			this.totalWeight -= this.nodes.get(node.getId()).get(node);
 			this.nodes.get(node.getId()).remove(node);
 			if (this.nodes.get(node.getId()).size() == 0)
 				this.nodes.remove(node.getId());
 			this.itemCount--;
+			
 		}
 		
 		return true;
@@ -129,6 +142,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			if (changes != null)
 				changes.add(edge);
 		}
+		
 		return changed;
 	}
 	
@@ -197,9 +211,13 @@ public class WeightedStructureGraph extends WeightedStructure {
 	}
 	
 	private boolean replaceEdge(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
+		this.totalWeight += w - this.edges.get(id1).get(id2).get(edge);
 		this.edges.get(id1).get(id2).put(edge, w);
-		if (!edge.isOrdered())
+		if (!edge.isOrdered()) {
+			this.totalWeight += w - this.edges.get(id2).get(id1).get(edge);
 			this.edges.get(id2).get(id1).put(edge.getReverse(), w);
+		}
+		
 		return true;
 	}
 	
@@ -210,6 +228,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			this.edges.get(id1).put(id2, new HashMap<WeightedStructureRelationBinary, Double>());
 		this.edges.get(id1).get(id2).put(edge, w);
 		this.itemCount++;
+		this.totalWeight += w;
 		
 		if (!edge.isOrdered()) {
 			if (!this.edges.containsKey(id2))
@@ -218,6 +237,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 				this.edges.get(id2).put(id1, new HashMap<WeightedStructureRelationBinary, Double>());
 			this.edges.get(id2).get(id1).put(edge.getReverse(), w);
 			this.itemCount++;
+			this.totalWeight += w;
 		}
 		
 		return true;

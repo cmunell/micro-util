@@ -127,4 +127,9 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	public int getItemCount() {
 		throw new UnsupportedOperationException(); // FIXME Add this later
 	}
+	
+	@Override
+	public double getTotalWeight() {
+		throw new UnsupportedOperationException(); // FIXME Add this later
+	}
 }
