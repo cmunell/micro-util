@@ -78,8 +78,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 			changes.put(pair.getFirst(), new HashSet<WeightedStructure>());
 		
 		if (rel != null) {
-			changes.get(pair.getFirst()).add(rel);
-			graph.add(rel, weight);
+			graph.add(rel, weight, changes.get(pair.getFirst()));
 		}
 		return structures;
 	}
