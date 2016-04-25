@@ -19,7 +19,7 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStructure<S, S> {
-	//private static final double EPSILON = 10;
+	private static final double EPSILON = 10;
 	
 	private Context context;
 	
@@ -129,7 +129,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				}
 				iterations++;
 				weightChange = structure.getTotalWeight() - totalWeight;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize)); //|| weightChange > EPSILON));
+			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize || weightChange > EPSILON));
 			
 			output.add(structure);
 		}

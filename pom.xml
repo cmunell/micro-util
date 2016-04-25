@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.cmu.ml.rtw</groupId>
   <artifactId>micro-util</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.4-SNAPSHOT</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <nd4j.version>0.4-rc3.8</nd4j.version> <!-- word2vec -->
@@ -300,10 +300,15 @@
     </repository>-->
   </repositories>
   <distributionManagement>
-  	<repository>
+  	<snapshotRepository>
       <id>rtw-libs-snapshot</id>
       <name>rtw-libs-snapshot</name>
       <url>http://rtw.ml.cmu.edu:8081/artifactory/libs-snapshot-local</url>
+    </snapshotRepository>
+    <repository>
+      <id>rtw-libs</id>
+      <name>rtw-libs-releases</name>
+      <url>http://rtw.ml.cmu.edu:8081/artifactory/libs-release-local</url>
     </repository>
   </distributionManagement>
 </project>
