@@ -51,12 +51,16 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	}
 	
 	public Map<L, Map<L, List<D>>> computeActualToPredictedData(MethodClassification<D, L> method) {
+		return computeActualToPredictedData(method, false);
+	}
+	
+	public Map<L, Map<L, List<D>>> computeActualToPredictedData(MethodClassification<D, L> method, boolean forceRecompute) {
 		if (!init())
 			return null;
 		if (!method.init(this.data))
 			return null;
 		
-		if (this.methodsActualToPredicted.containsKey(method))
+		if (!forceRecompute && this.methodsActualToPredicted.containsKey(method))
 			return this.methodsActualToPredicted.get(method);
 		
 		Map<L, Map<L, List<D>>> actualToPredicted = new HashMap<L, Map<L, List<D>>>();
@@ -80,7 +84,11 @@ public class TaskClassification<D extends Datum<L>, L> extends CtxParsableFuncti
 	}
 	
 	public Map<L, Map<Stat, Integer>> computeStats(MethodClassification<D, L> method) {
-		Map<L, Map<L, List<D>>> actualToPredicted = computeActualToPredictedData(method);
+		return computeStats(method, false);
+	}
+	
+	public Map<L, Map<Stat, Integer>> computeStats(MethodClassification<D, L> method, boolean forceRecompute) {
+		Map<L, Map<L, List<D>>> actualToPredicted = computeActualToPredictedData(method, forceRecompute);
 		Map<L, Map<Stat, Integer>> stats = new HashMap<L, Map<Stat, Integer>>();
 
 		for (Entry<L, Map<L, List<D>>> entry : actualToPredicted.entrySet()) {

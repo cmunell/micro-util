@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
@@ -20,14 +21,19 @@ import edu.cmu.ml.rtw.generic.structure.FnStructure;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasure;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
+import edu.cmu.ml.rtw.generic.task.classify.Trainable;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
-public class MethodMultiClassificationSieve extends MethodMultiClassification {
+public class MethodMultiClassificationSieve extends MethodMultiClassification implements MultiTrainable {
 	private List<MethodClassification<?, ?>> methods;
 	private List<Structurizer<?, ?, ?>> structurizers;
 	private List<EvaluationClassificationMeasure<?, ?>> permutationMeasures;
 	private Fn<?, ?> structureTransformFn;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn" };
+	private boolean trainOnInit = false;
+	private int trainIters = 10;
+	private boolean orderClassifiersWithSensitivity = false;
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity" };
 	
 	public MethodMultiClassificationSieve() {
 		
@@ -67,7 +73,13 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			return array;
 		} else if (parameter.equals("structureTransformFn")) {
 			return (this.structureTransformFn == null) ? null : this.structureTransformFn.toParse();
-		}
+		} else if (parameter.equals("trainOnInit")) {
+			return Obj.stringValue(String.valueOf(this.trainOnInit));
+		} else if (parameter.equals("trainIters")) {
+			return Obj.stringValue(String.valueOf(this.trainIters));
+		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
+			return Obj.stringValue(String.valueOf(this.orderClassifiersWithSensitivity));
+		}	
 		
 		return null;
 	}
@@ -97,19 +109,30 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			}
 		} else if (parameter.equals("structureTransformFn")) {
 			this.structureTransformFn = (parameterValue == null) ? null : this.context.getMatchOrConstructStructureFn(parameterValue);
-		} else 
+		} else if (parameter.equals("trainOnInit")) {
+			this.trainOnInit = (parameterValue == null) ? null : Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("trainIters")) {
+			this.trainIters = (parameterValue == null) ? this.trainIters : Integer.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
+			this.orderClassifiersWithSensitivity = (parameterValue == null) ? this.orderClassifiersWithSensitivity : Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else {
 			return false;
+		}
 		return true;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data) {
+		return classify(data, false);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data, boolean recomputeOrderingMeasures) {
 		Map<String, ?> structures = null;
 		if (this.structurizers.size() > 0)
 			structures = this.structurizers.get(0).makeStructures();
 		
-		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering();
+		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering(recomputeOrderingMeasures);
 		
 		for (int o = 0; o < classifierOrdering.size(); o++) {
 			Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
@@ -119,6 +142,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
 			int addedLinks = 0;
 			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+			
 			for (int j = 0; j < data.size(); j++) {
 				if (!method.matchesData(data.get(j)))
 					continue;
@@ -132,21 +156,23 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
 			
-			int startStructureItems = 0;
-			int addedStructureItems = 0;
-			for (Entry entry : structures.entrySet()) {
-				startStructureItems += ((WeightedStructure)entry.getValue()).getItemCount();
-				//System.out.println("BEFORE TRANSFORM:\n " + entry.getValue());
-				List transformedStructures = ((FnStructure)this.structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
-				WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-				for (int j = 1; j < transformedStructures.size(); j++)
-					firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-				entry.setValue(firstTransformed);
-				//System.out.println("AFTER TRANSFORM:\n " + entry.getValue());
-				addedStructureItems += firstTransformed.getItemCount();
-			}
 			
-			this.context.getDataTools().getOutputWriter().debugWriteln("Structure transform changed item count from " + startStructureItems + " to " + addedStructureItems);
+			ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
+				@Override
+				public Boolean apply(Entry entry) {
+					List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
+					WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+					for (int j = 1; j < transformedStructures.size(); j++)
+						firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+					entry.setValue(firstTransformed);
+					return true;
+				}
+				
+			});
+			
+			threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
+			
+			this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");
@@ -190,7 +216,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		return classifications;
 	}
 
-	private List<Pair<Integer, Double>> getClassifierOrdering() {
+	private List<Pair<Integer, Double>> getClassifierOrdering(boolean recomputeMeasures) {
 		List<Pair<Integer, Double>> ordering = new ArrayList<>();
 		
 		if (this.permutationMeasures == null) {
@@ -199,10 +225,10 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName());
 				ordering.add(new Pair<Integer, Double>(i, null));
 			}
-		} else {
+		} else if (!this.orderClassifiersWithSensitivity) {
 			List<Pair<Integer, Double>> measures = new ArrayList<>();
 			for (int i = 0; i < this.methods.size(); i++)
-				measures.add(new Pair<>(i, this.permutationMeasures.get(i).compute()));
+				measures.add(new Pair<>(i, this.permutationMeasures.get(i).compute(recomputeMeasures)));
 			Collections.sort(measures, new Comparator<Pair<Integer, Double>>() {
 				@Override
 				public int compare(Pair<Integer, Double> o1,
@@ -218,6 +244,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(orderIndex).getReferenceName() + " " + measures.get(i).getSecond());
 				ordering.add(new Pair<Integer, Double>(orderIndex, measures.get(i).getSecond()));
 			}
+		} else { // Order with sensitivity
+			// FIXME asdf
 		}
 		
 		return ordering;
@@ -229,7 +257,11 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		for (int i = 0; i < testData.size(); i++) {
 			this.methods.get(i).init((DataSet)testData.get(i));
 		}
-		return true;
+	
+		if (this.trainOnInit)
+			return train();
+		else
+			return true;
 	}
 
 	@Override
@@ -267,4 +299,80 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification {
 		return "Sieve";
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public boolean train() {
+		List<DataSet<?, ?>> data = getTrainData();
+		Map<Trainable<?, ?>, Integer> trainables = getTrainableToDataIndices(data); 
+		for (int i = 0; i < this.trainIters; i++) {
+			List<Map<Datum<?>, ?>> classifiedData = classify(data, true);
+			
+			for (Entry<Trainable<?, ?>, Integer> entry : trainables.entrySet()) {
+				Map<Datum<?>, ?> c = classifiedData.get(entry.getValue());
+				if (!entry.getKey().iterateTraining((Map)c))
+					return false;
+			}
+		}
+		
+		return true;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public boolean setTrainData(List<DataSet<?, ?>> data) {
+		Map<Trainable<?, ?>, Integer> trainables = getTrainableToDataIndices(data);
+		for (Entry<Trainable<? ,?>, Integer> entry : trainables.entrySet())
+			if (!entry.getKey().setTrainData((DataSet)data.get(entry.getValue())))
+				return false;
+		return true;
+	}
+
+	@Override
+	public List<DataSet<?, ?>> getTrainData() {
+		List<DataSet<?, ?>> data = new ArrayList<>();
+		Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> trainables = getTrainableMethods();
+		for (Entry<Trainable<?, ?>, List<MethodClassification<?, ?>>> entry : trainables.entrySet()) {
+			data.add(entry.getKey().getTrainData());
+		}
+		
+		return data;
+	}
+	
+	private Map<Trainable<?, ?>, Integer> getTrainableToDataIndices(List<DataSet<?, ?>> data) {
+		Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> trainables = getTrainableMethods();
+		Map<Trainable<?, ?>, Integer> indices = new HashMap<>();
+		
+		for (Entry<Trainable<?, ?>, List<MethodClassification<?, ?>>> entry : trainables.entrySet()) {
+			for (MethodClassification<?, ?> method : entry.getValue()) {
+				boolean foundIndex = false;
+				for (int i = 0; i < data.size(); i++) {
+					if (method.matchesData(data.get(i))) {
+						indices.put(entry.getKey(), i);
+						foundIndex = true;
+						break;
+					}
+				}
+				
+				if (foundIndex)
+					break;
+			}
+		}
+		
+		return indices;
+	}
+	
+	// Map from trainable  to list of methods that use that trainable
+	private Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> getTrainableMethods() {
+		Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> trainableMethods = new HashMap<>();
+		
+		for (int i = 0; i < this.methods.size(); i++) {
+			if (this.methods.get(i).hasTrainable()) {
+				if (!trainableMethods.containsKey(this.methods.get(i).getTrainable()))
+					trainableMethods.put(this.methods.get(i).getTrainable(), new ArrayList<>());
+				trainableMethods.get(this.methods.get(i).getTrainable()).add(this.methods.get(i));
+			}
+		}
+		
+		return trainableMethods;
+	}
 }

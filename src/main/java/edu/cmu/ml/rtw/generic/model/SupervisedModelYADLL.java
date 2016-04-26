@@ -32,8 +32,9 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
+import edu.cmu.ml.rtw.generic.util.Triple;
 
-public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedModel<D, L> {
+public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	public static enum YADLLTrainingEstimator {
 		BACK_PROPAGATION
 	}
@@ -388,80 +389,19 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 	
 	@Override
 	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
+		return iterateTraining(data, testData, evaluations, null);
 		
-		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
-				return false;
-		
-		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false);
-		Pair<Matrix, Matrix> testDataMatrices = buildMatricesFromData(testData, false);
-		Matrix X = dataMatrices.getFirst();
-		Matrix Y = dataMatrices.getSecond();
-		Matrix testX = testDataMatrices.getFirst();
-		Matrix testY = testDataMatrices.getSecond();
-		synchronized (this.context) {
-			Estimator estimator = new BP(this.model); // FIXME: Add other estimators
-			GradOpt optimizer = new GradOpt(estimator); 
-			optimizer.setStepSize(this.stepSize);
-			optimizer.setOptType("descent");
-		
-			List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
-	
-			int epoch = 0;
-			while(epoch < this.numEpochs) {
-				double testLoss = 0.0;
-				if (this.lossFnNode != null) {
-					this.model.clamp_("x", testX);
-					this.model.clamp_("y", testY);
-					this.model.eval();
-					testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-					this.model.flush_stats_(false);
-				}
-				
-				this.model.clamp_("x", X);
-				this.model.clamp_("y", Y);
-				this.model.eval();
-			
-			
-				double trainLoss = 0.0;
-				if (this.lossFnNode != null) {
-					trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
-					iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
-				}
-			
-				optimizer.accum_grad(1f); 
-				optimizer.update_graph();
-				this.model.flush_stats_(false);
-				
-				//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
-	
-				epoch = epoch + 1;
-			}
-			
-			if (this.lossFnNode != null) {
-				StringBuilder iterativeOutput = new StringBuilder();
-				iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
-				for (int i = 0; i < iterativeEvaluations.size(); i++) {
-					iterativeOutput.append("Epoch " + i + " " + 
-						this.lossFnNode + ": " + 
-							iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
-				}
-				iterativeOutput.append("End of training for model " + this.toParse(false)); 
-				output.debugWriteln(iterativeOutput.toString());
-			}
-		}
-		
-		return true;
 	}
 	
-	private Pair<Matrix, Matrix> buildMatricesFromData(DataFeatureMatrix<D, L> data, boolean onlyX) {
+	private Triple<Matrix, Matrix, Matrix> buildMatricesFromData(DataFeatureMatrix<D, L> data, boolean onlyX, Map<D, L> fixedPredictions) {
 		Map<L, Integer> labelMap = getLabelIndices();
 		
 		int datumFeatureCount = data.getFeatures().getFeatureVocabularySize();
-		int datumCount = data.getData().size();
+		int datumCount = onlyX ? data.getData().size() : data.getData().labeledSize();
 		int labelCount = labelMap.size();
 		
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
+		float[] fixedP = (fixedPredictions == null) ? null : new float[datumCount*labelCount];
 		int i = 0;
 		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
 		Iterator<D> iter = onlyX ? data.getData().iterator(DataFilter.All) : data.getData().iterator(DataFilter.OnlyLabeled);
@@ -477,6 +417,16 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 				Y[i*labelCount + labelIndex] = 1f;
 			}
 			
+			if (fixedPredictions != null) {
+				if (fixedPredictions.containsKey(datum)) {
+					int fixedLabelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
+					fixedP[i*labelCount + fixedLabelIndex] = 1f;
+				} else {
+					for (int j = 0; j < labelCount; j++)
+						fixedP[i*labelCount + j] = 1f;
+				}
+			}
+			
 			i++;
 		}
 		
@@ -488,8 +438,9 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		synchronized (this.context) {
-			return new Pair<Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
-				(onlyX) ? null : new FMatrix(labelCount, datumCount, Y)); 
+			return new Triple<Matrix, Matrix, Matrix>(new FMatrix(datumFeatureCount, datumCount, X),
+				(onlyX) ? null : new FMatrix(labelCount, datumCount, Y),
+				(fixedPredictions == null) ? null : new FMatrix(labelCount, datumCount, fixedP)); 
 		}
 		/*int[] featureIndices = new int[numNonZeroFeatures];
 		int[] datumIndices = new int[numNonZeroFeatures];
@@ -621,7 +572,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 			return null;
 	
-		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
+		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true, null);
 		Matrix X = dataMatrices.getFirst();
 		List<L> labels = getLabels();
 		
@@ -667,7 +618,7 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 				return null;
 		
-		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true);
+		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true, null);
 		Matrix X = dataMatrices.getFirst();
 		List<L> labels = getLabels();
 		int numLabels = labels.size();
@@ -829,8 +780,90 @@ public class SupervisedModelYADLL <D extends Datum<L>, L> extends SupervisedMode
 			clone.possibleFnParameters = this.possibleFnParameters;
 		}
 		
-		
 		return clone;
+	}
+
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+
+		OutputWriter output = data.getData().getDatumTools().getDataTools().getOutputWriter();
+		
+		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
+				return false;
+		
+		Triple<Matrix, Matrix, Matrix> dataMatrices = buildMatricesFromData(data, false, constrainedData);
+		Pair<Matrix, Matrix> testDataMatrices = buildMatricesFromData(testData, false, null);
+		Matrix X = dataMatrices.getFirst();
+		Matrix Y = dataMatrices.getSecond();
+		float[] C = dataMatrices.getThird() != null ? dataMatrices.getThird().getData() : null;
+		Matrix testX = testDataMatrices.getFirst();
+		Matrix testY = testDataMatrices.getSecond();
+		int datumCount = data.getData().labeledSize();
+		int labelCount = getLabelIndices().size();
+		
+		synchronized (this.context) {
+			Estimator estimator = new BP(this.model); // FIXME: Add other estimators
+			GradOpt optimizer = new GradOpt(estimator); 
+			optimizer.setStepSize(this.stepSize);
+			optimizer.setOptType("descent");
+		
+			List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
+	
+			int epoch = 0;
+			while(epoch < this.numEpochs) {
+				double testLoss = 0.0;
+				if (this.lossFnNode != null) {
+					this.model.clamp_("x", testX);
+					this.model.clamp_("y", testY);
+					this.model.eval();
+					testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+					this.model.flush_stats_(false);
+				}
+				
+				this.model.clamp_("x", X);
+				this.model.clamp_("y", Y);
+				this.model.eval();
+			
+				if (C != null) {
+					float[] tempP = this.model.getOutput(this.targetFnNode).getData();
+					float[] P = new float[tempP.length];
+					for (int i = 0; i < tempP.length; i++)
+						P[i] = tempP[i]*C[i];
+					this.model.clamp_(this.targetFnNode, new FMatrix(labelCount, datumCount, P));
+				}
+				
+				double trainLoss = 0.0;
+				if (this.lossFnNode != null) {
+					trainLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
+					iterativeEvaluations.add(new Pair<Double, Double>(trainLoss, testLoss));
+				}
+				
+				optimizer.accum_grad(1f);
+				optimizer.update_graph();
+				this.model.flush_stats_(false);
+				
+				//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
+	
+				epoch = epoch + 1;
+			}
+			
+			if (this.lossFnNode != null) {
+				StringBuilder iterativeOutput = new StringBuilder();
+				iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
+				for (int i = 0; i < iterativeEvaluations.size(); i++) {
+					iterativeOutput.append("Epoch " + i + " " + 
+						this.lossFnNode + ": " + 
+							iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+				}
+				iterativeOutput.append("End of training for model " + this.toParse(false)); 
+				output.debugWriteln(iterativeOutput.toString());
+			}
+		}
+		
+		return true;
 	}
 }
 

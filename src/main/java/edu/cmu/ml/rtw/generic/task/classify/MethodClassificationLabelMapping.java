@@ -112,4 +112,14 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	public MethodClassification<D, L> makeInstance(DatumContext<D, L> context) {
 		return new MethodClassificationLabelMapping<D, L>(context);
 	}
+
+	@Override
+	public boolean hasTrainable() {
+		return this.method.hasTrainable();
+	}
+
+	@Override
+	public Trainable<D, L> getTrainable() {
+		return this.method.getTrainable();
+	}
 }

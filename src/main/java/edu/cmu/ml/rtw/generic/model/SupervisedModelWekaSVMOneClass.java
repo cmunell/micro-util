@@ -266,4 +266,12 @@ public class SupervisedModelWekaSVMOneClass<D extends Datum<L>, L> extends Super
 		
 		return dataSet;
 	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
+	}
 }

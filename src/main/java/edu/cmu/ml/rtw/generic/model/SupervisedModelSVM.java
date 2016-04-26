@@ -627,4 +627,12 @@ public class SupervisedModelSVM<D extends Datum<L>, L> extends SupervisedModel<D
 		
 		return internalAssignments;
 	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
+	}
 }

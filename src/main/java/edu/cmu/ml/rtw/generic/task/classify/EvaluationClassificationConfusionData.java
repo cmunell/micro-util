@@ -55,8 +55,8 @@ public class EvaluationClassificationConfusionData<D extends Datum<L>, L> extend
 	}
 
 	@Override
-	public Map<L, Map<L, List<D>>> compute() {
-		return this.task.computeActualToPredictedData(this.method);
+	public Map<L, Map<L, List<D>>> compute(boolean forceRecompute) {
+		return this.task.computeActualToPredictedData(this.method, forceRecompute);
 	}
 
 	@Override

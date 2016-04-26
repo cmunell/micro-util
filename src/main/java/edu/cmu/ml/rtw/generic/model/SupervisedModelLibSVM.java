@@ -12,6 +12,7 @@ import libsvm.svm_parameter;
 import libsvm.svm_problem;
 
 import org.platanios.learn.math.matrix.Vector;
+
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
@@ -306,5 +307,13 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 		}
 		
 		return prob;
+	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
 	}
 }

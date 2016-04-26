@@ -11,8 +11,8 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 
-public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> extends MethodClassification<D, L> {
-	private DatumIndicator<D> datumIndicator;
+public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> extends MethodClassification<D, L> implements Trainable<D, L> {
+	private DatumIndicator<D> datumIndicator; 
 	private MethodClassification<D, L> method;
 	private String[] parameterNames = { "datumIndicator", "method" };
 	
@@ -107,5 +107,55 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	@Override
 	public MethodClassification<D, L> makeInstance(DatumContext<D, L> context) {
 		return new MethodClassificationFilterDatumIndicator<D, L>(context);
+	}
+
+	@Override
+	public boolean hasTrainable() {
+		return this.method.hasTrainable();
+	}
+
+	@Override
+	public Trainable<D, L> getTrainable() {
+		if (this.method.hasTrainable())
+			return this;
+		else 
+			return null;
+	}
+
+	@Override
+	public boolean train() {
+		if (!hasTrainable())
+			return false;
+		return this.method.getTrainable().train();
+	}
+
+	@Override
+	public boolean setTrainData(DataSet<D, L> data) {
+		if (!hasTrainable())
+			return false;
+		
+		return this.method.getTrainable().setTrainData(
+				data.filter(this.datumIndicator, this.context.getMaxThreads()));
+	}
+
+	@Override
+	public boolean setDevData(DataSet<D, L> data) {
+		if (!hasTrainable())
+			return false;
+		
+		return this.method.getTrainable().setDevData(
+				data.filter(this.datumIndicator, this.context.getMaxThreads()));
+	}
+
+	@Override
+	public boolean iterateTraining(Map<D, L> constrainedData) {
+		if (!hasTrainable())
+			return false;
+		return this.method.getTrainable().iterateTraining(constrainedData);
+	}
+
+	@Override
+	public DataSet<D, L> getTrainData() {
+		return this.method.getTrainable().getTrainData();
 	}
 }

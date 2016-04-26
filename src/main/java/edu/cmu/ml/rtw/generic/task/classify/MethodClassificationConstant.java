@@ -99,4 +99,14 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	public MethodClassification<D, L> makeInstance(DatumContext<D, L> context) {
 		return new MethodClassificationConstant<D, L>(context);
 	}
+
+	@Override
+	public boolean hasTrainable() {
+		return false;
+	}
+
+	@Override
+	public Trainable<D, L> getTrainable() {
+		return null;
+	}
 }

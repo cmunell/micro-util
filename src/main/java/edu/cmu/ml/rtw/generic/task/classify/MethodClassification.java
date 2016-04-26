@@ -55,4 +55,6 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 	public abstract boolean init(DataSet<D, L> testData);
 	public abstract MethodClassification<D, L> clone(String referenceName);
 	public abstract MethodClassification<D, L> makeInstance(DatumContext<D, L> context);
+	public abstract boolean hasTrainable();
+	public abstract Trainable<D, L> getTrainable();
 }

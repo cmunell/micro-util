@@ -121,4 +121,14 @@ public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> exte
 		}
 		return scores;
 	}
+
+	@Override
+	public boolean hasTrainable() {
+		return false;
+	}
+
+	@Override
+	public Trainable<D, TernaryLabel> getTrainable() {
+		return null;
+	}
 }

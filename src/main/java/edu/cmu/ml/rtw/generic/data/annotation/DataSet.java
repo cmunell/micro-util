@@ -372,6 +372,14 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 	public int size() {
 		return this.data.size();
 	}
+	
+	public int labeledSize() {
+		return this.data.size() - this.unlabeledData.size();
+	}
+	
+	public int unlabeledSize() {
+		return this.unlabeledData.size();
+	}
 
 	@Override
 	public Object[] toArray() {

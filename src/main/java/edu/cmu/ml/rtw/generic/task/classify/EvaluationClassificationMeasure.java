@@ -23,7 +23,7 @@ public abstract class EvaluationClassificationMeasure<D extends Datum<L>, L> ext
 		if (stageIndex == 0)
 			return this.method.init(this.task.getData());
 		else
-			return this.task.computeActualToPredictedData(this.method) != null;
+			return this.task.computeActualToPredictedData(this.method, true) != null;
 	}
 
 	@Override

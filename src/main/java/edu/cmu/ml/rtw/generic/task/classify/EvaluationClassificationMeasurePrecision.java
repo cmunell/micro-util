@@ -30,8 +30,8 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	}
 
 	@Override
-	public Double compute() {
-		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method);
+	public Double compute(boolean forceRecompute) {
+		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method, forceRecompute);
 		
 		double p = 0.0;
 		double num = 0.0;

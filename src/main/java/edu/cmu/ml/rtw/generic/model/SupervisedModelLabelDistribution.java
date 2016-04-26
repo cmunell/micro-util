@@ -110,4 +110,12 @@ public class SupervisedModelLabelDistribution<D extends Datum<L>, L> extends Sup
 			SupervisedModel<T, Boolean> binaryModel) {
 		return binaryModel;
 	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
+	}
 }

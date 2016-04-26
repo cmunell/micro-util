@@ -180,4 +180,12 @@ public class SupervisedModelCompositeBinary<T extends Datum<Boolean>, D extends 
 			SupervisedModel<U, Boolean> binaryModel) {
 		return binaryModel; // TODO Implement later if necessary
 	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -230,4 +230,12 @@ public class SupervisedModelWekaOneClass<D extends Datum<L>, L> extends Supervis
 	
 		return dataSet;
 	}
+	
+	@Override
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data,
+			DataFeatureMatrix<D, L> testData,
+			List<SupervisedModelEvaluation<D, L>> evaluations,
+			Map<D, L> constrainedData) {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -36,8 +36,8 @@ public class EvaluationClassificationMeasureF<D extends Datum<L> , L> extends Ev
 	}
 
 	@Override
-	public Double compute() {
-		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method);
+	public Double compute(boolean forceRecompute) {
+		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method, forceRecompute);
 		
 		double F = 0.0;
 

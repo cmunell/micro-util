@@ -28,8 +28,8 @@ public class EvaluationClassificationConfusionMatrix<D extends Datum<L>, L> exte
 	}
 
 	@Override
-	public ConfusionMatrix<D, L> compute() {
-		Map<L, Map<L, List<D>>> actualToPredictedData = this.task.computeActualToPredictedData(this.method);
+	public ConfusionMatrix<D, L> compute(boolean forceRecompute) {
+		Map<L, Map<L, List<D>>> actualToPredictedData = this.task.computeActualToPredictedData(this.method, forceRecompute);
 		ConfusionMatrix<D, L> matrix = new ConfusionMatrix<D, L>(actualToPredictedData, this.labelMapping);
 		return matrix;
 	}

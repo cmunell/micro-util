@@ -58,12 +58,17 @@ public abstract class SupervisedModel<D extends Datum<L>, L> extends CtxParsable
 	public abstract String getGenericName();
 	
 	public abstract boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations);
+	public abstract boolean iterateTraining(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations, Map<D, L> constrainedData);
 	
 	/**
 	 * @param data
 	 * @return a map from datums to distributions over labels for the datums
 	 */
 	public abstract Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data);
+	
+	public boolean iterateTraining(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		return iterateTraining(data, testData, evaluations, null);
+	}
 	
 	public boolean setLabelMapping(LabelMapping<L> labelMapping) {
 		this.labelMapping = labelMapping;
