@@ -146,7 +146,12 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	@Override
 	public boolean train() {
 		for (int i = 0; i < this.trainIters; i++) {
+			this.context.getDataTools().getOutputWriter().debugWriteln("Self training iteration " + i);
+
 			this.method.getTrainable().setTrainData(this.trainData);
+			if (!this.method.getTrainable().train())
+				return false;
+			
 			if (!makeTrainData())
 				return false;
 			
