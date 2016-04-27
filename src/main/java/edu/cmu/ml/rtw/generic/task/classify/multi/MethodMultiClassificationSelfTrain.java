@@ -11,6 +11,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 public class MethodMultiClassificationSelfTrain extends MethodMultiClassification implements MultiTrainable {
@@ -22,6 +23,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations" };
 	
 	private List<DataSet<?, ?>> trainData;
+	private List<DataSet<?, ?>> initData;
 	
 	public MethodMultiClassificationSelfTrain() {
 		
@@ -95,6 +97,11 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	@Override
 	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data) {
 		return this.method.classify(data);
+	}
+	
+	@Override
+	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data) {
+		return this.method.classifyWithScore(data);
 	}
 	
 	@Override
@@ -177,9 +184,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private boolean makeTrainData() {
 		MultiTrainable trainable = this.method.getTrainable();
-		List<DataSet<?, ?>> initData = trainable.getTrainData();
+		if (this.initData == null)
+			this.initData = trainable.getTrainData();
 		Map<Tools<?, ?>, DataSet<?, ?>> typeData = new HashMap<>();
-		for (DataSet<?, ?> d : initData) {
+		for (DataSet<?, ?> d : this.initData) {
 			if (!typeData.containsKey(d.getDatumTools()))
 				typeData.put(d.getDatumTools(), d.cloneUnbuildable());
 			else

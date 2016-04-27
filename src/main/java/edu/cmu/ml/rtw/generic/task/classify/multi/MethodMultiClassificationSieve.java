@@ -133,8 +133,28 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		return classify(data, false);
 	}
 	
+	// FIXME Extra pass over the data is unnecessary
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data, boolean recomputeOrderingMeasures) {
+		List<Map<Datum<?>, Pair<?, Double>>> labelsWithScores = classifyWithScore(data, recomputeOrderingMeasures);
+		List<Map<Datum<?>, ?>> labels = new ArrayList<>();
+		for (Map<Datum<?>, Pair<?, Double>> map : labelsWithScores) {
+			Map labelMap = new HashMap();
+			for (Entry<Datum<?>, Pair<?, Double>> entry : map.entrySet()) {
+				labelMap.put(entry.getKey(), entry.getValue().getFirst());
+			}
+			labels.add(labelMap);
+		}
+		
+		return labels;
+	}
+	
+	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data) {
+		return classifyWithScore(data, false);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data, boolean recomputeOrderingMeasures) {
 		Map<String, ?> structures = null;
 		if (this.structurizers.size() > 0)
 			structures = this.structurizers.get(0).makeStructures();
@@ -184,7 +204,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");
 
-		List<Map<Datum<?>, ?>> classifications = new ArrayList<Map<Datum<?>, ?>>();
+		List<Map<Datum<?>, Pair<?, Double>>> classifications = new ArrayList<Map<Datum<?>, Pair<?, Double>>>();
 		for (int i = 0; i < data.size(); i++) {
 			Structurizer structurizer = null;
 			for (int j = 0; j < this.structurizers.size(); j++) {
@@ -213,7 +233,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 				}
 				
 				if (maxLabel != null)
-					labeledData.put(d, maxLabel);
+					labeledData.put(d, new Pair(maxLabel, maxWeight));
 			}
 			classifications.add(labeledData);
 		}

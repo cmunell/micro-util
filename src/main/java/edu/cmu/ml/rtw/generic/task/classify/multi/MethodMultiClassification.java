@@ -8,6 +8,7 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public abstract class MethodMultiClassification extends CtxParsableFunction {
 	protected Context context;
@@ -39,12 +40,21 @@ public abstract class MethodMultiClassification extends CtxParsableFunction {
 		return classify(data);
 	}
 	
+	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(TaskMultiClassification task) {
+		List<DataSet<?, ?>> data = new ArrayList<DataSet<?, ?>>();
+		for (int i = 0; i < task.getTaskCount(); i++) {
+			data.add(task.getTask(i).getData());
+		}
+		
+		return classifyWithScore(data);
+	}
 	
 	public boolean init() {
 		return init(null);
 	}
 	
 	public abstract List<Map<Datum<?>, ?>> classify(List<DataSet<?, ?>> data);
+	public abstract List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data);
 	public abstract boolean init(List<DataSet<?, ?>> testData);
 	public abstract MethodMultiClassification clone();
 	public abstract MethodMultiClassification makeInstance(Context context);
