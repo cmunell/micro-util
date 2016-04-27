@@ -19,8 +19,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	private List<DataSet<?, ?>> unlabeledData;
 	private int trainIters = 1;
 	private boolean trainOnInit = true;
+	private boolean weightData = false;
+	private double dataScoreThreshold = -1.0;
 	private List<EvaluationMultiClassificationMeasure> evaluations;
-	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations" };
+	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold" };
 	
 	private List<DataSet<?, ?>> trainData;
 	private List<DataSet<?, ?>> initData;
@@ -60,6 +62,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			for (EvaluationMultiClassificationMeasure evaluation : this.evaluations)
 				array.add(Obj.curlyBracedValue(evaluation.getReferenceName()));
 			return array;		
+		} else if (parameter.equals("weightData")) {
+			return Obj.stringValue(String.valueOf(this.weightData));
+		} else if (parameter.equals("dataScoreThreshold")) {
+			return Obj.stringValue(String.valueOf(this.dataScoreThreshold));
 		}
 		
 		return null;
@@ -86,8 +92,11 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
 					this.evaluations.add((EvaluationMultiClassificationMeasure)this.context.getAssignedMatches(array.get(i)).get(0));
-			}			
-
+			}
+		} else if (parameter.equals("weightData")) {
+			this.weightData = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("dataScoreThreshold")) {
+			this.dataScoreThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -194,26 +203,36 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				typeData.get(d.getDatumTools()).addAll((DataSet)d);
 		}
 		
-		List<Map<Datum<?>, ?>> labels = this.method.classify(this.unlabeledData);
-		for (int i = 0; i < this.unlabeledData.size(); i++){
+		List<Map<Datum<?>, Pair<?, Double>>> labels = this.method.classifyWithScore(this.unlabeledData);
+		for (int i = 0; i < this.unlabeledData.size(); i++) {
 			DataSet<?, ?> unlabeledData = this.unlabeledData.get(i);
-			Map<Datum<?>, ?> dataLabels = labels.get(i);
+			Map<Datum<?>, Pair<?, Double>> dataLabels = labels.get(i);
 			DataSet trainData = typeData.get(unlabeledData.getDatumTools());
 			unlabeledData.map((ThreadMapper.Fn)(new ThreadMapper.Fn<Object, Boolean>() {
 				@Override
 				public Boolean apply(Object item) {
 					Object label = null;
+					double score = 0.0;
 					synchronized (dataLabels) {
-						if (dataLabels.containsKey(item))
-							label = dataLabels.get(item);
+						if (dataLabels.containsKey(item)) {
+							Pair<?, Double> labelScore = dataLabels.get(item);
+							label = labelScore.getFirst();
+							score = labelScore.getSecond();
+						}
 					}
 					
-					if (label != null) {
-						Datum datum = (Datum)item;
-						datum.setLabel(label); // FIXME This should clone the datum
-						synchronized (trainData) {
-							trainData.add(datum);
-						}
+					if (label == null || (dataScoreThreshold >= 0.0 && score < dataScoreThreshold))
+						return true;
+					
+					Datum datum = (Datum)item;
+					datum.setLabel(label); // FIXME This should clone the datum
+					if (weightData)
+						datum.setLabelWeight(label, score);
+					else 
+						datum.setLabelWeight(label, 1.0);
+					
+					synchronized (trainData) {
+						trainData.add(datum);
 					}
 					
 					return true;

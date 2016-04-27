@@ -360,7 +360,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	private String lossFnNode;
 	private Map<String, Obj> additionalParameters;
 	private double classificationThreshold = -1;
-	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold", "lossFnNode" };
+	private boolean weightedData = true;
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold", "lossFnNode", "weightedData" };
 	
 	private FunctionGraph model;
 	private Map<String, Obj.Function> possibleFnNodes;
@@ -390,8 +391,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	
 	@Override
 	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
+		this.model = null;
 		return iterateTraining(data, testData, evaluations, null);
-		
 	}
 	
 	private Triple<Matrix, Matrix, Matrix> buildMatricesFromData(DataFeatureMatrix<D, L> data, boolean onlyX, Map<D, L> fixedPredictions) {
@@ -404,13 +405,14 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 		float[] Y = (onlyX) ? null : new float[datumCount*labelCount];
 		float[] fixedP = (fixedPredictions == null) ? null : new float[datumCount*labelCount];
 		int i = 0;
-		List<Map<Integer, Double>> featureMaps = new ArrayList<Map<Integer, Double>>();
+		List<Pair<Double, Map<Integer, Double>>> featureMaps = new ArrayList<Pair<Double, Map<Integer, Double>>>();
 		Iterator<D> iter = onlyX ? data.getData().iterator(DataFilter.All) : data.getData().iterator(DataFilter.OnlyLabeled);
 		// FIXME int numNonZeroFeatures = 0;
 		while (iter.hasNext()) {
 			D datum = iter.next();
 			Map<Integer, Double> datumFeatureMap = PlataniosUtil.vectorToMap(data.getFeatureVocabularyValues(datum));
-			featureMaps.add(datumFeatureMap);
+			double weight = (this.weightedData) ? datum.getLabelWeight(datum.getLabel()) : 1.0;
+			featureMaps.add(new Pair<>(weight, datumFeatureMap));
 			// FIXME numNonZeroFeatures += datumFeatureMap.size();
 			
 			if (!onlyX) {
@@ -434,8 +436,9 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 		// FIXME This uses dense matrix temporarily
 		float[] X = new float[datumCount * datumFeatureCount];
 		for (i = 0; i < featureMaps.size(); i++) {
-			for (Entry<Integer, Double> entry : featureMaps.get(i).entrySet())
-				X[i*datumFeatureCount + entry.getKey()] = entry.getValue().floatValue();
+			float weight = featureMaps.get(i).getFirst().floatValue();
+			for (Entry<Integer, Double> entry : featureMaps.get(i).getSecond().entrySet())
+				X[i*datumFeatureCount + entry.getKey()] = entry.getValue().floatValue() * weight;
 		}
 		
 		synchronized (this.context) {
@@ -686,6 +689,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
 		else if (parameter.equals("lossFnNode"))
 			return Obj.stringValue(this.lossFnNode);
+		else if (parameter.equals("weightedData"))
+			return Obj.stringValue(String.valueOf(this.weightedData));
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
 		return null;
@@ -709,6 +714,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("lossFnNode"))
 			this.lossFnNode = this.context.getMatchValue(parameterValue);
+		else if (parameter.equals("weightedData"))
+			this.weightedData = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else 
 			this.additionalParameters.put(parameter, parameterValue);
 		
