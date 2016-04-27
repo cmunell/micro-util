@@ -126,7 +126,7 @@ public abstract class Datum<L> {
 	
 	public double getLabelWeight(L label) {
 		if (this.labelDistribution == null) {
-			if (this.label.equals(label))
+			if ((this.label == null && label == null) || (this.label != null && this.label.equals(label)))
 				return 1.0;
 			else
 				return 0.0;
