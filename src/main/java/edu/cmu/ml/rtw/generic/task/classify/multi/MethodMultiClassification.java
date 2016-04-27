@@ -48,4 +48,6 @@ public abstract class MethodMultiClassification extends CtxParsableFunction {
 	public abstract boolean init(List<DataSet<?, ?>> testData);
 	public abstract MethodMultiClassification clone();
 	public abstract MethodMultiClassification makeInstance(Context context);
+	public abstract boolean hasTrainable();
+	public abstract MultiTrainable getTrainable();
 }

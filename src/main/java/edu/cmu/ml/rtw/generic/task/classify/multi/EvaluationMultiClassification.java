@@ -64,7 +64,11 @@ public abstract class EvaluationMultiClassification<E> extends CtxParsableFuncti
 		return this.method;
 	}
 	
+	public E compute() {
+		return compute(false);
+	}
+	
 	public abstract Type getType();
-	public abstract E compute();
+	public abstract E compute(boolean forceRecompute);
 	public abstract EvaluationMultiClassification<E> makeInstance(Context context);
 }

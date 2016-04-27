@@ -38,6 +38,7 @@ import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationM
 import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasurePrecision;
 import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasureRecall;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassification;
+import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSelfTrain;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSieve;
 import edu.cmu.ml.rtw.generic.task.classify.multi.TaskMultiClassification;
 import edu.cmu.ml.rtw.generic.util.NamedIterable;
@@ -353,6 +354,7 @@ public class DataTools {
 		this.addGenericMultiClassifyEval(new EvaluationMultiClassificationMeasureRecall());
 		
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSieve());
+		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSelfTrain());
 		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<String>, String>(DocumentNLPDatum.getStringTools(this), "DocumentNLPString"));
@@ -368,6 +370,20 @@ public class DataTools {
 		this.addConstructionCommand(new RuleSet(null), new MakeInstanceFn<RuleSet>() {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
+		
+		addCommand("InitMultiClassifyMethod", new Command<MethodMultiClassification>() {
+			@Override
+			public MethodMultiClassification run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+
+				TaskMultiClassification task = context.getMatchMultiClassifyTask(parameters.get("devTask").getValue());
+				MethodMultiClassification method = (MethodMultiClassification)context.getMatchMultiClassifyMethod(parameters.get("method").getValue());
+				if (!method.init(task.getData()))
+					return null;
+				else
+					return method;
+			}
+		});
 		
 		addCommand("CloneSearch", new Command<Search>() {
 			@Override

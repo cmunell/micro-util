@@ -33,7 +33,10 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	private boolean trainOnInit = false;
 	private int trainIters = 10;
 	private boolean orderClassifiersWithSensitivity = false;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity" };
+	private boolean trainStructured = false;
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured" };
+	
+	private boolean initialized = false;
 	
 	public MethodMultiClassificationSieve() {
 		
@@ -79,7 +82,9 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			return Obj.stringValue(String.valueOf(this.trainIters));
 		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
 			return Obj.stringValue(String.valueOf(this.orderClassifiersWithSensitivity));
-		}	
+		} else if (parameter.equals("trainStructured")) {
+			return Obj.stringValue(String.valueOf(this.trainStructured));
+		}
 		
 		return null;
 	}
@@ -115,6 +120,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			this.trainIters = (parameterValue == null) ? this.trainIters : Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
 			this.orderClassifiersWithSensitivity = (parameterValue == null) ? this.orderClassifiersWithSensitivity : Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("trainStructured")) {
+			this.trainStructured = (parameterValue == null) ? false : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -245,7 +252,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 				ordering.add(new Pair<Integer, Double>(orderIndex, measures.get(i).getSecond()));
 			}
 		} else { // Order with sensitivity
-			// FIXME asdf
+			throw new UnsupportedOperationException();
 		}
 		
 		return ordering;
@@ -254,10 +261,15 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public boolean init(List<DataSet<?, ?>> testData) {
+		if (this.initialized)
+			return true;
+		
 		for (int i = 0; i < testData.size(); i++) {
 			this.methods.get(i).init((DataSet)testData.get(i));
 		}
 	
+		this.initialized = true;
+		
 		if (this.trainOnInit)
 			return train();
 		else
@@ -302,15 +314,27 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public boolean train() {
-		List<DataSet<?, ?>> data = getTrainData();
-		Map<Trainable<?, ?>, Integer> trainables = getTrainableToDataIndices(data); 
-		for (int i = 0; i < this.trainIters; i++) {
-			List<Map<Datum<?>, ?>> classifiedData = classify(data, true);
-			
-			for (Entry<Trainable<?, ?>, Integer> entry : trainables.entrySet()) {
-				Map<Datum<?>, ?> c = classifiedData.get(entry.getValue());
-				if (!entry.getKey().iterateTraining((Map)c))
+		if (!this.trainStructured) {
+			List<Trainable<?, ?>> trainables = new ArrayList<>(getTrainableMethods().keySet()); 
+			for (Trainable<?, ?> trainable : trainables)
+				if (!trainable.train())
 					return false;
+			getClassifierOrdering(true);
+		} else {
+			List<Trainable<?, ?>> trainables = new ArrayList<>(getTrainableMethods().keySet()); 
+			List<DataSet<?, ?>> data = new ArrayList<>();
+			for (Trainable<?, ?> trainable : trainables)
+				data.add(trainable.getTrainData());
+			
+			
+			for (int i = 0; i < this.trainIters; i++) {
+				List<Map<Datum<?>, ?>> classifiedData = classify(data, true);
+				
+				for (int j = 0; j < trainables.size(); j++) {
+					Map<Datum<?>, ?> c = classifiedData.get(j);
+					if (!trainables.get(j).iterateTraining((Map)c))
+						return false;
+				}
 			}
 		}
 		
@@ -374,5 +398,15 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		}
 		
 		return trainableMethods;
+	}
+
+	@Override
+	public boolean hasTrainable() {
+		return true;
+	}
+
+	@Override
+	public MultiTrainable getTrainable() {
+		return this;
 	}
 }

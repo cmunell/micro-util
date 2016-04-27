@@ -30,8 +30,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	}
 
 	@Override
-	public Double compute() {
-		List<Map<?, Map<Stat, Integer>>> stats =  this.task.computeStats(this.method);
+	public Double compute(boolean forceRecompute) {
+		List<Map<?, Map<Stat, Integer>>> stats =  this.task.computeStats(this.method, forceRecompute);
 		
 		double p = 0.0;
 		double num = 0.0;

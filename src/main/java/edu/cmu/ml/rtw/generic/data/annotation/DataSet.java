@@ -147,6 +147,16 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		this.datumTools = datumTools;
 	}
 	
+	public DataSet<D, L> cloneUnbuildable() {
+		if (this.isBuildable() && !this.isBuilt() && !this.build())
+			return null;
+		
+		DataSet<D, L> clone = new DataSet<D, L>(this.referenceName + "_clone", this.datumTools, this.labelMapping);
+		clone.addAll(this);
+		
+		return clone;
+	}
+	
 	public synchronized boolean build() {
 		DataSet<D, L> data = this.builder.build();
 		

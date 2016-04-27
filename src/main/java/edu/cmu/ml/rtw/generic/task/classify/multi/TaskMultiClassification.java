@@ -61,14 +61,19 @@ public class TaskMultiClassification extends CtxParsableFunction {
 		return data;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<Map<?, Map<?, List<?>>>> computeActualToPredictedData(MethodMultiClassification method) {
+		return computeActualToPredictedData(method, false);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Map<?, Map<?, List<?>>>> computeActualToPredictedData(MethodMultiClassification method, boolean forceRecompute) {
 		if (!this.initialized && !init())
 			return null;
 		if (!method.init(this.getData()))
 			return null;
-		if (this.methodsActualToPredicted.containsKey(method))
-			return this.methodsActualToPredicted.get(method);
+		if (!forceRecompute)
+			if (this.methodsActualToPredicted.containsKey(method))
+				return this.methodsActualToPredicted.get(method);
 		
 		List<Map<Datum<?>, ?>> predictionMaps = method.classify(this);
 		List<Map<?, Map<?, List<?>>>> actualToPredictedMaps = new ArrayList<Map<?, Map<?, List<?>>>>();
@@ -103,7 +108,11 @@ public class TaskMultiClassification extends CtxParsableFunction {
 	}
 	
 	public List<Map<?, Map<Stat, Integer>>> computeStats(MethodMultiClassification method) {
-		List<Map<?, Map<?, List<?>>>> actualToPredictedMaps = computeActualToPredictedData(method);
+		return computeStats(method, false);
+	}
+	
+	public List<Map<?, Map<Stat, Integer>>> computeStats(MethodMultiClassification method, boolean forceRecompute) {
+		List<Map<?, Map<?, List<?>>>> actualToPredictedMaps = computeActualToPredictedData(method, forceRecompute);
 		List<Map<?, Map<Stat, Integer>>> statsMaps = new ArrayList<Map<?, Map<Stat, Integer>>>();
 		
 		for (Map<?, Map<?, List<?>>> actualToPredicted : actualToPredictedMaps) {

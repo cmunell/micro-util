@@ -53,6 +53,7 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 		NEGATIVE_LOG_LOSS("NegativeLogLoss", "neg_log_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
 		CROSS_ENTROPY_LOSS("CrossEntropyLoss", "cross_entropy_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
 		QUADRATIC_LOSS("QuadraticLoss", "quadratic_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
+		HINGE_LOSS("HingeLoss", "hinge_loss", YADLLFunctionType.LOSS, new String[] { "input" }),
 		RELU("Relu", "relu", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
 		SIGMOID("Sigmoid", "sigmoid", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
 		SOFTMAX("Softmax", "softmax", YADLLFunctionType.ACTIVATION, new String[] { "input" }),
@@ -571,6 +572,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	public Map<D, Map<L, Double>> posterior(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 			return null;
+		if (data.getData().size() == 0)
+			return new HashMap<D, Map<L, Double>>();
 	
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true, null);
 		Matrix X = dataMatrices.getFirst();
@@ -617,6 +620,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		if (this.model == null && !buildModelFromParameters(data.getFeatures().getFeatureVocabularySize()))
 				return null;
+		if (data.getData().size() == 0)
+			return new HashMap<D, L>();
 		
 		Pair<Matrix, Matrix> dataMatrices = buildMatricesFromData(data, true, null);
 		Matrix X = dataMatrices.getFirst();

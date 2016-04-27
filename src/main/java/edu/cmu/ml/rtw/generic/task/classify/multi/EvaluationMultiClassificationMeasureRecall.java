@@ -30,8 +30,8 @@ public class EvaluationMultiClassificationMeasureRecall extends EvaluationMultiC
 	}
 
 	@Override
-	public Double compute() {
-		List<Map<?, Map<Stat, Integer>>> stats =  this.task.computeStats(this.method);
+	public Double compute(boolean forceRecompute) {
+		List<Map<?, Map<Stat, Integer>>> stats =  this.task.computeStats(this.method, forceRecompute);
 		
 		double r = 0.0;
 		double num = 0.0;
