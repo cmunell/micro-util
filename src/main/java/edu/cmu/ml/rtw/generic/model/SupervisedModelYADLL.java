@@ -837,7 +837,7 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			int bestEpoch = 0;
 		
 			int epoch = 0;
-			while(epoch < this.numEpochs) {
+			while(epoch < this.numEpochs) {				
 				double testLoss = 0.0;
 				if (this.lossFnNode != null) {
 					this.model.clamp_("x", testX);
