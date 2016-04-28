@@ -12,6 +12,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Singleton;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 public class MethodMultiClassificationSelfTrain extends MethodMultiClassification implements MultiTrainable {
@@ -203,6 +204,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				typeData.get(d.getDatumTools()).addAll((DataSet)d);
 		}
 		
+		Singleton<Integer> unlabeledAdded = new Singleton<Integer>(0);
 		List<Map<Datum<?>, Pair<?, Double>>> labels = this.method.classifyWithScore(this.unlabeledData);
 		for (int i = 0; i < this.unlabeledData.size(); i++) {
 			DataSet<?, ?> unlabeledData = this.unlabeledData.get(i);
@@ -233,6 +235,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 					
 					synchronized (trainData) {
 						trainData.add(datum);
+						unlabeledAdded.set(unlabeledAdded.get() + 1);
 					}
 					
 					return true;
@@ -242,6 +245,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 		
 		this.trainData = new ArrayList<>();
 		this.trainData.addAll(typeData.values());
+		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + unlabeledAdded.get() + " self-labeled data");
 		
 		return true;
 	}
