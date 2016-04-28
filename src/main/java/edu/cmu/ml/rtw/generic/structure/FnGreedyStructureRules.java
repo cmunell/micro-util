@@ -19,7 +19,7 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStructure<S, S> {
-	private static final double EPSILON = 10;
+	private static final double EPSILON = .1;
 	
 	private Context context;
 	
