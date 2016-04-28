@@ -162,6 +162,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 
 	@Override
 	public boolean train() {
+		for (EvaluationMultiClassificationMeasure evaluation : this.evaluations) {
+			this.context.getDataTools().getOutputWriter().debugWriteln("Self training (init) " + evaluation.getReferenceName() + " " + evaluation.compute(true));
+		}
+		
 		for (int i = 0; i < this.trainIters; i++) {
 			this.context.getDataTools().getOutputWriter().debugWriteln("Self training iteration " + i);
 
@@ -169,12 +173,12 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			if (!this.method.getTrainable().train())
 				return false;
 			
-			if (!makeTrainData())
-				return false;
-			
 			for (EvaluationMultiClassificationMeasure evaluation : this.evaluations) {
 				this.context.getDataTools().getOutputWriter().debugWriteln("Self training iteration " + i + " " + evaluation.getReferenceName() + " " + evaluation.compute(true));
 			}
+			
+			if (!makeTrainData())
+				return false;
 		}
 		
 		return true;

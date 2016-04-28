@@ -391,7 +391,7 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	
 	@Override
 	public boolean train(DataFeatureMatrix<D, L> data, DataFeatureMatrix<D, L> testData, List<SupervisedModelEvaluation<D, L>> evaluations) {
-		//this.model = null;
+		this.model = null;
 		return iterateTraining(data, testData, evaluations, null);
 	}
 	
