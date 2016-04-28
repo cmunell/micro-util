@@ -351,6 +351,9 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 		}
 	}
 	
+	private static final int EARLY_STOPPING_CHECK_FREQUENCY = 10;
+	private static final int EARLY_STOPPING_WAIT = 300;
+	
 	private int numEpochs = 1;
 	private float stepSize = .1f;
 	private YADLLTrainingEstimator trainingEstimator = YADLLTrainingEstimator.BACK_PROPAGATION;
@@ -361,7 +364,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 	private Map<String, Obj> additionalParameters;
 	private double classificationThreshold = -1;
 	private boolean weightedData = true;
-	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold", "lossFnNode", "weightedData" };
+	private boolean earlyStopping = false;
+	private String[] defaultParameterNames = { "numEpochs", "stepSize", "trainingEstimator", "fnNodes", "fnParameters", "targetFnNode", "classificationThreshold", "lossFnNode", "weightedData", "earlyStopping" };
 	
 	private FunctionGraph model;
 	private Map<String, Obj.Function> possibleFnNodes;
@@ -691,6 +695,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			return Obj.stringValue(this.lossFnNode);
 		else if (parameter.equals("weightedData"))
 			return Obj.stringValue(String.valueOf(this.weightedData));
+		else if (parameter.equals("earlyStopping"))
+			return Obj.stringValue(String.valueOf(this.earlyStopping));
 		else if (this.additionalParameters.containsKey(parameter))
 			return this.additionalParameters.get(parameter);
 		return null;
@@ -716,6 +722,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			this.lossFnNode = this.context.getMatchValue(parameterValue);
 		else if (parameter.equals("weightedData"))
 			this.weightedData = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("earlyStopping"))
+			this.earlyStopping = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else 
 			this.additionalParameters.put(parameter, parameterValue);
 		
@@ -823,7 +831,11 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			optimizer.setOptType("descent");
 		
 			List<Pair<Double, Double>> iterativeEvaluations = new ArrayList<Pair<Double, Double>>();
-	
+			
+			FunctionGraph bestModel = this.model;
+			double bestLoss = Double.POSITIVE_INFINITY;
+			int bestEpoch = 0;
+		
 			int epoch = 0;
 			while(epoch < this.numEpochs) {
 				double testLoss = 0.0;
@@ -833,6 +845,14 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 					this.model.eval();
 					testLoss = Double.valueOf(this.model.getOutput(this.lossFnNode).getData()[0]);
 					this.model.flush_stats_(false);
+					
+					if (this.earlyStopping 
+							&& epoch % EARLY_STOPPING_CHECK_FREQUENCY == 0 
+							&& Double.compare(testLoss, bestLoss) < 0) {
+						bestModel = this.model.buildCopy(false);
+						bestLoss = testLoss;
+						bestEpoch = epoch;
+					}
 				}
 				
 				this.model.clamp_("x", X);
@@ -859,6 +879,9 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 				
 				//iterativeEvaluations.add(evaluations.get(0).evaluate(this, testData, classify(testData)));
 	
+				if (this.earlyStopping && epoch - bestEpoch > EARLY_STOPPING_WAIT)
+					break;
+				
 				epoch = epoch + 1;
 			}
 			
@@ -866,12 +889,21 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 				StringBuilder iterativeOutput = new StringBuilder();
 				iterativeOutput.append("Training iterations for model " + this.toParse(false) + "\n");
 				for (int i = 0; i < iterativeEvaluations.size(); i++) {
-					iterativeOutput.append("Epoch " + i + " " + 
-						this.lossFnNode + ": " + 
-							iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+					if (i % 100 == 1) {
+						iterativeOutput.append("Epoch " + i + " " + 
+							this.lossFnNode + ": " + 
+								iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
+					}
 				}
 				iterativeOutput.append("End of training for model " + this.toParse(false)); 
+				if (this.earlyStopping)
+					iterativeOutput.append("Early stopping chose model at " + bestEpoch + " " + bestLoss + " (test)");
+					
 				output.debugWriteln(iterativeOutput.toString());
+			}
+			
+			if (this.earlyStopping) {
+				this.model = bestModel;
 			}
 		}
 		
