@@ -895,7 +895,7 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 								iterativeEvaluations.get(i).getFirst() + " (train), " + iterativeEvaluations.get(i).getSecond() + " (test)\n");
 					}
 				}
-				iterativeOutput.append("End of training for model " + this.toParse(false)); 
+				iterativeOutput.append("End of training for model " + this.toParse(false) + "\n"); 
 				if (this.earlyStopping)
 					iterativeOutput.append("Early stopping chose model at " + bestEpoch + " " + bestLoss + " (test)");
 					
