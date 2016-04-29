@@ -183,7 +183,7 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			StringBuilder str = new StringBuilder();
 			
 			str.append(this.fnType.getYADLLName());
-			if (this.fnType.getType() != YADLLFunctionType.PARAMETER_INITIALIZATION) {
+			if (this.fnType.getType() != YADLLFunctionType.PARAMETER_INITIALIZATION || this.fnType.getName().equals("Gaussian")) { // FIXME Hack
 				if (this.fnType.getArgNames().length > 0) {
 					str.append("(");
 					for (String paramName : this.fnType.getArgNames())
