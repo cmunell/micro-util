@@ -296,7 +296,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 		double size = trainData.labeledSize();
 		
 		for (Object l : labels)
-			counts.put(l, (int)Math.floor(trainData.getDataSizeForLabel(l)/size)*this.incrementSize);
+			counts.put(l, (int)Math.floor((trainData.getDataSizeForLabel(l)/size)*this.incrementSize));
 		
 		return counts;
 	}
