@@ -17,6 +17,7 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Singleton;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
+import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class MethodMultiClassificationSelfTrain extends MethodMultiClassification implements MultiTrainable {
 	private MethodMultiClassification method;
@@ -26,9 +27,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	private boolean weightData = false;
 	private double dataScoreThreshold = -1.0;
 	private boolean incremental = false;
+	private boolean incrementByLabel = true;
 	private int incrementSize = 300;
 	private List<EvaluationMultiClassificationMeasure> evaluations;
-	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold", "incremental", "incrementSize" };
+	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold", "incremental", "incrementSize", "incrementByLabel" };
 	
 	private List<DataSet<?, ?>> trainData;
 	private List<DataSet<?, ?>> initData;
@@ -77,7 +79,11 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			return Obj.stringValue(String.valueOf(this.incremental));
 		} else if (parameter.equals("incrementSize")) {
 			return Obj.stringValue(String.valueOf(this.incrementSize));
+		} else if (parameter.equals("incrementByLabel")) {
+			return Obj.stringValue(String.valueOf(this.incrementByLabel));
 		}
+		
+		
 		return null;
 	}
 
@@ -111,6 +117,8 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			this.incremental = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("incrementSize")) {
 			this.incrementSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("incrementByLabel")) {
+			this.incrementByLabel = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -213,7 +221,9 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	}
 	
 	private boolean makeTrainData() {
-		if (this.incremental) {
+		if (this.incremental && this.incrementByLabel) {
+			return makeTrainDataIncrementalByLabel();
+		} else if (this.incremental && !this.incrementByLabel) {
 			return makeTrainDataIncremental();
 		} else {
 			return makeTrainDataBatch();
@@ -222,6 +232,94 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private boolean makeTrainDataIncremental() {
+		if (this.iterUnlabeledData == null) {
+			this.iterUnlabeledData = this.unlabeledData;
+		}
+		
+		MultiTrainable trainable = this.method.getTrainable();
+		Map<Tools<?, ?>, DataSet<?, ?>> nextIterTrainData = new HashMap<>();
+		for (DataSet<?, ?> d : trainable.getTrainData()) {
+			if (!nextIterTrainData.containsKey(d.getDatumTools())) {
+				nextIterTrainData.put(d.getDatumTools(), d.cloneUnbuildable());
+			} else
+				nextIterTrainData.get(d.getDatumTools()).addAll((DataSet)d);
+		}
+		
+		Map<Tools<?, ?>, DataSet<?, ?>> nextIterUnlabeledData = new HashMap<>();
+		for (DataSet<?, ?> d : this.iterUnlabeledData) {
+			if (!nextIterUnlabeledData.containsKey(d.getDatumTools())) {
+				DataSet<?, ?> dClone = d.cloneUnbuildable();
+				dClone.clear();
+				nextIterUnlabeledData.put(d.getDatumTools(), dClone);
+			}
+		}
+		
+		int dataAdded = 0;
+		List<Map<Datum<?>, Pair<?, Double>>> labels = this.method.classifyWithScore(this.iterUnlabeledData);
+		for (int i = 0; i < this.iterUnlabeledData.size(); i++) {
+			DataSet<?, ?> curUnlabeledData = this.iterUnlabeledData.get(i);
+			Map<Datum<?>, Pair<?, Double>> dataLabels = labels.get(i);
+			DataSet nextTrainData = nextIterTrainData.get(curUnlabeledData.getDatumTools());
+			DataSet nextUnlabeledData = nextIterUnlabeledData.get(curUnlabeledData.getDatumTools());
+
+			List<Triple<Datum, Object, Double>> ordering = getDataOrdering(dataLabels);
+			
+			for (int j = 0; j < ordering.size(); j++) {
+				Triple<Datum, Object, Double> e = ordering.get(j);
+				Object label = e.getSecond();
+				Datum d = e.getFirst();
+				double score = e.getThird();
+						
+				if (j < this.incrementSize && (this.dataScoreThreshold < 0 || score >= this.dataScoreThreshold)) {
+					d.setLabel(label); // FIXME This should clone the datum
+					if (this.weightData)
+						d.setLabelWeight(label, score);
+					else 
+						d.setLabelWeight(label, 1.0);
+					nextTrainData.add(d);
+					dataAdded++;
+				} else {
+					nextUnlabeledData.add(d);
+				}
+			
+				
+			}
+		}
+		
+		this.trainData = new ArrayList<>();
+		this.trainData.addAll(nextIterTrainData.values());
+		
+		this.iterUnlabeledData = new ArrayList<>();
+		this.iterUnlabeledData.addAll(nextIterUnlabeledData.values());
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + dataAdded + " self-labeled data");
+		
+		return true;
+	}
+	
+	// (datum, label, score) list ordered descending
+	@SuppressWarnings({ "rawtypes" })
+	private List<Triple<Datum, Object, Double>> getDataOrdering(Map<Datum<?>, Pair<?, Double>> dataLabels) {
+		List<Triple<Datum, Object, Double>> ordering = new ArrayList<>();
+		for (Entry<Datum<?>, Pair<?, Double>> entry : dataLabels.entrySet()) {
+			Object label = entry.getValue().getFirst();
+			Datum<?> datum = entry.getKey();
+			double score = entry.getValue().getSecond();
+			ordering.add(new Triple<>(datum, label, score));
+		}
+		
+		ordering.sort(new Comparator<Triple<Datum, Object, Double>>() {
+			@Override
+			public int compare(Triple<Datum, Object, Double> o1, Triple<Datum, Object, Double> o2) {
+				return Double.compare(o2.getThird(), o1.getThird());
+			}
+		});
+	
+		return ordering;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private boolean makeTrainDataIncrementalByLabel() {
 		if (this.iterUnlabeledData == null) {
 			this.iterUnlabeledData = this.unlabeledData;
 		}

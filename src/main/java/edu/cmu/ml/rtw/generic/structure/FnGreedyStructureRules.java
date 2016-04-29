@@ -119,6 +119,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				prevFilterSize = (filter != null) ? filter.size() : 0;
 				filter = new HashSet<F>();
 				double totalWeight = structure.getTotalWeight();
+				
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (Entry<String, List<Obj>> objList : objs.entrySet())
