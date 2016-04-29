@@ -253,7 +253,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				nextIterUnlabeledData.put(d.getDatumTools(), dClone);
 			}
 		}
-		
+		double lastScore = 0.0;
 		int dataAdded = 0;
 		List<Map<Datum<?>, Pair<?, Double>>> labels = this.method.classifyWithScore(this.iterUnlabeledData);
 		for (int i = 0; i < this.iterUnlabeledData.size(); i++) {
@@ -269,7 +269,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				Object label = e.getSecond();
 				Datum d = e.getFirst();
 				double score = e.getThird();
-						
+				
 				if (j < this.incrementSize && (this.dataScoreThreshold < 0 || score >= this.dataScoreThreshold)) {
 					d.setLabel(label); // FIXME This should clone the datum
 					if (this.weightData)
@@ -277,6 +277,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 					else 
 						d.setLabelWeight(label, 1.0);
 					nextTrainData.add(d);
+					lastScore = score;
 					dataAdded++;
 				} else {
 					nextUnlabeledData.add(d);
@@ -292,7 +293,7 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 		this.iterUnlabeledData = new ArrayList<>();
 		this.iterUnlabeledData.addAll(nextIterUnlabeledData.values());
 		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + dataAdded + " self-labeled data");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + dataAdded + " self-labeled data (lowest score: " + lastScore + ")");
 		
 		return true;
 	}
