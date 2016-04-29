@@ -1,9 +1,12 @@
 package edu.cmu.ml.rtw.generic.task.classify.multi;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
@@ -22,11 +25,14 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	private boolean trainOnInit = true;
 	private boolean weightData = false;
 	private double dataScoreThreshold = -1.0;
+	private boolean incremental = false;
+	private int incrementSize = 300;
 	private List<EvaluationMultiClassificationMeasure> evaluations;
-	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold" };
+	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold", "incremental", "incrementSize" };
 	
 	private List<DataSet<?, ?>> trainData;
 	private List<DataSet<?, ?>> initData;
+	private List<DataSet<?, ?>> iterUnlabeledData;
 	
 	public MethodMultiClassificationSelfTrain() {
 		
@@ -67,8 +73,11 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			return Obj.stringValue(String.valueOf(this.weightData));
 		} else if (parameter.equals("dataScoreThreshold")) {
 			return Obj.stringValue(String.valueOf(this.dataScoreThreshold));
+		} else if (parameter.equals("incremental")) {
+			return Obj.stringValue(String.valueOf(this.incremental));
+		} else if (parameter.equals("incrementSize")) {
+			return Obj.stringValue(String.valueOf(this.incrementSize));
 		}
-		
 		return null;
 	}
 
@@ -98,6 +107,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			this.weightData = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("dataScoreThreshold")) {
 			this.dataScoreThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("incremental")) {
+			this.incremental = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("incrementSize")) {
+			this.incrementSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -121,6 +134,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	
 		if (!this.method.hasTrainable())
 			return false;
+		
+		MultiTrainable trainable = this.method.getTrainable();
+		if (this.initData == null)
+			this.initData = trainable.getTrainData();
 		
 		if (!makeTrainData())
 			return false;
@@ -195,11 +212,123 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 		return this.trainData;
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private boolean makeTrainData() {
+		if (this.incremental) {
+			return makeTrainDataIncremental();
+		} else {
+			return makeTrainDataBatch();
+		}
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private boolean makeTrainDataIncremental() {
+		if (this.iterUnlabeledData == null) {
+			this.iterUnlabeledData = this.unlabeledData;
+		}
+		
 		MultiTrainable trainable = this.method.getTrainable();
-		if (this.initData == null)
-			this.initData = trainable.getTrainData();
+		Map<Tools<?, ?>, DataSet<?, ?>> nextIterTrainData = new HashMap<>();
+		for (DataSet<?, ?> d : trainable.getTrainData()) {
+			if (!nextIterTrainData.containsKey(d.getDatumTools())) {
+				nextIterTrainData.put(d.getDatumTools(), d.cloneUnbuildable());
+			} else
+				nextIterTrainData.get(d.getDatumTools()).addAll((DataSet)d);
+		}
+		
+		Map<Tools<?, ?>, DataSet<?, ?>> nextIterUnlabeledData = new HashMap<>();
+		for (DataSet<?, ?> d : this.iterUnlabeledData) {
+			if (!nextIterUnlabeledData.containsKey(d.getDatumTools())) {
+				DataSet<?, ?> dClone = d.cloneUnbuildable();
+				dClone.clear();
+				nextIterUnlabeledData.put(d.getDatumTools(), dClone);
+			}
+		}
+		
+		int dataAdded = 0;
+		List<Map<Datum<?>, Pair<?, Double>>> labels = this.method.classifyWithScore(this.iterUnlabeledData);
+		for (int i = 0; i < this.iterUnlabeledData.size(); i++) {
+			DataSet<?, ?> curUnlabeledData = this.iterUnlabeledData.get(i);
+			Map<Datum<?>, Pair<?, Double>> dataLabels = labels.get(i);
+			DataSet nextTrainData = nextIterTrainData.get(curUnlabeledData.getDatumTools());
+			DataSet nextUnlabeledData = nextIterUnlabeledData.get(curUnlabeledData.getDatumTools());
+			Map labelCountsToAdd = getLabelCountsToAdd(nextTrainData);
+			Map<Object, List<Pair<Datum, Double>>> labelsToDataOrderings = getDataOrderingsForLabels(dataLabels);
+			
+			for (Entry<Object, List<Pair<Datum, Double>>> entry : labelsToDataOrderings.entrySet()) {
+				Object label = entry.getKey();
+				int trainingCount = (Integer)labelCountsToAdd.get(label);
+				for (int j = 0; j < entry.getValue().size(); j++) {
+					Datum d = entry.getValue().get(j).getFirst();
+					double score = entry.getValue().get(j).getSecond();
+					
+					if (j < trainingCount && (this.dataScoreThreshold < 0 || score >= this.dataScoreThreshold)) {
+						d.setLabel(label); // FIXME This should clone the datum
+						if (this.weightData)
+							d.setLabelWeight(label, score);
+						else 
+							d.setLabelWeight(label, 1.0);
+						nextTrainData.add(d);
+						dataAdded++;
+					} else {
+						nextUnlabeledData.add(d);
+					}
+				}
+				
+			}
+		}
+		
+		this.trainData = new ArrayList<>();
+		this.trainData.addAll(nextIterTrainData.values());
+		
+		this.iterUnlabeledData = new ArrayList<>();
+		this.iterUnlabeledData.addAll(nextIterUnlabeledData.values());
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + dataAdded + " self-labeled data");
+		
+		return true;
+	}
+	
+	// Gets counts of each label to add by proportion in the train data
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Map getLabelCountsToAdd(DataSet trainData) {
+		Map counts = new HashMap();
+		Set labels = trainData.getLabels();
+		double size = trainData.labeledSize();
+		
+		for (Object l : labels)
+			counts.put(l, (int)Math.floor(trainData.getDataSizeForLabel(l)/size)*this.incrementSize);
+		
+		return counts;
+	}
+	
+	// Maps labels to (datum, score) list ordered descending
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Map getDataOrderingsForLabels(Map<Datum<?>, Pair<?, Double>> dataLabels) {
+		Map<Object, List> orderings = new HashMap();
+		for (Entry<Datum<?>, Pair<?, Double>> entry : dataLabels.entrySet()) {
+			Object label = entry.getValue().getFirst();
+			Datum<?> datum = entry.getKey();
+			double score = entry.getValue().getSecond();
+			
+			if (!orderings.containsKey(label))
+				orderings.put(label, new ArrayList());
+			orderings.get(label).add(new Pair<Datum, Double>(datum, score));
+		}
+		
+		for (Entry<Object, List> entry : orderings.entrySet()) {
+			entry.getValue().sort(new Comparator<Pair<Datum, Double>>() {
+				@Override
+				public int compare(Pair<Datum, Double> o1, Pair<Datum, Double> o2) {
+					return Double.compare(o2.getSecond(), o1.getSecond());
+				}
+			});
+		}
+		
+		return orderings;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private boolean makeTrainDataBatch() {
 		Map<Tools<?, ?>, DataSet<?, ?>> typeData = new HashMap<>();
 		for (DataSet<?, ?> d : this.initData) {
 			if (!typeData.containsKey(d.getDatumTools()))

@@ -349,6 +349,10 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		return this.labelMapping;
 	}
 	
+	public Set<L> getLabels() {
+		return this.labeledData.keySet();
+	}
+	
 	@Override
 	public Iterator<D> iterator() {
 		return iterator(DataFilter.All);
