@@ -35,6 +35,8 @@ import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel<D, L> {
+	private static Boolean SEED_SET = false;
+	
 	public static enum YADLLTrainingEstimator {
 		BACK_PROPAGATION
 	}
@@ -389,6 +391,14 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 				this.possibleFnParameters.put(type.getName(), YADLLParameter.makeGenericParse(type));
 			} else {
 				this.possibleFnNodes.put(type.getName(), YADLLFunctionNode.makeGenericParse(type));
+			}
+		}
+		
+		synchronized (SEED_SET) {  // FIXME Hack to deal with static seed in YADLL - BIDMat
+			if (!SEED_SET) {
+				this.model = new FunctionGraph();
+				this.model.setSeed(1);
+				this.model = null;
 			}
 		}
 	}
