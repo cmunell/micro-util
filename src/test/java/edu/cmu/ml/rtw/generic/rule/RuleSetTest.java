@@ -56,7 +56,7 @@ public class RuleSetTest {
 		rels.add(rel1);
 		rels.add(rel2);
 		
-		long startTime = System.currentTimeMillis();
+		// long startTime = System.currentTimeMillis();
 		for (int i = 0; i < 40000; i++) {
 			Map<String, List<Obj>> results = rs.apply(rels);
 			for (Entry<String, List<Obj>> entry : results.entrySet()) {
@@ -66,10 +66,10 @@ public class RuleSetTest {
 				}
 			}
 		}
-		long nonThreadedTime = System.currentTimeMillis() - startTime;
+		//long nonThreadedTime = System.currentTimeMillis() - startTime;
 		
-		System.out.println("Non-threaded time " + nonThreadedTime);
-		
+		//System.out.println("Non-threaded time " + nonThreadedTime);
+		/*
 		rs.startThreaded();
 		startTime = System.currentTimeMillis();
 		for (int i = 0; i < 40000; i++) {
@@ -84,6 +84,6 @@ public class RuleSetTest {
 		long threadedTime = System.currentTimeMillis() - startTime;
 		rs.endThreaded();
 		
-		System.out.println("Threaded time " + threadedTime);
+		System.out.println("Threaded time " + threadedTime);*/
 	}
 }

@@ -10,16 +10,10 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.CtxParsableFunction;
 import edu.cmu.ml.rtw.generic.parse.Obj;
-import edu.cmu.ml.rtw.generic.util.Pair;
-import edu.cmu.ml.rtw.generic.util.ThreadFnPool;
-import edu.cmu.ml.rtw.generic.util.ThreadFnPool.Fn;
 
 public class RuleSet extends CtxParsableFunction {
 	private List<Rule> rules;
 	private String[] parameterNames = { "rules" };
-	
-	private ThreadFnPool<Pair<List<Obj>, Map<String, Obj>>, List<Obj>> ruleThreads;
-	private int startedThreaded = 0;
 	
 	private Context context;
 	
@@ -29,25 +23,6 @@ public class RuleSet extends CtxParsableFunction {
 	
 	public RuleSet(Context context) {
 		this.context = context;
-	}
-	
-	public synchronized boolean startThreaded() {
-		if (this.startedThreaded == 0)
-			if (!this.ruleThreads.startThreads())
-				return false;
-		
-		this.startedThreaded++;
-		return true;
-	}
-	
-	public synchronized boolean endThreaded() {
-		this.startedThreaded--;
-		
-		if (this.startedThreaded == 0)
-			if (!this.ruleThreads.stopThreads())
-				return false;
-		
-		return true;
 	}
 	
 	@Override
@@ -78,22 +53,12 @@ public class RuleSet extends CtxParsableFunction {
 				return true;
 			}
 			
-			List<ThreadFnPool.Fn<Pair<List<Obj>, Map<String, Obj>>, List<Obj>>> ruleThreadFns = new ArrayList<>();
 			this.rules = new ArrayList<Rule>();
 			Obj.Array rulesObj = (Obj.Array)parameterValue;
 			for (int i = 0; i < rulesObj.size(); i++) {
-				Rule r = this.context.getMatchRule(rulesObj.get(i));
-				ruleThreadFns.add(new Fn<Pair<List<Obj>, Map<String, Obj>>, List<Obj>>() {
-					@Override
-					public List<Obj> apply(Pair<List<Obj>, Map<String, Obj>> item) {
-						return r.applyToParses(item.getFirst(), item.getSecond());
-					}
-				});
-				
+				Rule r = this.context.getMatchRule(rulesObj.get(i));				
 				this.rules.add(r);
-			}
-			
-			this.ruleThreads = new ThreadFnPool<Pair<List<Obj>, Map<String, Obj>>, List<Obj>>(ruleThreadFns);
+			}		
 		} else {
 			return false;
 		}
@@ -154,11 +119,6 @@ public class RuleSet extends CtxParsableFunction {
 	
 	
 	public Map<String, List<Obj>> applyToParses(List<Obj> sourceObjs, Map<String, Obj> extraAssignments) {
-		synchronized (this) {
-			if (this.startedThreaded > 0)
-				return applyToParsesThreaded(sourceObjs, extraAssignments);
-		}
-		
 		Map<String, List<Obj>> outputs = new HashMap<String, List<Obj>>();
 		
 		for (Rule rule : this.rules) {
@@ -169,15 +129,4 @@ public class RuleSet extends CtxParsableFunction {
 		
 		return outputs;
 	}
-	
-	public Map<String, List<Obj>> applyToParsesThreaded(List<Obj> sourceObjs, Map<String, Obj> extraAssignments) {
-		Map<String, List<Obj>> outputs = new HashMap<String, List<Obj>>();
-		
-		List<List<Obj>> out = this.ruleThreads.run(new Pair<>(sourceObjs, extraAssignments));
-		for (int i = 0; i < this.rules.size(); i++)
-			outputs.put(this.rules.get(i).getReferenceName(), out.get(i));
-		
-		return outputs;
-	}
-
 }

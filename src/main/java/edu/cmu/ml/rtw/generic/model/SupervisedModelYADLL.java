@@ -353,8 +353,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 		}
 	}
 	
-	private static final int EARLY_STOPPING_CHECK_FREQUENCY = 100;
-	private static final int EARLY_STOPPING_WAIT = 500;
+	private static final int EARLY_STOPPING_CHECK_FREQUENCY = 10;
+	private static final int EARLY_STOPPING_WAIT = 100;
 	
 	private int numEpochs = 1;
 	private float stepSize = .1f;
