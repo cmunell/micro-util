@@ -160,6 +160,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			int prevFilterSize = (filter != null) ? filter.size() : 0;
 			double weightChange = 0;
 			do {
+				
+				this.context.getDataTools().getOutputWriter().debugWriteln("Running structure rules iteration " + iterations + " split." );
 				List<Triple<List<CtxParsable>, Double, Integer>> structureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
 				for (int i = 0; i < this.splitFns.size(); i++) {
 					FnStructure<S, ?> splitFn = this.splitFns.get(i);
@@ -186,9 +188,10 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 						}
 					);
 					
-					mapper.run((List<Object>)splitStructure, this.context.getMaxThreads());
+					mapper.run((List<Object>)splitStructure, this.context.getMaxThreads(), true);
 				}
 				
+				this.context.getDataTools().getOutputWriter().debugWriteln("Running structure rules iteration " + iterations + " rule application." );
 				
 				prevFilterSize = (filter != null) ? filter.size() : 0;
 				
@@ -212,8 +215,10 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					}
 				});
 				
-				mapper.run(structureParts, this.context.getMaxThreads());
+				mapper.run(structureParts, this.context.getMaxThreads(), true);
 				
+				this.context.getDataTools().getOutputWriter().debugWriteln("Finisehd structure rules iteration " + iterations );
+
 				filter = tempFilter;
 				iterations++;
 				weightChange = structure.getTotalWeight() - totalWeight;

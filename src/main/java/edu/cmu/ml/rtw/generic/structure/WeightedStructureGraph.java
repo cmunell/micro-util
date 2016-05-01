@@ -541,7 +541,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			}
 		});
 		
-		mapper.run(this.edges.keySet(), this.context.getMaxThreads());
+		mapper.run(this.edges.keySet(), this.context.getMaxThreads(), true);
 		
 		return paths;
 	}
