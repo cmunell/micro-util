@@ -198,6 +198,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				double totalWeight = structure.getTotalWeight();
 				
 				final Set<F> tempFilter = new HashSet<F>();
+				List<Pair<WeightedStructure, Double>> newSortedStructureParts = new ArrayList<>();
 				ThreadMapper<Triple<List<CtxParsable>, Double, Integer>, Boolean> mapper = new ThreadMapper<Triple<List<CtxParsable>, Double, Integer>, Boolean>(new ThreadMapper.Fn<Triple<List<CtxParsable>, Double, Integer>, Boolean>() {
 					@Override
 					public Boolean apply(Triple<List<CtxParsable>, Double, Integer> structurePart) {
@@ -205,8 +206,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 						for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 							for (Obj obj : objList.getValue()) {
 								WeightedStructure newStructurePart = context.constructMatchWeightedStructure(obj);
-								synchronized (structure) {
-									structure.add(newStructurePart, structurePart.getSecond(), tempFilter);
+								synchronized (newSortedStructureParts) {
+									newSortedStructureParts.add(new Pair<WeightedStructure, Double>(newStructurePart, structurePart.getSecond()));
 								}
 							}
 						}
@@ -214,10 +215,19 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 						return true;
 					}
 				});
-				
 				mapper.run(structureParts, this.context.getMaxThreads(), true);
 				
-				this.context.getDataTools().getOutputWriter().debugWriteln("Finisehd structure rules iteration " + iterations );
+				Collections.sort(newSortedStructureParts, new Comparator<Pair<WeightedStructure, Double>>() {
+					@Override
+					public int compare(Pair<WeightedStructure, Double> o1, Pair<WeightedStructure, Double> o2) {
+						return Double.compare(o2.getSecond(), o1.getSecond());
+					}
+				});
+				
+				for (Pair<WeightedStructure, Double> pair : newSortedStructureParts)
+					structure.add(pair.getFirst(), pair.getSecond(), tempFilter);
+				
+				this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure rules iteration " + iterations );
 
 				filter = tempFilter;
 				iterations++;
