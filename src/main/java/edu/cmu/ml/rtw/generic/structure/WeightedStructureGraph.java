@@ -12,6 +12,7 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 
 public class WeightedStructureGraph extends WeightedStructure {
 	public static enum RelationMode {
@@ -504,11 +505,16 @@ public class WeightedStructureGraph extends WeightedStructure {
 					}
 				}
 				
-				if (matchesFilter)
-					paths.add(path);
+				if (matchesFilter) {
+					synchronized (paths) {
+						paths.add(path);
+					}
+				}
 			}
 		} else {
-			paths.addAll(currentPaths);
+			synchronized (paths) {
+				paths.addAll(currentPaths);
+			}
 		}
 		
 		return paths;
@@ -527,8 +533,16 @@ public class WeightedStructureGraph extends WeightedStructure {
 		if (length <= 0)
 			return paths;
 		
-		for (String nodeId : this.edges.keySet())
-			getEdgePaths(nodeId, length, paths, ignoreTypes, filter);
+		ThreadMapper<String, Boolean> mapper = new ThreadMapper<String, Boolean>(new ThreadMapper.Fn<String, Boolean>() {
+			@Override
+			public Boolean apply(String nodeId) {
+				getEdgePaths(nodeId, length, paths, ignoreTypes, filter);
+				return true;
+			}
+		});
+		
+		mapper.run(this.edges.keySet(), this.context.getMaxThreads());
+		
 		return paths;
 	}
 	
