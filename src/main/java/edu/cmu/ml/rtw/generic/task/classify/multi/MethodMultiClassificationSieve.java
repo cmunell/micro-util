@@ -34,7 +34,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	private int trainIters = 10;
 	private boolean orderClassifiersWithSensitivity = false;
 	private boolean trainStructured = false;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured" };
+	private boolean threadStructure = true;
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure" };
 	
 	private boolean initialized = false;
 	
@@ -84,6 +85,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			return Obj.stringValue(String.valueOf(this.orderClassifiersWithSensitivity));
 		} else if (parameter.equals("trainStructured")) {
 			return Obj.stringValue(String.valueOf(this.trainStructured));
+		} else if (parameter.equals("threadStructure")) {
+			return Obj.stringValue(String.valueOf(this.threadStructure));
 		}
 		
 		return null;
@@ -122,6 +125,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			this.orderClassifiersWithSensitivity = (parameterValue == null) ? this.orderClassifiersWithSensitivity : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("trainStructured")) {
 			this.trainStructured = (parameterValue == null) ? false : Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("threadStructure")) {
+			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -183,21 +188,30 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
 			
-			
-			ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
-				@Override
-				public Boolean apply(Entry entry) {
+			if (this.threadStructure) {
+				ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
+					@Override
+					public Boolean apply(Entry entry) {
+						List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
+						WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+						for (int j = 1; j < transformedStructures.size(); j++)
+							firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+						entry.setValue(firstTransformed);
+						return true;
+					}
+					
+				});
+				threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
+			} else {
+				for (Entry entry : structures.entrySet()) {
 					List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
 					WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 					for (int j = 1; j < transformedStructures.size(); j++)
 						firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 					entry.setValue(firstTransformed);
-					return true;
 				}
-				
-			});
+			}
 			
-			threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
 			
 			this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
 		}
