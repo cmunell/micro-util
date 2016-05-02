@@ -8,12 +8,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import java_cup.runtime.ComplexSymbolFactory;
 import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
-import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentUntyped;
+import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
 /**
@@ -28,12 +28,29 @@ import edu.cmu.ml.rtw.generic.util.StringSerializable;
  *
  */
 public class AssignmentList extends Obj implements Iterable<Assignment>, StringSerializable {
-	private List<Assignment> assignments;
-	private Map<String, Assignment> assignmentMap;
+	private class AssignmentIterator implements Iterator<Assignment> {
+		private Iterator<Pair<String, Assignment>> iterator;
+		
+		public AssignmentIterator(Iterator<Pair<String, Assignment>> iterator) {
+			this.iterator = iterator;
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return this.iterator.hasNext();
+		}
+
+		@Override
+		public Assignment next() {
+			return this.iterator.next().getSecond();
+		}
+		
+	}
+	
+	private List<Pair<String, Assignment>> assignments;
 	
 	public AssignmentList() {
-		this.assignments = new ArrayList<Assignment>();
-		this.assignmentMap = new HashMap<String, Assignment>();
+		this.assignments = new ArrayList<Pair<String, Assignment>>();
 	}
 	
 	public boolean push(Assignment assignment) {
@@ -43,37 +60,32 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 			return false;
 		}
 		
-		this.assignments.add(0, assignment);
-		if (assignment.getName() != null)
-			this.assignmentMap.put(assignment.getName(), assignment);
+		this.assignments.add(0, new Pair<>(assignment.getName(), assignment));
 		
 		return true;
 	}
 	
 	public boolean add(Assignment assignment) {
-		if ((assignment.getName() == null && hasNames())
-				|| (assignment.getName() != null && !hasNames() && size() > 0)) {
-			// Must be either all named or all not-named assignments
-			return false;
-		}
-		
-		this.assignments.add(assignment);
-		if (assignment.getName() != null)
-			this.assignmentMap.put(assignment.getName(), assignment);
-		
+		this.assignments.add(new Pair<>(assignment.getName(), assignment));
 		return true;
 	}
 	
 	public Assignment get(int index) {
-		return this.assignments.get(index);
+		return this.assignments.get(index).getSecond();
 	}
 	
 	public Assignment get(String name) {
-		return this.assignmentMap.get(name);
+		for (Pair<String, Assignment> assignment : this.assignments)
+			if (name.equals(assignment.getFirst()))
+				return assignment.getSecond();
+		return null;
 	}
 	
 	public boolean contains(String name) {
-		return this.assignmentMap.containsKey(name);
+		for (Pair<String, Assignment> assignment : this.assignments)
+			if (name.equals(assignment.getFirst()))
+				return true;
+		return false;
 	}
 	
 	public int size() {
@@ -81,13 +93,13 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 	}
 	
 	public boolean hasNames() {
-		return this.assignmentMap.size() > 0;
+		return this.assignments.size() > 0 && this.assignments.get(0).getFirst() != null;
 	}
 	
 	@Override
 	public boolean serialize(Writer writer) throws IOException {
 		for (int i = 0; i < this.assignments.size(); i++) {
-			Assignment assignment = this.assignments.get(i);
+			Assignment assignment = this.assignments.get(i).getSecond();
 			if (!assignment.serialize(writer))
 				return false;
 			
@@ -107,7 +119,7 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 
 	@Override
 	public Map<String, Obj> match(Obj obj) {
-		Map<String, Obj> matches = new HashMap<String, Obj>();
+		Map<String, Obj> matches = new TreeMap<String, Obj>();
 		
 		if (obj.getObjType() == Obj.Type.VALUE) {
 			Obj.Value vObj = (Obj.Value)obj;
@@ -126,7 +138,7 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 			for (int i = 0; i < aList.size(); i++) {
 				String name = aList.get(i).getName();
 				if (!contains(name))
-					return new HashMap<String, Obj>();
+					return new TreeMap<String, Obj>();
 				Map<String, Obj> aMatches = get(name).getValue().match(aList.get(i).getValue());
 				if (aMatches.size() == 0)
 					return aMatches;
@@ -149,11 +161,11 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 	@Override
 	public boolean resolveValues(Map<String, Obj> context) {
 		boolean resolved = true;
-		List<Assignment> oldAssignments = this.assignments;
-		this.assignmentMap = new HashMap<String, Assignment>();
-		this.assignments = new ArrayList<Assignment>();
+		List<Pair<String, Assignment>> oldAssignments = this.assignments;
+		this.assignments = new ArrayList<>();
 		
-		for (Assignment assignment : oldAssignments) {
+		for (Pair<String, Assignment> pair: oldAssignments) {
+			Assignment assignment = pair.getSecond();
 			Obj obj = assignment.getValue();
 
 			if (obj.getObjType() != Obj.Type.VALUE || ((Obj.Value)obj).getType() != Obj.Value.Type.CURLY_BRACED) {
@@ -171,8 +183,7 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 				AssignmentTyped assignmentTyped = (AssignmentTyped)assignment;
 				add(AssignmentTyped.assignmentTyped(assignmentTyped.getModifiers(), assignmentTyped.getType(), assignmentTyped.getName(), context.get(valueObj.getStr())));
 			} else {
-				AssignmentUntyped assignmentUntyped = (AssignmentUntyped)assignment;
-				add(AssignmentTyped.assignmentUntyped(assignmentUntyped.getName(), context.get(valueObj.getStr())));
+				add(AssignmentTyped.assignmentUntyped(assignment.getName(), context.get(valueObj.getStr())));
 			}
 		}
 		
@@ -182,8 +193,8 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 	public Map<String, Obj> makeObjMap() {
 		Map<String, Obj> objMap = new HashMap<String, Obj>();
 		
-		for (Entry<String, Assignment> entry : this.assignmentMap.entrySet()) {
-			objMap.put(entry.getKey(), entry.getValue().getValue());
+		for (Pair<String, Assignment> pair: this.assignments) {
+			objMap.put(pair.getFirst(), pair.getSecond().getValue());
 		}
 		
 		return objMap;
@@ -192,11 +203,19 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 	@Override
 	public Obj clone() {
 		AssignmentList clone = new AssignmentList();
-		for (Assignment assignment : this.assignments) {
-			if (assignment.isTyped()) {
-				AssignmentTyped assignmentTyped = (AssignmentTyped)assignment;
+		if (this.assignments.size() == 0)
+			return clone;
+		
+		if (this.assignments.get(0).getSecond().isTyped()) {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			List<Pair<String, AssignmentTyped>> typedAssignments = (List<Pair<String, AssignmentTyped>>)(List)this.assignments;
+			for (Pair<String, AssignmentTyped> pair : typedAssignments) {
+				AssignmentTyped assignmentTyped = pair.getSecond();
 				clone.add(Assignment.assignmentTyped(assignmentTyped.getModifiers(), assignmentTyped.getType(), assignmentTyped.getName(), assignmentTyped.getValue().clone()));
-			} else { 
+			}
+		} else {
+			for (Pair<String, Assignment> pair : this.assignments) {
+				Assignment assignment = pair.getSecond();
 				clone.add(Assignment.assignmentUntyped(assignment.getName(), assignment.getValue().clone()));
 			}
 		}
@@ -206,14 +225,14 @@ public class AssignmentList extends Obj implements Iterable<Assignment>, StringS
 
 	@Override
 	protected Set<String> getCurlyBracedValueStrs(Set<String> strs) {
-		for (Assignment assignment : this.assignments)
-			assignment.getValue().getCurlyBracedValueStrs(strs);
+		for (Pair<String, Assignment> assignment : this.assignments)
+			assignment.getSecond().getValue().getCurlyBracedValueStrs(strs);
 		return strs;
 	}
 
 	@Override
 	public Iterator<Assignment> iterator() {
-		return this.assignments.iterator();
+		return new AssignmentIterator(this.assignments.iterator());
 	}
 	
 	@Override

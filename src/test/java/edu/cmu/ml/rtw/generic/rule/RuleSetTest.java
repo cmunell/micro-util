@@ -57,7 +57,7 @@ public class RuleSetTest {
 		rels.add(rel2);
 		
 		// long startTime = System.currentTimeMillis();
-		for (int i = 0; i < 40000; i++) {
+		for (int i = 0; i < 500000; i++) {
 			Map<String, List<Obj>> results = rs.apply(rels);
 			for (Entry<String, List<Obj>> entry : results.entrySet()) {
 				for (Obj obj : entry.getValue()) {

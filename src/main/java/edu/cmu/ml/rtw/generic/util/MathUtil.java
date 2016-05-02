@@ -1,9 +1,12 @@
 package edu.cmu.ml.rtw.generic.util;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * MathUtil contains various mathy sorts of utility
@@ -66,6 +69,27 @@ public class MathUtil {
 		}
 		
 		return reservoir;
+	}
+	
+	public static Set<Integer> reservoirSampleSet(int n, int k, Random r) {
+		int[] sample = reservoirSample(n, k, r);
+		Set<Integer> sampleSet = new HashSet<Integer>();
+		for (int i = 0; i < sample.length; i++)
+			sampleSet.add(sample[i]);
+		return sampleSet;
+	}
+	
+	
+	public static <I> Collection<I> reservoirSample(Collection<I> collection, int k, Random r, Collection<I> outputCollection) {
+		Set<Integer> sampleSet = reservoirSampleSet(collection.size(), k, r);
+		int i = 0;
+		for (I item : collection) {
+			if (sampleSet.contains(i))
+				outputCollection.add(item);
+			i++;
+		}
+		
+		return outputCollection;
 	}
 	
 	/**
