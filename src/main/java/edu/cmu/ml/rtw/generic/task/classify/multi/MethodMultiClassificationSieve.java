@@ -35,7 +35,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	private boolean orderClassifiersWithSensitivity = false;
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure" };
+	private boolean useScoreWeights = false;
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure", "useScoreWeights" };
 	
 	private boolean initialized = false;
 	
@@ -87,6 +88,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			return Obj.stringValue(String.valueOf(this.trainStructured));
 		} else if (parameter.equals("threadStructure")) {
 			return Obj.stringValue(String.valueOf(this.threadStructure));
+		} else if (parameter.equals("useScoreWeights")) {
+			return Obj.stringValue(String.valueOf(this.useScoreWeights));
 		}
 		
 		return null;
@@ -127,6 +130,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			this.trainStructured = (parameterValue == null) ? false : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("threadStructure")) {
 			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("useScoreWeights")) {
+			this.useScoreWeights = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -180,7 +185,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
 				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
-					double weight = (indexAndWeight.getSecond() != null) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
+					double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
 					structures = structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
 					addedLinks++;
 				}

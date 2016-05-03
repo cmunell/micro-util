@@ -430,7 +430,8 @@ public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel
 			// FIXME numNonZeroFeatures += datumFeatureMap.size();
 			
 			if (!onlyX) {
-				int labelIndex = labelMap.get(mapValidLabel(datum.getLabel()));
+				L label = mapValidLabel(datum.getLabel());
+				int labelIndex = labelMap.get(label);
 				Y[i*labelCount + labelIndex] = 1f;
 			}
 			

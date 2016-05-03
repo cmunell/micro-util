@@ -109,4 +109,14 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	public Trainable<D, L> getTrainable() {
 		return null;
 	}
+
+	@Override
+	public L classify(D datum) {
+		return this.label;
+	}
+
+	@Override
+	public Pair<L, Double> classifyWithScore(D datum) {
+		return new Pair<L, Double>(this.label, 1.0);
+	}
 }

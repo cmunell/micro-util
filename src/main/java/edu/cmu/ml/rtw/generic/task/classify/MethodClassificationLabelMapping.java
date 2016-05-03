@@ -122,4 +122,16 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	public Trainable<D, L> getTrainable() {
 		return this.method.getTrainable();
 	}
+
+	@Override
+	public L classify(D datum) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Pair<L, Double> classifyWithScore(D datum) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

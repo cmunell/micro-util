@@ -52,6 +52,8 @@ public abstract class MethodClassification<D extends Datum<L>, L> extends CtxPar
 	
 	public abstract Map<D, L> classify(DataSet<D, L> data);
 	public abstract Map<D, Pair<L, Double>> classifyWithScore(DataSet<D, L> data);
+	public abstract L classify(D datum);
+	public abstract Pair<L, Double> classifyWithScore(D datum);
 	public abstract boolean init(DataSet<D, L> testData);
 	public abstract MethodClassification<D, L> clone(String referenceName);
 	public abstract MethodClassification<D, L> makeInstance(DatumContext<D, L> context);

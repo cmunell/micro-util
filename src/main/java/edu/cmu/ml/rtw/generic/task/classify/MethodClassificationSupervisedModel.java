@@ -95,7 +95,6 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 																  data.getReferenceName() + "_" + this.data.getFeatures().getReferenceName(), 
 																  data,
 																  this.data.getFeatures());
-		
 		return this.model.classify(mat);
 	}
 	
@@ -252,5 +251,17 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	@Override
 	public DataSet<D, L> getTrainData() {
 		return this.data.getData();
+	}
+
+	@Override
+	public L classify(D datum) {
+		// FIXME Implement later;
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Pair<L, Double> classifyWithScore(D datum) {
+		// FIXME Implement later;
+		throw new UnsupportedOperationException();
 	}
 }

@@ -131,4 +131,14 @@ public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> exte
 	public Trainable<D, TernaryLabel> getTrainable() {
 		return null;
 	}
+
+	@Override
+	public TernaryLabel classify(D datum) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Pair<TernaryLabel, Double> classifyWithScore(D datum) {
+		throw new UnsupportedOperationException();
+	}
 }

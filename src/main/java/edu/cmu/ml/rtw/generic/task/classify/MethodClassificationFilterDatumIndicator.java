@@ -158,4 +158,20 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	public DataSet<D, L> getTrainData() {
 		return this.method.getTrainable().getTrainData();
 	}
+
+	@Override
+	public L classify(D datum) {
+		if (this.datumIndicator.indicator(datum))
+			return this.method.classify(datum);
+		else
+			return null;
+	}
+
+	@Override
+	public Pair<L, Double> classifyWithScore(D datum) {
+		if (this.datumIndicator.indicator(datum))
+			return this.method.classifyWithScore(datum);
+		else
+			return null;
+	}
 }

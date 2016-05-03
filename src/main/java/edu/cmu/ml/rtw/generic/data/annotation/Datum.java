@@ -16,6 +16,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.structure.DatumStructureCollection;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.Feature;
+import edu.cmu.ml.rtw.generic.data.feature.FeatureClassificationMethod;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConjunction;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyParseRelation;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureConstituencyPath;
@@ -317,6 +318,7 @@ public abstract class Datum<L> {
 			addGenericFeature(new FeatureWord2Vec<D, L>());
 			addGenericFeature(new FeatureTokenSpanFnComparison<D, L>());
 			addGenericFeature(new FeaturePredicateArgumentPath<D, L>());
+			addGenericFeature(new FeatureClassificationMethod<D, L>());
 			
 			addGenericModel(new SupervisedModelCreg<D, L>());
 			addGenericModel(new SupervisedModelLabelDistribution<D, L>());
