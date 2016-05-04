@@ -19,32 +19,29 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.structure.FnStructure;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
-import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasure;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.task.classify.Trainable;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
+import edu.cmu.ml.rtw.generic.util.Triple;
 
-public class MethodMultiClassificationSieve extends MethodMultiClassification implements MultiTrainable {
+public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassification implements MultiTrainable {
 	private List<MethodClassification<?, ?>> methods;
 	private List<Structurizer<?, ?, ?>> structurizers;
-	private List<EvaluationClassificationMeasure<?, ?>> permutationMeasures;
 	private Fn<?, ?> structureTransformFn;
 	private boolean trainOnInit = false;
 	private int trainIters = 10;
-	private boolean orderClassifiersWithSensitivity = false;
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
-	private boolean useScoreWeights = false;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure", "useScoreWeights" };
+	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure" };
 	
 	private boolean initialized = false;
 	
-	public MethodMultiClassificationSieve() {
+	public MethodMultiClassificationPrecedenceScore() {
 		
 	}
 	
-	public MethodMultiClassificationSieve(Context context) {
+	public MethodMultiClassificationPrecedenceScore(Context context) {
 		this.context = context;
 	}
 	
@@ -69,27 +66,16 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			for (Structurizer<?, ?, ?> structurizer : this.structurizers)
 				array.add(Obj.curlyBracedValue(structurizer.getReferenceName()));
 			return array;
-		} else if (parameter.equals("orderingMeasure")) {
-			if (this.permutationMeasures == null)
-				return null;
-			Obj.Array array = Obj.array();
-			for (EvaluationClassificationMeasure<?, ?> measure : this.permutationMeasures)
-				array.add(Obj.curlyBracedValue(measure.getReferenceName()));
-			return array;
 		} else if (parameter.equals("structureTransformFn")) {
 			return (this.structureTransformFn == null) ? null : this.structureTransformFn.toParse();
 		} else if (parameter.equals("trainOnInit")) {
 			return Obj.stringValue(String.valueOf(this.trainOnInit));
 		} else if (parameter.equals("trainIters")) {
 			return Obj.stringValue(String.valueOf(this.trainIters));
-		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
-			return Obj.stringValue(String.valueOf(this.orderClassifiersWithSensitivity));
 		} else if (parameter.equals("trainStructured")) {
 			return Obj.stringValue(String.valueOf(this.trainStructured));
 		} else if (parameter.equals("threadStructure")) {
 			return Obj.stringValue(String.valueOf(this.threadStructure));
-		} else if (parameter.equals("useScoreWeights")) {
-			return Obj.stringValue(String.valueOf(this.useScoreWeights));
 		}
 		
 		return null;
@@ -111,27 +97,16 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 				for (int i = 0; i < array.size(); i++)
 					this.structurizers.add((Structurizer<?, ?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
-		} else if (parameter.equals("permutationMeasures")) {
-			if (parameterValue != null) {
-				this.permutationMeasures = new ArrayList<EvaluationClassificationMeasure<?, ?>>();
-				Obj.Array array = (Obj.Array)parameterValue;
-				for (int i = 0; i < array.size(); i++)
-					this.permutationMeasures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
-			}
 		} else if (parameter.equals("structureTransformFn")) {
 			this.structureTransformFn = (parameterValue == null) ? null : this.context.getMatchOrConstructStructureFn(parameterValue);
 		} else if (parameter.equals("trainOnInit")) {
 			this.trainOnInit = (parameterValue == null) ? null : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("trainIters")) {
 			this.trainIters = (parameterValue == null) ? this.trainIters : Integer.valueOf(this.context.getMatchValue(parameterValue));
-		} else if (parameter.equals("orderClassifiersWithSensitivity")) {
-			this.orderClassifiersWithSensitivity = (parameterValue == null) ? this.orderClassifiersWithSensitivity : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("trainStructured")) {
 			this.trainStructured = (parameterValue == null) ? false : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("threadStructure")) {
 			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
-		} else if (parameter.equals("useScoreWeights")) {
-			this.useScoreWeights = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -169,59 +144,80 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		if (this.structurizers.size() > 0)
 			structures = this.structurizers.get(0).makeStructures();
 		
-		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering(recomputeOrderingMeasures);
-		
-		for (int o = 0; o < classifierOrdering.size(); o++) {
-			Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
-			int i = indexAndWeight.getFirst();
-			Structurizer structurizer = this.structurizers.get(i);
+		List<Pair<Integer, Triple<Datum, Object, Double>>> orderedPredictions = new ArrayList<>();
+		for (int i = 0; i < this.methods.size(); i++) {
 			MethodClassification<?, ?> method = this.methods.get(i);
-			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
-			int addedLinks = 0;
-			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+			this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) classifying with method " + method.getReferenceName());
 			
 			for (int j = 0; j < data.size(); j++) {
 				if (!method.matchesData(data.get(j)))
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
-				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
-					double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
-					structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
-					addedLinks++;
-				}
+				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet())
+					orderedPredictions.add(
+							new Pair<>(i,
+							new Triple<Datum, Object, Double>((Datum)entry.getKey(), entry.getValue().getFirst(), entry.getValue().getSecond())));
 			}
+		}
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) sorting predictions");
+		
+		Collections.sort(orderedPredictions, new Comparator<Pair<Integer, Triple<Datum, Object, Double>>>() {
+			@Override
+			public int compare(Pair<Integer, Triple<Datum, Object, Double>> o1, Pair<Integer, Triple<Datum, Object, Double>> o2) {
+				return Double.compare(o2.getSecond().getThird(), o1.getSecond().getThird());
+			}
+		});
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) adding predictions to structures");
+		
+		Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+		double transformCount = 0;
+		for (Pair<Integer, Triple<Datum, Object, Double>> pair : orderedPredictions) {
+			int methodIndex = pair.getFirst();
+			Triple<Datum, Object, Double> prediction = pair.getSecond();
+			Datum datum = prediction.getFirst();
+			Object label = prediction.getSecond();
+			Double score = prediction.getThird();
+			Structurizer structurizer = this.structurizers.get(methodIndex);
 			
-			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
-			
-			if (this.threadStructure) {
-				ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
-					@Override
-					public Boolean apply(Entry entry) {
+			int changePartitionSize = changes.size();
+			boolean changed = structurizer.addToStructures(datum, label, score, structures, changes);
+
+			// Change made in same part, so run transformations
+			if (changed && changes.size() == changePartitionSize) {
+				if (this.threadStructure) {
+					final Map<String, Collection<WeightedStructure>> finalChanges = changes;
+					ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
+						@Override
+						public Boolean apply(Entry entry) {
+							List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), finalChanges.get(entry.getKey()));
+							WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+							for (int j = 1; j < transformedStructures.size(); j++)
+								firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+							entry.setValue(firstTransformed);
+							return true;
+						}
+						
+					});
+					threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
+				} else {
+					for (Entry entry : structures.entrySet()) {
 						List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
 						WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 						for (int j = 1; j < transformedStructures.size(); j++)
 							firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 						entry.setValue(firstTransformed);
-						return true;
 					}
-					
-				});
-				threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
-			} else {
-				for (Entry entry : structures.entrySet()) {
-					List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
-					WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-					for (int j = 1; j < transformedStructures.size(); j++)
-						firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-					entry.setValue(firstTransformed);
 				}
+				
+				transformCount++;
+				changes = new HashMap<String, Collection<WeightedStructure>>();
 			}
-			
-			
-			this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
 		}
 		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished structuring data (ran " + transformCount + " transforms (" + (orderedPredictions.size()/transformCount) + " predictions per transform))");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) pulling labeled data out of structures...");
 
 		List<Map<Datum<?>, Pair<?, Double>>> classifications = new ArrayList<Map<Datum<?>, Pair<?, Double>>>();
 		for (int i = 0; i < data.size(); i++) {
@@ -257,44 +253,9 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			classifications.add(labeledData);
 		}
 		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve finished classifying data");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished classifying data");
 		
 		return classifications;
-	}
-
-	private List<Pair<Integer, Double>> getClassifierOrdering(boolean recomputeMeasures) {
-		List<Pair<Integer, Double>> ordering = new ArrayList<>();
-		
-		if (this.permutationMeasures == null) {
-			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by default: ");
-			for (int i = 0; i < this.methods.size(); i++) {
-				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName());
-				ordering.add(new Pair<Integer, Double>(i, null));
-			}
-		} else if (!this.orderClassifiersWithSensitivity) {
-			List<Pair<Integer, Double>> measures = new ArrayList<>();
-			for (int i = 0; i < this.methods.size(); i++)
-				measures.add(new Pair<>(i, this.permutationMeasures.get(i).compute(recomputeMeasures)));
-			Collections.sort(measures, new Comparator<Pair<Integer, Double>>() {
-				@Override
-				public int compare(Pair<Integer, Double> o1,
-						Pair<Integer, Double> o2) {
-					return o2.getSecond().compareTo(o1.getSecond());
-				}
-			});
-			
-			this.context.getDataTools().getOutputWriter().debugWriteln("Ordering methods by measures: ");
-			for (int i = 0; i < this.permutationMeasures.size(); i++) {
-				int orderIndex = measures.get(i).getFirst();
-				
-				this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(orderIndex).getReferenceName() + " " + measures.get(i).getSecond());
-				ordering.add(new Pair<Integer, Double>(orderIndex, measures.get(i).getSecond()));
-			}
-		} else { // Order with sensitivity
-			throw new UnsupportedOperationException();
-		}
-		
-		return ordering;
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -317,7 +278,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 
 	@Override
 	public MethodMultiClassification clone() {
-		MethodMultiClassificationSieve clone = new MethodMultiClassificationSieve(this.context);
+		MethodMultiClassificationPrecedenceScore clone = new MethodMultiClassificationPrecedenceScore(this.context);
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
 		
@@ -332,7 +293,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 
 	@Override
 	public MethodMultiClassification makeInstance(Context context) {
-		return new MethodMultiClassificationSieve(context);
+		return new MethodMultiClassificationPrecedenceScore(context);
 	}
 
 	@Override
@@ -347,7 +308,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 
 	@Override
 	public String getGenericName() {
-		return "Sieve";
+		return "PrecedenceScore";
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -358,7 +319,6 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			for (Trainable<?, ?> trainable : trainables)
 				if (!trainable.train())
 					return false;
-			getClassifierOrdering(true);
 		} else {
 			List<Trainable<?, ?>> trainables = new ArrayList<>(getTrainableMethods().keySet()); 
 			List<DataSet<?, ?>> data = new ArrayList<>();
@@ -424,7 +384,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		return indices;
 	}
 	
-	// Map from trainable  to list of methods that use that trainable
+	// Map from trainable to list of methods that use that trainable
 	private Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> getTrainableMethods() {
 		Map<Trainable<?, ?>, List<MethodClassification<?, ?>>> trainableMethods = new HashMap<>();
 		

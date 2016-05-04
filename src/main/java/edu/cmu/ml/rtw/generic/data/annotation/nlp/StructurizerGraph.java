@@ -70,17 +70,22 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	}
 
 	@Override
-	public Map<String, WeightedStructureGraph> addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures, Map<String, Collection<WeightedStructure>> changes) {
+	public boolean addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures, Map<String, Collection<WeightedStructure>> changes) {
 		Pair<String, WeightedStructureGraph> pair = getOrConstructStructure(datum, structures);
 		WeightedStructureGraph graph = pair.getSecond();
 		WeightedStructureRelation rel = makeDatumStructure(datum, label);
 		if (!changes.containsKey(pair.getFirst()))
 			changes.put(pair.getFirst(), new HashSet<WeightedStructure>());
 		
+		boolean changed = false;
 		if (rel != null) {
-			graph.add(rel, weight, changes.get(pair.getFirst()));
+			Collection<WeightedStructure> c = changes.get(pair.getFirst());
+			int changesStart = c.size();
+			graph.add(rel, weight, c);
+			changed = c.size() != changesStart;	
 		}
-		return structures;
+		
+		return changed;
 	}
 
 	@Override

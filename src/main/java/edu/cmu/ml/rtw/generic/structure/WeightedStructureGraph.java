@@ -459,6 +459,72 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return nodes;
 	}
 	
+	// FIXME This assumes filter given for edges only contains edges and not nodes
+	private List<WeightedStructureSequence> getEdgesAsPaths(Set<String> ignoreTypes, Collection<WeightedStructureRelation> edges) {
+		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
+		
+		for (WeightedStructureRelation edge : edges) {
+			if (!hasEdge((WeightedStructureRelationBinary)edge))
+				continue;
+			
+			if (ignoreTypes.contains(edge.getType()))
+				continue;
+			
+			
+			WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
+			seq.add(edge, getWeight(edge));
+			paths.add(seq);
+		}
+		
+		return paths;
+	}
+	
+	// FIXME This assumes filter given for edges only contains edges and not nodes
+	private List<WeightedStructureSequence> getLengthTwoPathsContainingEdges(Set<String> ignoreTypes, Collection<WeightedStructureRelation> edges) {
+		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
+		
+		for (WeightedStructureRelation rel : edges) {
+			WeightedStructureRelationBinary edge = (WeightedStructureRelationBinary)rel;
+			if (!hasEdge(edge))
+				continue;
+			
+			if (ignoreTypes.contains(edge.getType()))
+				continue;
+			
+			// Get all paths starting with this edge
+			String nodeId = edge.getSecond().getId();
+			Map<String, Map<WeightedStructureRelationBinary, Double>> nextEdges = this.edges.get(nodeId);
+			for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : nextEdges.entrySet()) {
+				for (Entry<WeightedStructureRelationBinary, Double> entry2 : entry.getValue().entrySet()) {
+					if (ignoreTypes.contains(entry2.getKey().getType()))
+						continue;
+					WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
+					seq.add(edge, getWeight(edge));
+					seq.add(entry2.getKey(), entry2.getValue());
+					paths.add(seq);
+				}
+			}
+			
+			// Get all paths ending with this edge
+			for (Entry<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> entry : this.edges.entrySet()) {
+				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry2 : entry.getValue().entrySet()) {
+					if (!entry2.getKey().equals(edge.getFirst().getId()))
+						continue;
+					for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
+						if (ignoreTypes.contains(entry3.getKey().getType()))
+							continue;
+						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
+						seq.add(entry3.getKey(), entry3.getValue());
+						seq.add(edge, getWeight(edge));
+						paths.add(seq);
+					}
+				}
+			}
+		}
+		
+		return paths;
+	}
+	
 	private List<WeightedStructureSequence> getEdgePaths(String startNodeId, int length, List<WeightedStructureSequence> paths, Set<String> ignoreTypes, Collection<WeightedStructureRelation> filter) {
 		List<WeightedStructureSequence> currentPaths = new ArrayList<WeightedStructureSequence>();
 		
@@ -532,6 +598,12 @@ public class WeightedStructureGraph extends WeightedStructure {
 		List<WeightedStructureSequence> paths = new ArrayList<WeightedStructureSequence>();
 		if (length <= 0)
 			return paths;
+		
+		if (length == 1 && filter != null) {
+			return getEdgesAsPaths(ignoreTypes, filter);
+		} else if (length == 2 && filter != null && filter.size() < 5) {
+			return getLengthTwoPathsContainingEdges(ignoreTypes, filter);
+		}
 		
 		ThreadMapper<String, Boolean> mapper = new ThreadMapper<String, Boolean>(new ThreadMapper.Fn<String, Boolean>() {
 			@Override

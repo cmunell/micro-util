@@ -178,7 +178,7 @@ public abstract class Datum<L> {
 		public static abstract class Structurizer<D extends Datum<L>, L, S extends WeightedStructure> extends CtxParsableFunction {
 			protected DatumContext<D, L> context;
 			
-			public abstract Map<String, S> addToStructures(D datum, L label, double weight, Map<String, S> structures, Map<String, Collection<WeightedStructure>> changes);
+			public abstract boolean addToStructures(D datum, L label, double weight, Map<String, S> structures, Map<String, Collection<WeightedStructure>> changes);
 			public abstract Map<String, S> makeStructures();
 			public abstract Map<L, Double> getLabels(D datum, Map<String, S> structures);
 			public abstract Structurizer<D, L, S> makeInstance(DatumContext<D, L> context);
