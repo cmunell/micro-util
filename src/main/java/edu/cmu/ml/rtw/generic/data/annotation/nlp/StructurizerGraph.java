@@ -89,6 +89,11 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	}
 
 	@Override
+	public String getStructureId(D datum, L label, Map<String, WeightedStructureGraph> structures) {
+		return getOrConstructStructure(datum, structures).getFirst();
+	}
+	
+	@Override
 	public Map<String, WeightedStructureGraph> makeStructures() {
 		return new HashMap<String, WeightedStructureGraph>();
 	}

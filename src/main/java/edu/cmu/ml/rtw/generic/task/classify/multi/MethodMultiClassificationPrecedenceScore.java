@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
@@ -140,83 +139,58 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data, boolean recomputeOrderingMeasures) {
-		Map<String, ?> structures = null;
-		if (this.structurizers.size() > 0)
-			structures = this.structurizers.get(0).makeStructures();
+		Map<String, WeightedStructure> structures = (Map<String, WeightedStructure>)this.structurizers.get(0).makeStructures();
 		
-		List<Pair<Integer, Triple<Datum, Object, Double>>> orderedPredictions = new ArrayList<>();
+		Map<String, List<Pair<Integer, Triple<Datum, Object, Double>>>> predictions = new HashMap<>();
 		for (int i = 0; i < this.methods.size(); i++) {
 			MethodClassification<?, ?> method = this.methods.get(i);
+			Structurizer structurizer = this.structurizers.get(i);
+			
 			this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) classifying with method " + method.getReferenceName());
 			
 			for (int j = 0; j < data.size(); j++) {
 				if (!method.matchesData(data.get(j)))
 					continue;
 				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
-				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet())
-					orderedPredictions.add(
+				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
+					Datum datum = (Datum)entry.getKey();
+					Object label = entry.getValue().getFirst();
+					Double weight = entry.getValue().getSecond();
+					String structureId = structurizer.getStructureId(datum, label, structures);
+					if (!predictions.containsKey(structureId))
+						predictions.put(structureId, new ArrayList<>());
+					
+					predictions.get(structureId).add(
 							new Pair<>(i,
-							new Triple<Datum, Object, Double>((Datum)entry.getKey(), entry.getValue().getFirst(), entry.getValue().getSecond())));
+							new Triple<Datum, Object, Double>(
+									datum, 
+									label,
+									weight)));
+				}
 			}
 		}
 		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) sorting predictions");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) structuring data");	
 		
-		Collections.sort(orderedPredictions, new Comparator<Pair<Integer, Triple<Datum, Object, Double>>>() {
-			@Override
-			public int compare(Pair<Integer, Triple<Datum, Object, Double>> o1, Pair<Integer, Triple<Datum, Object, Double>> o2) {
-				return Double.compare(o2.getSecond().getThird(), o1.getSecond().getThird());
-			}
-		});
-		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) adding predictions to structures");
-		
-		Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
-		double transformCount = 0;
-		for (Pair<Integer, Triple<Datum, Object, Double>> pair : orderedPredictions) {
-			int methodIndex = pair.getFirst();
-			Triple<Datum, Object, Double> prediction = pair.getSecond();
-			Datum datum = prediction.getFirst();
-			Object label = prediction.getSecond();
-			Double score = prediction.getThird();
-			Structurizer structurizer = this.structurizers.get(methodIndex);
-			
-			int changePartitionSize = changes.size();
-			boolean changed = structurizer.addToStructures(datum, label, score, structures, changes);
-
-			// Change made in same part, so run transformations
-			if (changed && changes.size() == changePartitionSize) {
-				if (this.threadStructure) {
-					final Map<String, Collection<WeightedStructure>> finalChanges = changes;
-					ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
-						@Override
-						public Boolean apply(Entry entry) {
-							List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), finalChanges.get(entry.getKey()));
-							WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-							for (int j = 1; j < transformedStructures.size(); j++)
-								firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-							entry.setValue(firstTransformed);
-							return true;
-						}
-						
-					});
-					threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
-				} else {
-					for (Entry entry : structures.entrySet()) {
-						List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
-						WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-						for (int j = 1; j < transformedStructures.size(); j++)
-							firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-						entry.setValue(firstTransformed);
-					}
+		if (this.threadStructure) {
+			ThreadMapper<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean> threads = 
+					new ThreadMapper<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean>(
+						new ThreadMapper.Fn<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean>() {
+				@Override
+				public Boolean apply(Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>> entry) {
+					return structurePredictions(entry.getValue(), structures);
 				}
 				
-				transformCount++;
-				changes = new HashMap<String, Collection<WeightedStructure>>();
+			});
+			
+			threads.run(predictions.entrySet(), this.context.getMaxThreads());
+		} else {
+			for (Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>> entry : predictions.entrySet()) {
+				structurePredictions(entry.getValue(), structures);
 			}
 		}
 		
-		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished structuring data (ran " + transformCount + " transforms (" + (orderedPredictions.size()/transformCount) + " predictions per transform))");
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished structuring data");
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) pulling labeled data out of structures...");
 
 		List<Map<Datum<?>, Pair<?, Double>>> classifications = new ArrayList<Map<Datum<?>, Pair<?, Double>>>();
@@ -250,12 +224,51 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 				if (maxLabel != null)
 					labeledData.put(d, new Pair(maxLabel, maxWeight));
 			}
+			
 			classifications.add(labeledData);
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished classifying data");
 		
 		return classifications;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private boolean structurePredictions(List<Pair<Integer, Triple<Datum, Object, Double>>> predictions, Map<String, WeightedStructure> structures) {
+		Collections.sort(predictions, new Comparator<Pair<Integer, Triple<Datum, Object, Double>>>() {
+			@Override
+			public int compare(Pair<Integer, Triple<Datum, Object, Double>> o1, Pair<Integer, Triple<Datum, Object, Double>> o2) {
+				return Double.compare(o2.getSecond().getThird(), o1.getSecond().getThird());
+			}
+		});
+		
+		for (Pair<Integer, Triple<Datum, Object, Double>> pair : predictions) {
+			int methodIndex = pair.getFirst();
+			Triple<Datum, Object, Double> prediction = pair.getSecond();
+			Datum datum = prediction.getFirst();
+			Object label = prediction.getSecond();
+			Double score = prediction.getThird();
+			Structurizer structurizer = this.structurizers.get(methodIndex);
+			String structureId = structurizer.getStructureId(datum, label, structures);
+			
+			// FIXME This is stupid... but an artifact of the way the other sieve method is designed
+			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+			synchronized (structures) {
+				structurizer.addToStructures(datum, label, score, structures, changes);
+			}
+			
+			List transformedStructures = ((FnStructure)structureTransformFn).listCompute(structures.get(structureId), changes.get(structureId));
+			WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+			for (int j = 1; j < transformedStructures.size(); j++)
+				firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+			
+			
+			synchronized (structures) {
+				structures.put(structureId, firstTransformed);
+			}
+		}
+		
+		return true;
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
