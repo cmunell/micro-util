@@ -27,11 +27,15 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 	protected BidirectionalLookupTable<String, Integer> vocabulary;
 	
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
+	
+	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
+	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
+	
 	protected Fn<TokenSpan, String> fn;
 	protected Mode mode;
 	
 
-	protected String[] parameterNames = {"tokenExtractor", "fn", "mode"};
+	protected String[] parameterNames = {"tokenExtractor", "sourceTokenExtractor", "targetTokenExtractor", "fn", "mode"};
 	
 	public FeatureWord2Vec() {
 		
@@ -129,11 +133,43 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 	@Override
 	public Map<Integer, Double> computeVector(D datum, int offset, Map<Integer, Double> vector) {
 		Word2Vec w2v = this.context.getDataTools().getWord2Vec();
-		TokenSpan[] spans = this.tokenExtractor.extract(datum);
+		
 		if (this.mode == Mode.SIMILARITY || this.mode == Mode.DIFFERENCE) {
 			List<Map<String, Double>> spanStrVectors = new ArrayList<>();
-			for (TokenSpan span : spans) {
-				spanStrVectors.add(applyFnToSpan(span));
+			
+			if (this.tokenExtractor != null) {
+				TokenSpan[] spans = this.tokenExtractor.extract(datum);
+				for (TokenSpan span : spans) {
+					spanStrVectors.add(applyFnToSpan(span));
+				}
+			} else {
+				TokenSpan[] sourceSpans = this.sourceTokenExtractor.extract(datum);
+				TokenSpan[] targetSpans = this.targetTokenExtractor.extract(datum);
+				
+				Map<String, Double> sourceSpanStrs = new HashMap<String, Double>();
+				for (TokenSpan span : sourceSpans) {
+					Map<String, Double> thisSpanStrs = applyFnToSpan(span);
+					for (Entry<String, Double> entry : thisSpanStrs.entrySet()) {
+						if (!sourceSpanStrs.containsKey(entry.getKey()))
+							sourceSpanStrs.put(entry.getKey(), 0.0);
+						sourceSpanStrs.put(entry.getKey(), sourceSpanStrs.get(entry.getKey()) + entry.getValue());
+					}
+				}
+				sourceSpanStrs = MathUtil.normalize(sourceSpanStrs, sourceSpans.length);
+				
+				Map<String, Double> targetSpanStrs = new HashMap<String, Double>();
+				for (TokenSpan span : targetSpans) {
+					Map<String, Double> thisSpanStrs = applyFnToSpan(span);
+					for (Entry<String, Double> entry : thisSpanStrs.entrySet()) {
+						if (!targetSpanStrs.containsKey(entry.getKey()))
+							targetSpanStrs.put(entry.getKey(), 0.0);
+						targetSpanStrs.put(entry.getKey(), targetSpanStrs.get(entry.getKey()) + entry.getValue());
+					}
+				}
+				targetSpanStrs = MathUtil.normalize(targetSpanStrs, targetSpans.length);
+				
+				spanStrVectors.add(sourceSpanStrs);
+				spanStrVectors.add(targetSpanStrs);
 			}
 			
 			if (this.mode == Mode.SIMILARITY)
@@ -144,6 +180,7 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 					vector.put(i + offset, diff[i]);
 			}
 		} else if (this.mode == Mode.VECTOR) {
+			TokenSpan[] spans = this.tokenExtractor.extract(datum);
 			Map<String, Double> spanStrs = new HashMap<String, Double>();
 			for (TokenSpan span : spans) {
 				Map<String, Double> thisSpanStrs = applyFnToSpan(span);
@@ -200,7 +237,11 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 		if (parameter.equals("fn")) {
 			return this.fn.toParse();
 		} else if (parameter.equals("tokenExtractor"))
-			return Obj.stringValue((this.tokenExtractor == null) ? "" : this.tokenExtractor.toString());
+			return (this.tokenExtractor == null) ? null : Obj.stringValue(this.tokenExtractor.toString());
+		else if (parameter.equals("sourceTokenExtractor"))
+			return this.sourceTokenExtractor == null ? null : Obj.stringValue(this.sourceTokenExtractor.toString());
+		else if (parameter.equals("targetTokenExtractor"))
+			return this.targetTokenExtractor == null ? null : Obj.stringValue(this.targetTokenExtractor.toString());
 		else if (parameter.equals("mode"))
 			return Obj.stringValue(this.mode.toString());
 		return null;
@@ -211,7 +252,11 @@ public class FeatureWord2Vec<D extends Datum<L>, L> extends Feature<D, L> {
 		if (parameter.equals("fn"))
 			this.fn = this.context.getMatchOrConstructTokenSpanStrFn(parameterValue);
 		else if (parameter.equals("tokenExtractor"))
-			this.tokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+			this.tokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("sourceTokenExtractor"))
+			this.sourceTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("targetTokenExtractor"))
+			this.targetTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("mode"))
 			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		else

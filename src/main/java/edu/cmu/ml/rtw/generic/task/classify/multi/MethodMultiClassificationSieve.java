@@ -69,7 +69,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			for (Structurizer<?, ?, ?> structurizer : this.structurizers)
 				array.add(Obj.curlyBracedValue(structurizer.getReferenceName()));
 			return array;
-		} else if (parameter.equals("orderingMeasure")) {
+		} else if (parameter.equals("permutationMeasures")) {
 			if (this.permutationMeasures == null)
 				return null;
 			Obj.Array array = Obj.array();

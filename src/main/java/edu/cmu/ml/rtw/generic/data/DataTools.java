@@ -44,6 +44,7 @@ import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSieve
 import edu.cmu.ml.rtw.generic.task.classify.multi.TaskMultiClassification;
 import edu.cmu.ml.rtw.generic.util.NamedIterable;
 import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Properties;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 import edu.cmu.ml.rtw.generic.util.Timer;
@@ -210,6 +211,8 @@ public class DataTools {
 	protected Timer timer;
 	protected WordNet wordNet;
 	protected Word2Vec word2Vec;
+	
+	protected int incrementId = 0;
 	
 	public DataTools() {
 		this(new OutputWriter());
@@ -574,6 +577,19 @@ public class DataTools {
 				return String.valueOf("true");
 			}
 		});
+	}
+	
+	public synchronized int getIncrementId() {
+		this.incrementId += 1;
+		return this.incrementId;
+	}
+	
+	// Inclusive start, Non-inclusive end
+	public synchronized Pair<Integer, Integer> getIncrementIdRange(int range) {
+		int start = this.incrementId + 1;
+		int end = start + range;
+		this.incrementId = end - 1;
+		return new Pair<Integer, Integer>(start, end);
 	}
 	
 	public StoredItemSetManager getStoredItemSetManager() {

@@ -18,9 +18,11 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.structure.FnStructure;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasure;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.task.classify.Trainable;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Singleton;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
@@ -32,7 +34,8 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 	private int trainIters = 10;
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
-	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure" };
+	private List<EvaluationClassificationMeasure<?, ?>> measures;
+	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure", "measures" };
 	
 	private boolean initialized = false;
 	
@@ -75,6 +78,13 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 			return Obj.stringValue(String.valueOf(this.trainStructured));
 		} else if (parameter.equals("threadStructure")) {
 			return Obj.stringValue(String.valueOf(this.threadStructure));
+		} else if (parameter.equals("measures")) {
+			if (this.measures == null)
+				return null;
+			Obj.Array array = Obj.array();
+			for (EvaluationClassificationMeasure<?, ?> measure : this.measures)
+				array.add(Obj.curlyBracedValue(measure.getReferenceName()));
+			return array;
 		}
 		
 		return null;
@@ -106,6 +116,13 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 			this.trainStructured = (parameterValue == null) ? false : Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("threadStructure")) {
 			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("measures")) {
+			if (parameterValue != null) {
+				this.measures = new ArrayList<EvaluationClassificationMeasure<?, ?>>();
+				Obj.Array array = (Obj.Array)parameterValue;
+				for (int i = 0; i < array.size(); i++)
+					this.measures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
+			}
 		} else {
 			return false;
 		}
@@ -173,14 +190,20 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) structuring data");	
 		
 		if (this.threadStructure) {
+			Singleton<Integer> sCount = new Singleton<>(0);
 			ThreadMapper<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean> threads = 
 					new ThreadMapper<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean>(
 						new ThreadMapper.Fn<Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>>, Boolean>() {
 				@Override
 				public Boolean apply(Entry<String, List<Pair<Integer, Triple<Datum, Object, Double>>>> entry) {
-					return structurePredictions(entry.getValue(), structures);
-				}
-				
+					context.getDataTools().getOutputWriter().debugWriteln("Structuring data for part " + entry.getKey());	
+					boolean result = structurePredictions(entry.getValue(), structures);
+					synchronized (sCount) {
+						sCount.set(sCount.get() + 1);
+					}
+					context.getDataTools().getOutputWriter().debugWriteln("Finished structuring data for part " + entry.getKey() + " (" + sCount.get() + ")");	
+					return result;
+				}	
 			});
 			
 			threads.run(predictions.entrySet(), this.context.getMaxThreads());
@@ -348,6 +371,11 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 						return false;
 				}
 			}
+		}
+		
+		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) recomputing performance measures ");
+		for (int i = 0; i < this.methods.size(); i++) {
+			this.context.getDataTools().getOutputWriter().debugWriteln(this.methods.get(i).getReferenceName() + ": " + this.measures.get(i).compute(true));	
 		}
 		
 		return true;

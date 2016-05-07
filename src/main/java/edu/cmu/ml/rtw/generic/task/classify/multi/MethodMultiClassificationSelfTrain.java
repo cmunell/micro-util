@@ -30,11 +30,15 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 	private boolean incrementByLabel = true;
 	private int incrementSize = 300;
 	private List<EvaluationMultiClassificationMeasure> evaluations;
-	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold", "incremental", "incrementSize", "incrementByLabel" };
+	private boolean consistency = false;
+	private String[] parameterNames = { "method", "unlabeledData", "trainIters", "trainOnInit", "evaluations", "weightData", "dataScoreThreshold", "incremental", "incrementSize", "incrementByLabel", "consistency" };
 	
 	private List<DataSet<?, ?>> trainData;
 	private List<DataSet<?, ?>> initData;
 	private List<DataSet<?, ?>> iterUnlabeledData;
+	
+	// For consistency
+	private Map<Tools<?, ?>, DataSet<?, ?>> prevIterUnlabeledData;
 	
 	public MethodMultiClassificationSelfTrain() {
 		
@@ -81,7 +85,8 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			return Obj.stringValue(String.valueOf(this.incrementSize));
 		} else if (parameter.equals("incrementByLabel")) {
 			return Obj.stringValue(String.valueOf(this.incrementByLabel));
-		}
+		} else if (parameter.equals("consistency"))
+			return Obj.stringValue(String.valueOf(this.consistency));
 		
 		
 		return null;
@@ -119,6 +124,8 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 			this.incrementSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("incrementByLabel")) {
 			this.incrementByLabel = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("consistency")) {
+			this.consistency = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -270,7 +277,10 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 				Datum d = e.getFirst();
 				double score = e.getThird();
 				
-				if (j < this.incrementSize && (this.dataScoreThreshold < 0 || score >= this.dataScoreThreshold)) {
+				if ((this.incrementSize <= 0 ||  j < this.incrementSize) && (this.dataScoreThreshold < 0 || score >= this.dataScoreThreshold)) {
+					if (this.consistency && this.prevIterUnlabeledData != null 
+							&& !this.prevIterUnlabeledData.get(curUnlabeledData.getDatumTools()).getDatumById(d.getId()).getLabel().equals(label))
+						continue;
 					d.setLabel(label); // FIXME This should clone the datum
 					if (this.weightData)
 						d.setLabelWeight(label, score);
@@ -280,6 +290,8 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 					lastScore = score;
 					dataAdded++;
 				} else {
+					if (this.consistency)
+						d.setLabel(label);
 					nextUnlabeledData.add(d);
 				}
 			
@@ -292,6 +304,9 @@ public class MethodMultiClassificationSelfTrain extends MethodMultiClassificatio
 		
 		this.iterUnlabeledData = new ArrayList<>();
 		this.iterUnlabeledData.addAll(nextIterUnlabeledData.values());
+		
+		if (this.consistency)
+			this.prevIterUnlabeledData = nextIterUnlabeledData;
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Self training added " + dataAdded + " self-labeled data (lowest score: " + lastScore + ")");
 		
