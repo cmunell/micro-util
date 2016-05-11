@@ -69,6 +69,6 @@ public class SerializerJSONBSON<E extends StoredJSONSerializable> extends Serial
 	@Override
 	public StoredJSONSerializable deserializeFromString(String str,
 			StoreReference storeReference) {
-		return deserialize(Document.parse(str));
+		return deserialize(Document.parse(str), storeReference);
 	}
 }
