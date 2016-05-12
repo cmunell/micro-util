@@ -22,11 +22,13 @@ public class FeatureTokenSpanFnComparison<D extends Datum<L>, L> extends Feature
 	}
 	
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
+	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
+	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
 	protected Fn<TokenSpan, String> fn;
 	protected Mode mode;
 	
 
-	protected String[] parameterNames = {"tokenExtractor", "fn", "mode"};
+	protected String[] parameterNames = {"tokenExtractor", "sourceTokenExtractor", "targetTokenExtractor", "fn", "mode"};
 	
 	public FeatureTokenSpanFnComparison() {
 		
@@ -84,26 +86,62 @@ public class FeatureTokenSpanFnComparison<D extends Datum<L>, L> extends Feature
 	
 	@Override
 	public Map<Integer, Double> computeVector(D datum, int offset, Map<Integer, Double> vector) {
-		TokenSpan[] spans = this.tokenExtractor.extract(datum);
-
-		List<Map<String, Double>> spanStrVectors = new ArrayList<>();
-		for (TokenSpan span : spans) {
-			spanStrVectors.add(applyFnToSpan(span));
-		}
-		
-		double count = 0.0;
-		double similarity = 0.0;
-		for (int i = 0; i < spanStrVectors.size(); i++) {
-			for (int j = 0; j < spanStrVectors.size(); j++) {
-				if (i >= j)
-					continue;
-				similarity += compare(spanStrVectors.get(i), spanStrVectors.get(j));
-				count++;
+		if (this.tokenExtractor != null) {
+			TokenSpan[] spans = this.tokenExtractor.extract(datum);
+	
+			List<Map<String, Double>> spanStrVectors = new ArrayList<>();
+			for (TokenSpan span : spans) {
+				spanStrVectors.add(applyFnToSpan(span));
 			}
+			
+			double count = 0.0;
+			double similarity = 0.0;
+			for (int i = 0; i < spanStrVectors.size(); i++) {
+				for (int j = 0; j < spanStrVectors.size(); j++) {
+					if (i >= j)
+						continue;
+					similarity += compare(spanStrVectors.get(i), spanStrVectors.get(j));
+					count++;
+				}
+			}
+			
+			similarity /= count;
+			vector.put(offset, similarity);
+		} else {
+			TokenSpan[] sourceSpans = this.sourceTokenExtractor.extract(datum);
+			TokenSpan[] targetSpans = this.sourceTokenExtractor.extract(datum);
+			
+			List<Map<String, Double>> sourceSpanStrVectors = new ArrayList<>();
+			for (TokenSpan span : sourceSpans) {
+				sourceSpanStrVectors.add(applyFnToSpan(span));
+			}
+			
+			List<Map<String, Double>> targetSpanStrVectors = new ArrayList<>();
+			for (TokenSpan span : targetSpans) {
+				targetSpanStrVectors.add(applyFnToSpan(span));
+			}
+			
+			double similarity = 0.0;
+			for (Map<String, Double> sourceSpanVector : sourceSpanStrVectors) {
+				double maxSim = Double.NEGATIVE_INFINITY;
+				for (Map<String, Double> targetSpanVector : targetSpanStrVectors) {
+					maxSim = Math.max(maxSim, compare(sourceSpanVector, targetSpanVector));	
+				}
+				similarity += maxSim;
+			}
+			
+			for (Map<String, Double> targetSpanVector : targetSpanStrVectors) {
+				double maxSim = Double.NEGATIVE_INFINITY;
+				for (Map<String, Double> sourceSpanVector : sourceSpanStrVectors) {
+					maxSim = Math.max(maxSim, compare(sourceSpanVector, targetSpanVector));	
+				}
+				similarity += maxSim;
+			}
+			
+			similarity /= sourceSpanStrVectors.size() + targetSpanStrVectors.size();
+			
+			vector.put(offset, similarity);
 		}
-		
-		similarity /= count;
-		vector.put(offset, similarity);
 		
 		return vector;
 	}
@@ -137,7 +175,11 @@ public class FeatureTokenSpanFnComparison<D extends Datum<L>, L> extends Feature
 		if (parameter.equals("fn")) {
 			return this.fn.toParse();
 		} else if (parameter.equals("tokenExtractor"))
-			return Obj.stringValue((this.tokenExtractor == null) ? "" : this.tokenExtractor.toString());
+			return (this.tokenExtractor == null) ? null : Obj.stringValue(this.tokenExtractor.toString());
+		else if (parameter.equals("sourceTokenExtractor"))
+			return (this.sourceTokenExtractor == null) ? null : Obj.stringValue(this.sourceTokenExtractor.toString());
+		else if (parameter.equals("targetTokenExtractor"))
+			return (this.targetTokenExtractor == null) ? null : Obj.stringValue(this.targetTokenExtractor.toString());
 		else if (parameter.equals("mode"))
 			return Obj.stringValue(this.mode.toString());
 		return null;
@@ -148,7 +190,11 @@ public class FeatureTokenSpanFnComparison<D extends Datum<L>, L> extends Feature
 		if (parameter.equals("fn"))
 			this.fn = this.context.getMatchOrConstructTokenSpanStrFn(parameterValue);
 		else if (parameter.equals("tokenExtractor"))
-			this.tokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+			this.tokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("sourceTokenExtractor"))
+			this.sourceTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("targetTokenExtractor"))
+			this.targetTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("mode"))
 			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		else

@@ -54,6 +54,15 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	
 	@Override
 	public boolean init(DataSet<D, L> dataSet) {
+		for (int i = 0; i < this.features.size(); i++) {
+			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
+			// FIXME This is a hack to make sure features aren't reinitialized... works for now.  But should
+			// be handled differently 
+			if (feature.getVocabularySize() == 0)
+				if (!feature.init(dataSet))
+					return false;
+		}
+		
 		final CounterTable<String> counter = new CounterTable<String>();
 		dataSet.map(new ThreadMapper.Fn<D, Boolean>() {
 			@Override

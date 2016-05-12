@@ -82,11 +82,13 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 	protected Map<Integer, Double> idfs; // maps vocabulary term indices to idf values to use in tfidf scale function
 	
 	protected int minFeatureOccurrence;
+	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
+	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
 	protected Datum.Tools.TokenSpanExtractor<D, L> tokenExtractor;
 	protected Scale scale;
 	protected Fn<TokenSpan, String> fn;
 	protected InitMode initMode;
-	protected String[] parameterNames = {"minFeatureOccurrence", "tokenExtractor", "scale", "fn", "initMode"};
+	protected String[] parameterNames = {"minFeatureOccurrence", "tokenExtractor", "sourceTokenExtractor", "targetTokenExtractor", "scale", "fn", "initMode"};
 	
 	public FeatureTokenSpanFnDataVocab() {
 		
@@ -152,15 +154,33 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 	}
 
 	public Map<String, Integer> applyFnToDatum(D datum) {
-		List<TokenSpan> spans = Arrays.asList(this.tokenExtractor.extract(datum));
-		List<String> strs = this.fn.listCompute(spans);
-
 		Map<String, Integer> results = new HashMap<String, Integer>();
-		
-		for (String str : strs) {
-			if (!results.containsKey(str))
-				results.put(str, 0);
-			results.put(str, results.get(str) + 1);
+		if (this.tokenExtractor != null) {
+			List<TokenSpan> spans = Arrays.asList(this.tokenExtractor.extract(datum));
+			List<String> strs = this.fn.listCompute(spans);
+			
+			for (String str : strs) {
+				if (!results.containsKey(str))
+					results.put(str, 0);
+				results.put(str, results.get(str) + 1);
+			}
+		} else {
+			TokenSpan[] sourceSpans = this.sourceTokenExtractor.extract(datum);
+			TokenSpan[] targetSpans = this.targetTokenExtractor.extract(datum);
+			for (TokenSpan sourceSpan : sourceSpans) {
+				for (TokenSpan targetSpan : targetSpans) {
+					List<TokenSpan> sourceTarget = new ArrayList<>();
+					sourceTarget.add(sourceSpan);
+					sourceTarget.add(targetSpan);
+					List<String> strs = this.fn.listCompute(sourceTarget);
+				
+					for (String str : strs) {
+						if (!results.containsKey(str))
+							results.put(str, 0);
+						results.put(str, results.get(str) + 1);
+					}
+				}
+			}
 		}
 		
 		return results;
@@ -250,7 +270,11 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 		else if (parameter.equals("fn")) {
 			return this.fn.toParse();
 		} else if (parameter.equals("tokenExtractor"))
-			return Obj.stringValue((this.tokenExtractor == null) ? "" : this.tokenExtractor.toString());
+			return (this.tokenExtractor == null) ? null : Obj.stringValue(this.tokenExtractor.toString());
+		else if (parameter.equals("sourceTokenExtractor"))
+			return (this.sourceTokenExtractor == null) ? null : Obj.stringValue(this.sourceTokenExtractor.toString());
+		else if (parameter.equals("targetTokenExtractor"))
+			return (this.targetTokenExtractor == null) ? null : Obj.stringValue(this.targetTokenExtractor.toString());
 		else if (parameter.equals("scale"))
 			return Obj.stringValue(this.scale.toString());
 		else if (parameter.equals("initMode"))
@@ -265,7 +289,11 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 		else if (parameter.equals("fn"))
 			this.fn = this.context.getMatchOrConstructTokenSpanStrFn(parameterValue);
 		else if (parameter.equals("tokenExtractor"))
-			this.tokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+			this.tokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("sourceTokenExtractor"))
+			this.sourceTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("targetTokenExtractor"))
+			this.targetTokenExtractor = parameterValue == null ? null : this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("scale"))
 			this.scale = Scale.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("initMode"))

@@ -101,8 +101,9 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			if (parameterValue != null) {
 				this.methods = new ArrayList<MethodClassification<?, ?>>();
 				Obj.Array array = (Obj.Array)parameterValue;
-				for (int i = 0; i < array.size(); i++)
+				for (int i = 0; i < array.size(); i++) {
 					this.methods.add((MethodClassification<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
+				}
 			}
 		} else if (parameter.equals("structurizers")) {
 			if (parameterValue != null) {
@@ -303,8 +304,19 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		if (this.initialized)
 			return true;
 		
-		for (int i = 0; i < testData.size(); i++) {
-			this.methods.get(i).init((DataSet)testData.get(i));
+		for (MethodClassification<?, ?> method : this.methods) {
+			boolean init = false;
+			for (int j = 0; j < testData.size(); j++) {
+				if (!method.matchesData(testData.get(j)))
+					continue;
+				if (method.init((DataSet)testData.get(j))) {
+					init = true;
+					break;
+				}
+			}
+			
+			if (!init)
+				method.init();
 		}
 	
 		this.initialized = true;
