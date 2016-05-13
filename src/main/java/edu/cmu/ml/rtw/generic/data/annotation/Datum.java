@@ -73,6 +73,7 @@ import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassification;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionData;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionMatrix;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureAccuracy;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureConstant;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureF;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasurePrecision;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureRecall;
@@ -351,6 +352,7 @@ public abstract class Datum<L> {
 			addGenericClassifyEval(new EvaluationClassificationMeasurePrecision<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureRecall<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureF<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasureConstant<D, L>());
 			
 			addGenericDataSetBuilder(new DataSetBuilderStored<D, L>());
 			
