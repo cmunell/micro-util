@@ -487,7 +487,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			if (!hasEdge(edge))
 				continue;
 			
-			if (ignoreTypes.contains(edge.getType()))
+			if (ignoreTypes != null && ignoreTypes.contains(edge.getType()))
 				continue;
 			
 			// Get all paths starting with this edge
@@ -496,7 +496,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			if (nextEdges != null) {
 				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : nextEdges.entrySet()) {
 					for (Entry<WeightedStructureRelationBinary, Double> entry2 : entry.getValue().entrySet()) {
-						if (ignoreTypes.contains(entry2.getKey().getType()))
+						if (ignoreTypes != null && ignoreTypes.contains(entry2.getKey().getType()))
 							continue;
 						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 						seq.add(edge, getWeight(edge));
@@ -512,7 +512,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 					if (!entry2.getKey().equals(edge.getFirst().getId()))
 						continue;
 					for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
-						if (ignoreTypes.contains(entry3.getKey().getType()))
+						if (ignoreTypes != null && ignoreTypes.contains(entry3.getKey().getType()))
 							continue;
 						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 						seq.add(entry3.getKey(), entry3.getValue());
