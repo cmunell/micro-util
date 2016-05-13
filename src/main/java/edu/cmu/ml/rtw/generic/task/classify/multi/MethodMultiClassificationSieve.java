@@ -36,7 +36,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
 	private boolean useScoreWeights = false;
-	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure", "useScoreWeights" };
+	private boolean remakeData = false;
+	private String[] parameterNames = { "methods", "structurizers", "permutationMeasures", "structureTransformFn", "trainOnInit", "trainIters", "orderClassifiersWithSensitivity", "trainStructured", "threadStructure", "useScoreWeights", "remakeData" };
 	
 	private boolean initialized = false;
 	
@@ -90,6 +91,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			return Obj.stringValue(String.valueOf(this.threadStructure));
 		} else if (parameter.equals("useScoreWeights")) {
 			return Obj.stringValue(String.valueOf(this.useScoreWeights));
+		} else if (parameter.equals("remakeData")) {
+			return Obj.stringValue(String.valueOf(this.remakeData));
 		}
 		
 		return null;
@@ -133,6 +136,8 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("useScoreWeights")) {
 			this.useScoreWeights = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("remakeData")) {
+			this.remakeData = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -171,7 +176,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			structures = this.structurizers.get(0).makeStructures();
 		
 		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering(recomputeOrderingMeasures);
-		
+		List<DataSet<?, ?>> currentData = data;
 		for (int o = 0; o < classifierOrdering.size(); o++) {
 			Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
 			int i = indexAndWeight.getFirst();
@@ -181,10 +186,10 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			int addedLinks = 0;
 			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
 			
-			for (int j = 0; j < data.size(); j++) {
-				if (!method.matchesData(data.get(j)))
+			for (int j = 0; j < currentData.size(); j++) {
+				if (!method.matchesData(currentData.get(j)))
 					continue;
-				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)data.get(j));
+				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)currentData.get(j));
 				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
 					double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
 					structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
@@ -218,8 +223,26 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 				}
 			}
 			
-			
 			this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
+			
+			if (this.remakeData) {
+				List<DataSet<?, ?>> nextData = new ArrayList<>();
+				this.context.getDataTools().getOutputWriter().debugWriteln("Remaking data...");
+				int oldDataSize = 0;
+				int newDataSize = 0;
+				for (int j = 0; j < currentData.size(); j++) {
+					for (int k = 0; k < this.methods.size(); k++) {
+						if (this.methods.get(k).matchesData(currentData.get(j))) {
+							oldDataSize += currentData.get(j).size();
+							nextData.add(this.structurizers.get(k).makeData((DataSet)currentData.get(j), (Map)structures));
+							newDataSize += nextData.get(nextData.size() - 1).size();
+							continue;
+						}
+					}
+				}
+				currentData = nextData;
+				this.context.getDataTools().getOutputWriter().debugWriteln("Finished remaking data (old data size: " + oldDataSize + " new data size: " + newDataSize + ")...");
+			}
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");

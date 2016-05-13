@@ -3,10 +3,12 @@ package edu.cmu.ml.rtw.generic.structure;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Stack;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -634,6 +636,47 @@ public class WeightedStructureGraph extends WeightedStructure {
 		}
 		
 		return openPaths;
+	}
+	
+	public Set<String> getClusterIds(String nodeId, Set<String> validRelationTypes) {
+		Set<String> visited = new HashSet<String>();
+		Stack<String> toVisit = new Stack<String>();
+		toVisit.add(nodeId);
+		while (!toVisit.isEmpty()) {
+			String current = toVisit.pop();
+			visited.add(current);
+			
+			Set<String> neighbors = getNeighborIds(current, validRelationTypes);
+			for (String neighbor : neighbors) {
+				if (!visited.contains(neighbor)) {
+					toVisit.push(neighbor);
+					visited.add(neighbor);
+				}
+			}
+		}
+		
+		return visited;
+	}
+	
+	public Set<String> getNeighborIds(String nodeId, Set<String> validRelationTypes) {
+		Set<String> neighbors = new HashSet<String>();
+		if (!this.edges.containsKey(nodeId))
+			return neighbors;
+		Map<String, Map<WeightedStructureRelationBinary, Double>> allNeighbors = this.edges.get(nodeId);
+		for (Entry<String, Map<WeightedStructureRelationBinary, Double>> neighborEntry : allNeighbors.entrySet()) {
+			boolean hasValidRelation = false;
+			for (Entry<WeightedStructureRelationBinary, Double> relationEntry : neighborEntry.getValue().entrySet()) {
+				if (validRelationTypes.contains(relationEntry.getKey().getType())) {
+					hasValidRelation = true;
+					break;
+				}
+			}
+			
+			if (hasValidRelation)
+				neighbors.add(neighborEntry.getKey());
+		}
+		
+		return neighbors;
 	}
 
 	@Override

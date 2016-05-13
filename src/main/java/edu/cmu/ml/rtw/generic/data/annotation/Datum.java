@@ -183,6 +183,7 @@ public abstract class Datum<L> {
 			public abstract Map<String, S> makeStructures();
 			public abstract Map<L, Double> getLabels(D datum, Map<String, S> structures);
 			public abstract Structurizer<D, L, S> makeInstance(DatumContext<D, L> context);
+			public abstract DataSet<D, L> makeData(DataSet<D, L> existingData, Map<String, S> structures);
 			
 			public boolean matchesData(DataSet<?, ?> data) {
 				return data.getDatumTools().equals(this.context.getDatumTools());

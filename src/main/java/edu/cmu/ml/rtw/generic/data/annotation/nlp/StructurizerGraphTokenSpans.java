@@ -2,7 +2,9 @@ package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.Structurizer;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.structure.WeightedStructureGraph;
@@ -90,5 +92,11 @@ public class StructurizerGraphTokenSpans<L> extends StructurizerGraph<TokenSpans
 
 	private String getTokenSpanId(TokenSpan span) {
 		return span.getDocument().getName() + "_" + span.getSentenceIndex() + "_" + span.getStartTokenIndex() + "_" + span.getEndTokenIndex();
+	}
+
+	@Override
+	public DataSet<TokenSpansDatum<L>, L> makeData(
+			DataSet<TokenSpansDatum<L>, L> existingData, Map<String, WeightedStructureGraph> structures) {
+		throw new UnsupportedOperationException();
 	}
 }
