@@ -178,71 +178,75 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 		List<Pair<Integer, Double>> classifierOrdering = getClassifierOrdering(recomputeOrderingMeasures);
 		List<DataSet<?, ?>> currentData = data;
 		for (int o = 0; o < classifierOrdering.size(); o++) {
-			Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
-			int i = indexAndWeight.getFirst();
-			Structurizer structurizer = this.structurizers.get(i);
-			MethodClassification<?, ?> method = this.methods.get(i);
-			this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
-			int addedLinks = 0;
-			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
-			
-			for (int j = 0; j < currentData.size(); j++) {
-				if (!method.matchesData(currentData.get(j)))
-					continue;
-				Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)currentData.get(j));
-				for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
-					double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
-					structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
-					addedLinks++;
+			int oldDataSize = 0;
+			int newDataSize = 0;
+			do {
+				Pair<Integer, Double> indexAndWeight = classifierOrdering.get(o);
+				int i = indexAndWeight.getFirst();
+				Structurizer structurizer = this.structurizers.get(i);
+				MethodClassification<?, ?> method = this.methods.get(i);
+				this.context.getDataTools().getOutputWriter().debugWriteln("Sieve classifying with method " + method.getReferenceName());
+				int addedLinks = 0;
+				Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+				
+				for (int j = 0; j < currentData.size(); j++) {
+					if (!method.matchesData(currentData.get(j)))
+						continue;
+					Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)currentData.get(j));
+					for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
+						double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
+						structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
+						addedLinks++;
+					}
 				}
-			}
-			
-			this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
-			
-			if (this.threadStructure) {
-				ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
-					@Override
-					public Boolean apply(Entry entry) {
+				
+				this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
+				
+				if (this.threadStructure) {
+					ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
+						@Override
+						public Boolean apply(Entry entry) {
+							List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
+							WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+							for (int j = 1; j < transformedStructures.size(); j++)
+								firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+							entry.setValue(firstTransformed);
+							return true;
+						}
+						
+					});
+					threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
+				} else {
+					for (Entry entry : structures.entrySet()) {
 						List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
 						WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 						for (int j = 1; j < transformedStructures.size(); j++)
 							firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 						entry.setValue(firstTransformed);
-						return true;
 					}
-					
-				});
-				threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
-			} else {
-				for (Entry entry : structures.entrySet()) {
-					List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
-					WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-					for (int j = 1; j < transformedStructures.size(); j++)
-						firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-					entry.setValue(firstTransformed);
 				}
-			}
-			
-			this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
-			
-			if (this.remakeData) {
-				List<DataSet<?, ?>> nextData = new ArrayList<>();
-				this.context.getDataTools().getOutputWriter().debugWriteln("Remaking data...");
-				int oldDataSize = 0;
-				int newDataSize = 0;
-				for (int j = 0; j < currentData.size(); j++) {
-					for (int k = 0; k < this.methods.size(); k++) {
-						if (this.methods.get(k).matchesData(currentData.get(j))) {
-							oldDataSize += currentData.get(j).size();
-							nextData.add(this.structurizers.get(k).makeData((DataSet)currentData.get(j), (Map)structures));
-							newDataSize += nextData.get(nextData.size() - 1).size();
-							break;
+				
+				this.context.getDataTools().getOutputWriter().debugWriteln("Finished structure transform...");
+				
+				if (this.remakeData) {
+					List<DataSet<?, ?>> nextData = new ArrayList<>();
+					this.context.getDataTools().getOutputWriter().debugWriteln("Remaking data...");
+					oldDataSize = 0;
+					newDataSize = 0;
+					for (int j = 0; j < currentData.size(); j++) {
+						for (int k = 0; k < this.methods.size(); k++) {
+							if (this.methods.get(k).matchesData(currentData.get(j))) {
+								oldDataSize += currentData.get(j).size();
+								nextData.add(this.structurizers.get(k).makeData((DataSet)currentData.get(j), (Map)structures));
+								newDataSize += nextData.get(nextData.size() - 1).size();
+								break;
+							}
 						}
 					}
+					currentData = nextData;
+					this.context.getDataTools().getOutputWriter().debugWriteln("Finished remaking data (old data size: " + oldDataSize + " new data size: " + newDataSize + ")...");
 				}
-				currentData = nextData;
-				this.context.getDataTools().getOutputWriter().debugWriteln("Finished remaking data (old data size: " + oldDataSize + " new data size: " + newDataSize + ")...");
-			}
+			} while (this.remakeData && oldDataSize != newDataSize);
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Sieve pulling labeled data out of structures...");

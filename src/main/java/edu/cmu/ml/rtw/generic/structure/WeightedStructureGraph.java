@@ -444,6 +444,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return this.edges.containsKey(id1) && this.edges.get(id1).containsKey(id2);
 	}
 	
+	public boolean hasEdgeFrom(String id) {
+		return this.edges.containsKey(id);
+	}
+	
 	public List<WeightedStructureRelationBinary> getEdges(String id1, String id2) {
 		List<WeightedStructureRelationBinary> edges = new ArrayList<WeightedStructureRelationBinary>();
 		if (!hasEdge(id1, id2))
