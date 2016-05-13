@@ -236,7 +236,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 							oldDataSize += currentData.get(j).size();
 							nextData.add(this.structurizers.get(k).makeData((DataSet)currentData.get(j), (Map)structures));
 							newDataSize += nextData.get(nextData.size() - 1).size();
-							continue;
+							break;
 						}
 					}
 				}
