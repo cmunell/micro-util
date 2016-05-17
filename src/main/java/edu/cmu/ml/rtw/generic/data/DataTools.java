@@ -127,6 +127,14 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetSynset;
  */
 public class DataTools {	
 	/**
+	 * Interface for a function that maps a pair of strings to an indicator
+	 *
+	 */
+	public interface StringPairIndicator {
+		boolean compute(String str1, String str2);
+	}
+	
+	/**
 	 * Interface for a function that maps a pair of strings to a real number--
 	 * for example, as a measure of their similarity.
 	 *
@@ -179,6 +187,7 @@ public class DataTools {
 	
 	protected Map<String, Gazetteer> gazetteers;
 	protected Map<String, StringTransform> cleanFns;
+	protected Map<String, StringPairIndicator> stringPairIndicatorsFns;
 	protected Map<String, DataTools.StringCollectionTransform> collectionFns;
 	protected Map<String, Clusterer<String>> stringClusterers;
 	protected Map<String, Clusterer<TokenSpan>> tokenSpanClusterers;
@@ -225,6 +234,7 @@ public class DataTools {
 	public DataTools(OutputWriter outputWriter, Properties properties) {
 		this.gazetteers = new HashMap<String, Gazetteer>();
 		this.cleanFns = new HashMap<String, StringTransform>();
+		this.stringPairIndicatorsFns = new HashMap<String, StringPairIndicator>();
 		this.collectionFns = new HashMap<String, DataTools.StringCollectionTransform>();
 		this.stringClusterers = new HashMap<String, Clusterer<String>>();
 		this.tokenSpanClusterers = new HashMap<String, Clusterer<TokenSpan>>();
@@ -609,6 +619,10 @@ public class DataTools {
 		return this.cleanFns.get(name);
 	}
 	
+	public StringPairIndicator getStringPairIndicatorFn(String name) {
+		return this.stringPairIndicatorsFns.get(name);
+	}
+	
 	public DataTools.StringCollectionTransform getCollectionFn(String name) {
 		return this.collectionFns.get(name);
 	}
@@ -782,6 +796,11 @@ public class DataTools {
 	
 	public boolean addCleanFn(StringTransform cleanFn) {
 		this.cleanFns.put(cleanFn.toString(), cleanFn);
+		return true;
+	}
+	
+	public boolean addStringPairIndicatorFn(StringPairIndicator indicatorFn) {
+		this.stringPairIndicatorsFns.put(indicatorFn.toString(), indicatorFn);
 		return true;
 	}
 	

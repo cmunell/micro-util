@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmu.ml.rtw.generic.data.DataTools.StringPairIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
@@ -25,8 +26,9 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	private RelationMode graphEdgeMode = RelationMode.SINGLE;
 	private RelationMode graphNodeMode = RelationMode.SINGLE;
 	private OverwriteOperator graphOverwriteOperator = OverwriteOperator.MAX;
+	private StringPairIndicator graphEdgeMutexFn = null;
 	
-	protected String[] parameterNames = { "labelMapping", "graphEdgeMode", "graphNodeMode", "graphOverwriteOperator" };
+	protected String[] parameterNames = { "labelMapping", "graphEdgeMode", "graphNodeMode", "graphOverwriteOperator", "graphEdgeMutexFn" };
 	
 	public StructurizerGraph() {
 		
@@ -51,6 +53,8 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 			return Obj.stringValue(this.graphNodeMode.toString());
 		else if (parameter.equals("graphOverwriteOperator"))
 			return Obj.stringValue(this.graphOverwriteOperator.toString());
+		else if (parameter.equals("graphEdgeMutexFn"))
+			return this.graphEdgeMutexFn == null ? null : Obj.stringValue(this.graphEdgeMutexFn.toString());
 		return null;
 	}
 
@@ -64,6 +68,8 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 			this.graphNodeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("graphOverwriteOperator"))
 			this.graphOverwriteOperator = OverwriteOperator.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("graphEdgeMutexFn"))
+			this.graphEdgeMutexFn = parameterValue == null ? null : this.context.getDataTools().getStringPairIndicatorFn(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -132,7 +138,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	private Pair<String, WeightedStructureGraph> getOrConstructStructure(D datum, Map<String, WeightedStructureGraph> structures) {
 		String id = getStructureId(datum);
 		if (!structures.containsKey(id)) {
-			WeightedStructureGraph graph = new WeightedStructureGraph(this.context, this.graphEdgeMode, this.graphNodeMode, this.graphOverwriteOperator);
+			WeightedStructureGraph graph = new WeightedStructureGraph(this.context, this.graphEdgeMode, this.graphNodeMode, this.graphOverwriteOperator, this.graphEdgeMutexFn);
 			structures.put(id, graph);
 		}
 		

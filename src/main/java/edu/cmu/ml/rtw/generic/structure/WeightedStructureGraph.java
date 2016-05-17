@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import edu.cmu.ml.rtw.generic.data.Context;
+import edu.cmu.ml.rtw.generic.data.DataTools.StringPairIndicator;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.Obj;
@@ -29,7 +30,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 	private RelationMode edgeMode = RelationMode.SINGLE;
 	private RelationMode nodeMode = RelationMode.SINGLE;
 	private OverwriteOperator overwriteOperator = OverwriteOperator.MAX;
-	private static String[] parameterNames = { "edgeMode", "nodeMode", "overwriteOperator" };
+	private StringPairIndicator edgeMutexFn = null;  // FIXME: Note that this only works with conserve mode, but should also work with max
+	private static String[] parameterNames = { "edgeMode", "nodeMode", "overwriteOperator", "edgeMutexFn" };
 	
 	private Map<String, Map<WeightedStructureRelationUnary, Double>> nodes;
 	private Map<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> edges;
@@ -47,11 +49,12 @@ public class WeightedStructureGraph extends WeightedStructure {
 		this.edges = new HashMap<String, Map<String, Map<WeightedStructureRelationBinary, Double>>>();
 	}
 	
-	public WeightedStructureGraph(Context context, RelationMode edgeMode, RelationMode nodeMode, OverwriteOperator overwriteOperator) {
+	public WeightedStructureGraph(Context context, RelationMode edgeMode, RelationMode nodeMode, OverwriteOperator overwriteOperator, StringPairIndicator edgeMutexFn) {
 		this(context);
 		this.edgeMode = edgeMode;
 		this.nodeMode = nodeMode;
 		this.overwriteOperator = overwriteOperator;
+		this.edgeMutexFn = edgeMutexFn;
 	}
 
 	@Override
@@ -204,9 +207,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 	}
 	
 	private boolean addEdgeSingleConserve(String id1, String id2, WeightedStructureRelationBinary edge, double w) {
-		if (hasEdge(id1, id2))
+		if (hasEdge(id1, id2, edge))
 			return false;
-		else if (!edge.isOrdered() && hasEdge(id2, id1))
+		else if (!edge.isOrdered() && hasEdge(id2, id1, edge))
 			return false;
 		else 
 			return putEdge(id1, id2, edge, w);
@@ -385,6 +388,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 			return Obj.stringValue(this.nodeMode.toString());
 		else if (parameter.equals("overwriteOperator"))
 			return Obj.stringValue(this.overwriteOperator.toString());
+		else if (parameter.equals("edgeMutexFn"))
+			return this.edgeMutexFn == null ? null : Obj.stringValue(this.edgeMutexFn.toString());
 		else 
 			return null;
 	}
@@ -397,6 +402,8 @@ public class WeightedStructureGraph extends WeightedStructure {
 			this.nodeMode = RelationMode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("overwriteOperator"))
 			this.overwriteOperator = OverwriteOperator.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("edgeMutexFn"))
+			this.edgeMutexFn = parameterValue == null ? null : this.context.getDataTools().getStringPairIndicatorFn(this.context.getMatchValue(parameterValue));
 		else 
 			return false;
 		return true;
@@ -444,6 +451,22 @@ public class WeightedStructureGraph extends WeightedStructure {
 		return this.edges.containsKey(id1) && this.edges.get(id1).containsKey(id2);
 	}
 	
+	public boolean hasEdge(String id1, String id2, WeightedStructureRelationBinary edge) {
+		if (!this.edges.containsKey(id1) || !this.edges.get(id1).containsKey(id2))
+			return false;
+		
+		if (this.edgeMutexFn == null)
+			return true;
+		
+		Map<WeightedStructureRelationBinary, Double> existingEdges = this.edges.get(id1).get(id2);
+		for (WeightedStructureRelationBinary existingEdge : existingEdges.keySet()) {
+			if (this.edgeMutexFn.compute(existingEdge.getType(), edge.getType()))
+				return true;
+		}
+		
+		return false;	
+	}
+	
 	public boolean hasEdgeFrom(String id) {
 		return this.edges.containsKey(id);
 	}
@@ -472,7 +495,7 @@ public class WeightedStructureGraph extends WeightedStructure {
 			if (!hasEdge((WeightedStructureRelationBinary)edge))
 				continue;
 			
-			if (ignoreTypes.contains(edge.getType()))
+			if (ignoreTypes != null && ignoreTypes.contains(edge.getType()))
 				continue;
 			
 			

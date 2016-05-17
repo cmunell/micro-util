@@ -19,7 +19,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	
 	private Mode mode = Mode.MACRO_WEIGHTED;
 	private List<String> filterLabels;
-	private String[] parameterNames = { "mode", "filterLabels" };
+	private List<String> filterTasks;
+	private String[] parameterNames = { "mode", "filterLabels", "filterTasks" };
 	
 	public EvaluationMultiClassificationMeasurePrecision() {
 		this(null);
@@ -42,6 +43,12 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 			if (this.filterLabels != null)
 				if (this.filterLabels.get(i).length() > 0)
 					filterLabel = this.filterLabels.get(i);
+			
+			if (this.filterTasks != null)
+				if (!this.filterTasks.contains(String.valueOf(i))) {
+					i++;
+					continue;
+				}
 			
 			for (Entry<?, Map<Stat, Integer>> entry : stat.entrySet()) {		
 				if (filterLabel != null && !filterLabel.equals(entry.getKey().toString()))
@@ -102,6 +109,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 			return Obj.stringValue(this.mode.toString());
 		else if (parameter.equals("filterLabels"))
 			return this.filterLabels == null ? null : Obj.array(this.filterLabels);
+		else if (parameter.equals("filterTasks"))
+			return this.filterTasks == null ? null : Obj.array(this.filterTasks);
 		else
 			return super.getParameterValue(parameter);
 	}
@@ -112,6 +121,8 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 			this.mode = Mode.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("filterLabels"))
 			this.filterLabels = (parameterValue == null) ? null : this.context.getMatchArray(parameterValue);
+		else if (parameter.equals("filterTasks"))
+			this.filterTasks = (parameterValue == null) ? null : this.context.getMatchArray(parameterValue);
 		else
 			return super.setParameterValue(parameter, parameterValue);
 		return true;

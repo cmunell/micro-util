@@ -5,11 +5,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -986,11 +987,11 @@ public class Context extends CtxParsableFunction {
 	
 	public Context getInitOnceContextForScript(String initScript) {
 		Set<Context> visited = new HashSet<Context>();
-		Stack<Pair<Boolean, Context>> toVisit = new Stack<Pair<Boolean, Context>>();
-		toVisit.push(new Pair<Boolean, Context>(true, this));
+		Queue<Pair<Boolean, Context>> toVisit = new LinkedList<Pair<Boolean, Context>>();
+		toVisit.add(new Pair<Boolean, Context>(true, this));
 		
 		while (!toVisit.isEmpty()) {
-			Pair<Boolean, Context> cur = toVisit.pop();
+			Pair<Boolean, Context> cur = toVisit.poll();
 			Context curContext = cur.getSecond();
 			boolean curFromBelow = cur.getFirst();
 			
@@ -1001,7 +1002,7 @@ public class Context extends CtxParsableFunction {
 			if (curContext.initOnce || curFromBelow) {
 				for (Context child : curContext.contexts.values())
 					if (!visited.contains(child))
-						toVisit.push(new Pair<Boolean, Context>(false, child));
+						toVisit.add(new Pair<Boolean, Context>(false, child));
 			}
 			
 			if (curContext.parentContext != null && !visited.contains(curContext.parentContext))
@@ -1015,11 +1016,11 @@ public class Context extends CtxParsableFunction {
 	
 	public Context getInitOnceContextForName(String name) {
 		Set<Context> visited = new HashSet<Context>();
-		Stack<Pair<Boolean, Context>> toVisit = new Stack<Pair<Boolean, Context>>();
-		toVisit.push(new Pair<Boolean, Context>(true, this));
+		Queue<Pair<Boolean, Context>> toVisit = new LinkedList<Pair<Boolean, Context>>();
+		toVisit.add(new Pair<Boolean, Context>(true, this));
 		
 		while (!toVisit.isEmpty()) {
-			Pair<Boolean, Context> cur = toVisit.pop();
+			Pair<Boolean, Context> cur = toVisit.poll();
 			Context curContext = cur.getSecond();
 			boolean curFromBelow = cur.getFirst();
 			
@@ -1030,7 +1031,7 @@ public class Context extends CtxParsableFunction {
 			if (curContext.initOnce || curFromBelow) {
 				for (Context child : curContext.contexts.values())
 					if (!visited.contains(child))
-						toVisit.push(new Pair<Boolean, Context>(false, child));
+						toVisit.add(new Pair<Boolean, Context>(false, child));
 			}
 			
 			if (curContext.parentContext != null && !visited.contains(curContext.parentContext))
