@@ -79,9 +79,10 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			Map<L, Double> posterior = new HashMap<L, Double>();
 			double sum = 0.0;
 			for (Entry<String, Double> entry : scores.entrySet()) {
+				double value = Math.exp(entry.getValue());
 				L label = this.context.getDatumTools().labelFromString(entry.getKey());
-				posterior.put(label, entry.getValue());
-				sum += entry.getValue();
+				posterior.put(label, value);
+				sum += value;
 			}
 			
 			posterior = MathUtil.normalize(posterior, sum);
