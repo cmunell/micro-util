@@ -118,8 +118,8 @@ public class FileUtil {
 				return new BufferedReader(new InputStreamReader(resource));
 			
 			
-			System.err.println("WARNING: FileUtil failed to read file at " + path); // Do something better later
-		} catch (Exception e) { System.err.println("WARNING: FileUtil failed to read file at " + path); e.printStackTrace(); }
+			System.out.println("WARNING: FileUtil failed to read file at " + path); // Do something better later
+		} catch (Exception e) { System.out.println("WARNING: FileUtil failed to read file at " + path); e.printStackTrace(); }
 		
 		return HadoopUtil.getFileReader(path);
 	}
