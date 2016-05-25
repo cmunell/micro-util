@@ -52,6 +52,7 @@ public class JSONTokenizer implements Annotator {
 			int tokenOffset = 0;
 			List<CoreLabel> allTokens = new ArrayList<CoreLabel>();
 			for (int i = 0; i < document.getSentenceCount(); i++) {
+	
 				List<CoreLabel> tokens = new ArrayList<CoreLabel>();
 				StringBuilder sentenceText = new StringBuilder();
 				for (int j = 0; j < document.getSentenceTokenCount(i); j++) {
@@ -67,8 +68,8 @@ public class JSONTokenizer implements Annotator {
 				}
 				
 				Annotation sentence = new Annotation(sentenceText.toString().trim());
-				sentence.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, document.getToken(i, 0).getCharSpanStart());
-				sentence.set(CoreAnnotations.CharacterOffsetEndAnnotation.class, document.getToken(i, document.getSentenceTokenCount(i) - 1).getCharSpanEnd());
+				sentence.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, (document.getSentenceTokenCount(i) == 0 ? -1 : document.getToken(i, 0).getCharSpanStart()));
+				sentence.set(CoreAnnotations.CharacterOffsetEndAnnotation.class, (document.getSentenceTokenCount(i) == 0 ? -1 : document.getToken(i, document.getSentenceTokenCount(i) - 1).getCharSpanEnd()));
 				sentence.set(CoreAnnotations.TokensAnnotation.class, tokens);
 				sentence.set(CoreAnnotations.TokenBeginAnnotation.class, tokenOffset);
 				tokenOffset += tokens.size();

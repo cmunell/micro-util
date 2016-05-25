@@ -324,7 +324,9 @@ public class ConstituencyParse implements StringSerializable {
 			
 			if (constituent.isLeaf()) {
 				str.append(" (").append(constituent.getLabel()).append(" ");
-				TokenSpan leafSpan = new TokenSpan(this.document, this.sentenceIndex, constituent.getTokenSpan().getStartTokenIndex(), constituent.getTokenSpan().getEndTokenIndex());
+				TokenSpan leafSpan = null;
+				if (constituent.getTokenSpan() != null)
+					leafSpan = new TokenSpan(this.document, this.sentenceIndex, constituent.getTokenSpan().getStartTokenIndex(), constituent.getTokenSpan().getEndTokenIndex());
 				if (leafSpan != null)
 					str.append(leafSpan.toString().replace("(", "-LRB-").replace(")", "-RRB-"));
 			} else {

@@ -98,7 +98,7 @@
   	<dependency>
   		<groupId>edu.stanford.nlp</groupId>
   		<artifactId>stanford-corenlp</artifactId>
-  		<version>3.5.2</version>
+  		<version>3.6.0</version>
 <exclusions>
   <exclusion>
     <!-- This directly contains an old and ancient version of java-cup.  Excluding it altogether doesn't seem to be problematic so far -->

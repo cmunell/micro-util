@@ -67,6 +67,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpansDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
+import edu.cmu.ml.rtw.generic.data.feature.SerializerDataFeatureMatrixBSONString;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnCat;
@@ -541,27 +542,41 @@ public class DataTools {
 		});
 		
 		this.addCommand("OutputStrings", new Command<String>() {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
 				AssignmentList parameters = fnObj.getParameters();
 				String storageName = context.getMatchValue(parameters.get("storage").getValue());
 				String collectionName = context.getMatchValue(parameters.get("collection").getValue());
-				String id = context.getMatchValue(parameters.get("id").getValue());
 				
 				Obj.Array objRefs = (Obj.Array)parameters.get("refs").getValue();
-				
-				SerializerNamedIterableToString serializer = new SerializerNamedIterableToString();
+
 				List<Object> list = new ArrayList<Object>();
 				for (int i = 0; i < objRefs.size(); i++) {
 					List<?> objs = context.getAssignedMatches(objRefs.get(i));
 					list.add(objs.get(0));
 				}
 				
-				return String.valueOf(
-					DataTools.this.getStoredItemSetManager()
-						.getItemSet(storageName, collectionName, true, serializer)
-						.addItem(new NamedIterable<List<Object>, Object>(id, list)
-					));
+				if (!parameters.contains("serializer")) {
+					String id = context.getMatchValue(parameters.get("id").getValue());
+					SerializerNamedIterableToString serializer = new SerializerNamedIterableToString();
+					return String.valueOf(
+						DataTools.this.getStoredItemSetManager()
+							.getItemSet(storageName, collectionName, true, serializer)
+							.addItem(new NamedIterable<List<Object>, Object>(id, list)
+						));
+				} else {
+					if (objRefs.size() > 1)
+						return "false";
+					
+					String ser = context.getMatchValue(parameters.get("serializer").getValue());
+					Serializer serializer = DataTools.this.getSerializers().get(ser);
+					return String.valueOf(
+							DataTools.this.getStoredItemSetManager()
+								.getItemSet(storageName, collectionName, true, serializer)
+								.addItem(list.get(0)
+							));
+				}
 			}
 		});
 		
@@ -669,6 +684,8 @@ public class DataTools {
 		serializers.put(nIterSerializer.getName(), nIterSerializer);
 		SerializerGazetteerString gSerializer = new SerializerGazetteerString();
 		serializers.put(gSerializer.getName(), gSerializer);
+		SerializerDataFeatureMatrixBSONString dSerializer = new SerializerDataFeatureMatrixBSONString(this);
+		serializers.put(dSerializer.getName(), dSerializer);
 		
 		return serializers;
 	}

@@ -115,7 +115,7 @@ public abstract class Obj extends Serializable {
 		public boolean serialize(Writer writer) throws IOException {
 			writer.write(this.name);
 			writer.write("(");
-			if (!this.parameters.serialize(writer))
+			if (this.parameters != null && !this.parameters.serialize(writer))
 				return false;
 			writer.write(")");
 			

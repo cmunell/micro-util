@@ -235,7 +235,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 			public ValidationGST<T, Boolean> apply(LabelIndicator<L> labelIndicator) {
 				Datum.Tools<T, Boolean> binaryTools = trainData.getDatumTools().makeBinaryDatumTools(labelIndicator);
 				DatumContext<T, Boolean> binaryContext = gridSearch.getContext().makeBinary(binaryTools, labelIndicator);
-				
+
 				List<SupervisedModelEvaluation<T, Boolean>> binaryEvaluations = new ArrayList<SupervisedModelEvaluation<T, Boolean>>();
 				for (SupervisedModelEvaluation<D, L> evaluation : evaluations) {
 					binaryEvaluations.add(evaluation.makeBinary(binaryContext, labelIndicator).clone());
@@ -259,7 +259,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 				if (/*binaryTrainData.getDataSizeForLabel(true) == 0
 						|| binaryDevData.getDataSizeForLabel(true) == 0 */
 						 (binaryTestData != null && binaryTestData.getDataSizeForLabel(true)/(double)binaryTestData.size() < 0.003)) {
-					output.debugWriteln("Skipping " + labelIndicator.toString() + ".  Not enough positive examples.");
+					output.debugWriteln("Skipping " + labelIndicator.toString() + ".  Not enough positive examples. (test: " + binaryTestData.getDataSizeForLabel(true) + "/" + binaryTestData.size() + ")");
 					return binaryValidation;
 				}
 					
@@ -327,7 +327,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 				this.inverseLabelIndicator);
 		
 		output.debugWriteln("Composite model classifying test data...");
-		final Map<D, L> classifiedData = this.learnedCompositeModel.classify(this.testData.toDataFeatureMatrix(this.model.getContext()));
+		final Map<D, L> classifiedData = this.learnedCompositeModel.classify(this.testData.toDataFeatureMatrix(this.gridSearch.getContext()));
 		output.debugWriteln("Finished classifying test data.");
 		
 		output.debugWriteln("Evaluating composite model on test data...");

@@ -458,8 +458,8 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				context.addValue(entry.getKey(), context.getMatchValue(entry.getValue()));
 			*/
 			SupervisedModel<D, L> positionModel = context.getMatchModel(GridSearch.this.modelObj);
-			SupervisedModelEvaluation<D, L> positionEvaluation = context.getMatchEvaluation(GridSearch.this.evaluationObj);
 			
+			SupervisedModelEvaluation<D, L> positionEvaluation = context.getMatchEvaluation(GridSearch.this.evaluationObj);
 			List<GridPosition> positions = constructGrid(position, GridSearch.this.dimensions, false); // Positions for non-training dimensions
 			List<EvaluatedGridPosition> evaluatedPositions = new ArrayList<EvaluatedGridPosition>();
 			boolean skipTraining = false;
@@ -545,7 +545,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 		GridSearch<T, Boolean> gridSearch = new GridSearch<T, Boolean>(binaryContext);
 		
 		gridSearch.referenceName = this.referenceName;
-		gridSearch.modelObj = this.context.getMatchModel(this.modelObj).makeBinary(binaryContext, labelIndicator).toParse();
+		gridSearch.modelObj = this.modelObj;//this.context.getMatchModel(this.modelObj).makeBinary(binaryContext, labelIndicator).toParse();
 		gridSearch.evaluationObj = this.context.getMatchEvaluation(this.evaluationObj).makeBinary(binaryContext, labelIndicator).toParse();
 		
 		if (this.trainData != null) {

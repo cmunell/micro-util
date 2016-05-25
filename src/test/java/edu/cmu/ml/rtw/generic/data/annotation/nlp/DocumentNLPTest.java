@@ -20,11 +20,12 @@ public class DocumentNLPTest {
 		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.POS);
 		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.CONSTITUENCY_PARSE);
 		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.DEPENDENCY_PARSE);*/
-		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "");
+		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "");
 		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "He died of cancer in August 2014.");
-		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, "I eat. Jim learned to read at school. It was horrible, but he had to do it anyway.");
-		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.COREF);
-		testNLPAnnotationAndSerializationDisabledFrom(null);*/
+		*/
+		testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.NER, " Jim learned to read at school. It was horrible, but he had to do it anyway.");
+		/*testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP.COREF); */
+		/*testNLPAnnotationAndSerializationDisabledFrom(null, "Jim learned to read at school. It was horrible, but he had to do it anyway.");*/
 	}
 	
 	private void testNLPAnnotationAndSerializationDisabledFrom(AnnotationTypeNLP<?> disabledFrom, String text) {
@@ -67,6 +68,8 @@ public class DocumentNLPTest {
 				json2.put("annotationTime", "");
 			} catch (JSONException e) {}
 
+			//System.out.println(json.toString() + "\n" + json2.toString() + "\n\n");
+			
 			Assert.assertEquals(json.toString(), json2.toString());
 		}
 		

@@ -150,6 +150,18 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 		return true;
 	}
 	
+	public FeaturizedDataSet<D, L> getTrainData() {
+		return this.trainData;
+	}
+	
+	public FeaturizedDataSet<D, L> getDevData() {
+		return this.devData;
+	}
+	
+	public FeaturizedDataSet<D, L> getTestData() {
+		return this.testData;
+	}
+	
 	@Override
 	public List<Double> run() {
 		Timer timer = this.datumTools.getDataTools().getTimer();

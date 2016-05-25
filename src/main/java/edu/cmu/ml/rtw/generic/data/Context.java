@@ -300,7 +300,7 @@ public class Context extends CtxParsableFunction {
 		T result = runCommand(modifiers, referenceName, fnObj);
 		if (result == null)
 			return null;
-		
+
 		if (referenceName == null) {
 			// FIXME This works for now, but probably should disallow user-declared names that start with numbers to avoid conflicts
 			String currentReferenceIdStr = String.valueOf(this.currentReferenceId);
@@ -309,6 +309,7 @@ public class Context extends CtxParsableFunction {
 			this.currentReferenceId++;
 		} else {
 			storageMap.put(referenceName, result);
+			this.objNameOrdering.add(new Pair<String, String>(objectTypeStr, referenceName));
 		}
 		
 		return result;
@@ -954,7 +955,7 @@ public class Context extends CtxParsableFunction {
 	@Override
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("initScript"))
-			return Obj.stringValue(this.initScript);
+			return this.initScript == null ? null : Obj.stringValue(this.initScript);
 		else if (parameter.equals("initOnce"))
 			return Obj.stringValue(String.valueOf(this.initOnce));
 		else if (parameter.equals("initOverrideByName"))
