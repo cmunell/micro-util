@@ -42,7 +42,7 @@ public class SerializerDataFeatureMatrixBSONString extends Serializer<DataFeatur
 	public String serialize(DataFeatureMatrix item) {
 		StringBuilder str = new StringBuilder();
 		
-		for (Object o : item) {
+		for (Object o : item.getData()) {
 			Datum d = (Datum)o;
 			Vector v = item.getFeatureVocabularyValues(d, false);
 			List<Integer> indices = new ArrayList<>();
