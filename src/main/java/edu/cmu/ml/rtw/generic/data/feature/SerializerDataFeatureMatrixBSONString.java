@@ -55,7 +55,6 @@ public class SerializerDataFeatureMatrixBSONString extends Serializer<DataFeatur
 			Map names = item.getFeatures().getFeatureVocabularyNamesForIndices(indices);
 			
 			Document bsonVector = new Document();
-			bsonVector.append("id", d.getId());
 			for (int i = 0; i < indices.size(); i++) {
 				int index = indices.get(i);
 				String name = (String)names.get(index);
