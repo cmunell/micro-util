@@ -74,8 +74,8 @@ public abstract class FnRelationStr<S> extends Fn<S, String> {
 		StringBuilder outputStr = new StringBuilder();
 		for (S s : input) {
 			singletonInput.add(s);
-			List<String> tempOutputF1Strs = this.f1.compute(input, new ArrayList<String>());
-			List<String> tempOutputF2Strs = this.f2.compute(input, new ArrayList<String>());
+			List<String> tempOutputF1Strs = this.f1.compute(singletonInput, new ArrayList<String>());
+			List<String> tempOutputF2Strs = this.f2.compute(singletonInput, new ArrayList<String>());
 			
 			for (String tempOutputF1Str : tempOutputF1Strs) {
 				for (String tempOutputF2Str : tempOutputF2Strs) {
