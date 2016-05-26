@@ -47,6 +47,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 	
 	private Map<String, FeaturizedDataSet<D, L>> compositeTestSets;
 	private Map<String, List<Double>> compositeTestSetEvaluationValues;
+	private Map<String, Map<T, Map<Boolean, Double>>> modelTestDataScores;
 	
 	public ValidationGSTBinary(String name, DatumContext<D, L> context, Datum.Tools.InverseLabelIndicator<L> inverseLabelIndicator) {
 		super(name, context);
@@ -258,7 +259,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 				
 				if (/*binaryTrainData.getDataSizeForLabel(true) == 0
 						|| binaryDevData.getDataSizeForLabel(true) == 0 */
-						 (binaryTestData != null && binaryTestData.getDataSizeForLabel(true)/(double)binaryTestData.size() < 0.003)) {
+						 (binaryTestData != null && binaryTestData.getDataSizeForLabel(true) < 20)) {
 					output.debugWriteln("Skipping " + labelIndicator.toString() + ".  Not enough positive examples. (test: " + binaryTestData.getDataSizeForLabel(true) + "/" + binaryTestData.size() + ")");
 					return binaryValidation;
 				}
@@ -283,11 +284,12 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 		
 		List<SupervisedModel<T, Boolean>> trainedModels = new ArrayList<SupervisedModel<T, Boolean>>();
 		List<LabelIndicator<L>> trainedLabelIndicators = new ArrayList<LabelIndicator<L>>();
+		this.modelTestDataScores = new HashMap<>();
 		for (int i = 0; i < this.binaryValidations.size(); i++) {
 			ValidationGST<T, Boolean> validation = this.binaryValidations.get(i);
 			if (/* this.binaryValidations.get(i).trainData.getDataSizeForLabel(true) == 0
 					|| this.binaryValidations.get(i).devData.getDataSizeForLabel(true) == 0
-					|| */(this.binaryValidations.get(i).testData != null && this.binaryValidations.get(i).testData.getDataSizeForLabel(true)/(double)this.binaryValidations.get(i).testData.size() < .003)) {
+					|| */(this.binaryValidations.get(i).testData != null && this.binaryValidations.get(i).testData.getDataSizeForLabel(true)/(double)this.binaryValidations.get(i).testData.size() < 20)) {
 				output.resultsWriteln("Ignored " + this.trainData.getDatumTools().getLabelIndicators().get(i).toString() + " (lacking positive examples)");
 				continue;
 			}
@@ -314,6 +316,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 		
 			trainedModels.add(validation.getModel());
 			trainedLabelIndicators.add(this.trainData.getDatumTools().getLabelIndicators().get(i));
+			this.modelTestDataScores.put(this.trainData.getDatumTools().getLabelIndicators().get(i).toString(), validation.getModelTestScores());
 		}
 		
 		for (int j = 0; j < this.evaluations.size(); j++) {
@@ -377,7 +380,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 		
 		output.resultsWrite("\nMeasures:\t");
 		for (SupervisedModelEvaluation<D, L> evaluation : this.evaluations)
-			output.resultsWrite(evaluation.toString() + "\t");
+			output.resultsWrite(evaluation.getReferenceName() + "\t");
 		
 		for (ValidationGST<T, Boolean> validation : this.binaryValidations) {
 			if (validation.getEvaluationValues() == null)
@@ -410,8 +413,12 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 				output.resultsWriteln(this.compositeEvaluations.get(j).toString() + "\t" + cleanDouble.format(this.compositeTestSetEvaluationValues.get(entry.getKey()).get(j)));	
 		}
 		
-		output.resultsWriteln("\nTime:\n" + this.datumTools.getDataTools().getTimer().toString());
+		//output.resultsWriteln("\nTime:\n" + this.datumTools.getDataTools().getTimer().toString());
 	
 		return true;
+	}
+	
+	public Map<String, Map<T, Map<Boolean, Double>>> getAllModelTestScores() {
+		return this.modelTestDataScores;
 	}
 }

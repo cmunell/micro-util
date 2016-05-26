@@ -87,6 +87,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramDocument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramInside;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnNGramSentence;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoS;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnPoSUniversal;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPrepositionOfClause;
@@ -334,6 +335,7 @@ public class DataTools {
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
 		this.addGenericTokenSpanStrFn(new FnRelationStr.FnRelationStrTokenSpan());
 		this.addGenericTokenSpanStrFn(new FnPoS());
+		this.addGenericTokenSpanStrFn(new FnPoSUniversal());
 		this.addGenericTokenSpanStrFn(new FnString());
 		this.addGenericTokenSpanStrFn(new FnTokenSpanPathStr());
 		this.addGenericTokenSpanStrFn(new FnTokenAnnotation());

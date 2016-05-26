@@ -124,7 +124,10 @@ public class TokenSpan {
 	}
 	
 	public TokenSpan getSubspan(int startIndex, int endIndex) {
-		return new TokenSpan(this.document, this.sentenceIndex, this.startTokenIndex + startIndex, this.startTokenIndex + endIndex);
+		if (this.startTokenIndex + endIndex > this.endTokenIndex)
+			return null;
+		else
+			return new TokenSpan(this.document, this.sentenceIndex, this.startTokenIndex + startIndex, this.startTokenIndex + endIndex);
 	}
 	
 	public Relation getRelationTo(TokenSpan tokenSpan) {

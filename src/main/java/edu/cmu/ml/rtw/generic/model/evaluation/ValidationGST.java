@@ -284,4 +284,8 @@ public class ValidationGST<D extends Datum<L>, L> extends Validation<D, L> {
 		}
 		return -1;
 	}
+	
+	public Map<D, Map<L, Double>> getModelTestScores() {
+		return this.model.posterior(this.testData.toDataFeatureMatrix(this.model.getContext()));
+	}
 }
