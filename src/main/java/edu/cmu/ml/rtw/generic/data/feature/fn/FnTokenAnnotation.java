@@ -65,6 +65,8 @@ public class FnTokenAnnotation extends Fn<TokenSpan, String> {
 				str.append(
 						document.getTokenAnnotation(this.annotationType, tokenSpan.getSentenceIndex(), i).toString())
 				   .append("_");
+			if (str.length() > 0)
+				str.delete(str.length() - 1, str.length());
 			output.add(str.toString());
 		}
 		

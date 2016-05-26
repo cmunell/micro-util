@@ -12,7 +12,8 @@ public class PoSTagUniversalClass {
 	public static final PoSTag[] ADV = { PoSTag.RB, PoSTag.RBR, PoSTag.RBS, PoSTag.WRB };
 	public static final PoSTag[] PRT = { PoSTag.POS, PoSTag.RP, PoSTag.TO };
 	public static final PoSTag[] PRON = { PoSTag.PRP, PoSTag.PRP$, PoSTag.WP, PoSTag.WP$ };
-	public static final PoSTag[] X = { PoSTag.SYM, PoSTag.FW, PoSTag.LS, PoSTag.UH, PoSTag.Other };
+	public static final PoSTag[] PUNC = { PoSTag.SYM };
+	public static final PoSTag[] X = { PoSTag.FW, PoSTag.LS, PoSTag.UH, PoSTag.Other };
 	
 	public static PoSTag[] fromString(String str) {
 		if (str.equals("CONJ"))
@@ -35,6 +36,8 @@ public class PoSTagUniversalClass {
 			return PoSTagUniversalClass.PRT;
 		else if (str.equals("PRON"))
 			return PoSTagUniversalClass.PRON;
+		else if (str.equals("PUNC"))
+			return PoSTagUniversalClass.PUNC;
 		else if (str.equals("X"))
 			return PoSTagUniversalClass.X;
 		else
@@ -113,6 +116,8 @@ public class PoSTagUniversalClass {
 			return PRON;
 		else if (tag == PoSTag.WP$)
 			return PRON;
+		else if (tag == PoSTag.SYM)
+			return PUNC;
 		else
 			return X;
 	}
@@ -182,6 +187,8 @@ public class PoSTagUniversalClass {
 			return "PRON";
 		else if (tag == PoSTag.WP$)
 			return "PRON";
+		else if (tag == PoSTag.SYM)
+			return "PUNC";
 		else
 			return "X";
 	}
