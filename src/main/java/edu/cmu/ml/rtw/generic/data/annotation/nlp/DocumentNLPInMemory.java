@@ -202,10 +202,10 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		List<Pair<TokenSpan, String>> retNer = new ArrayList<Pair<TokenSpan, String>>();
 		if (sentenceNer == null)
 			return retNer;
-		
+		List<Relation> rels = Arrays.asList(relationToAnnotations);
 		for (Pair<TokenSpan, String> span : sentenceNer) {
 			TokenSpan.Relation relation = tokenSpan.getRelationTo(span.getFirst());
-			if (Arrays.asList(relationToAnnotations).contains(relation))
+			if (rels.contains(relation))
 				retNer.add(span);
 		}
 		
@@ -219,10 +219,10 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		List<Pair<TokenSpan, TokenSpanCluster>> retCoref = new ArrayList<Pair<TokenSpan, TokenSpanCluster>>();
 		if (sentenceCoref == null)
 			return retCoref;
-		
+		List<Relation> rels = Arrays.asList(relationToAnnotations);
 		for (Pair<TokenSpan, TokenSpanCluster> span : sentenceCoref) {
 			TokenSpan.Relation relation = tokenSpan.getRelationTo(span.getFirst());
-			if (Arrays.asList(relationToAnnotations).contains(relation))
+			if (rels.contains(relation))
 				retCoref.add(span);
 		}
 		

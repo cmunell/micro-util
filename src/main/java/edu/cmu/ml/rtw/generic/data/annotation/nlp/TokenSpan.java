@@ -141,7 +141,7 @@ public class TokenSpan {
 			return Relation.CONTAINS;
 		else if (this.startTokenIndex >= tokenSpan.startTokenIndex && this.endTokenIndex <= tokenSpan.endTokenIndex)
 			return Relation.CONTAINED_BY;
-		else if (this.startTokenIndex < tokenSpan.startTokenIndex && this.endTokenIndex >= tokenSpan.startTokenIndex)
+		else if (this.startTokenIndex < tokenSpan.startTokenIndex && this.endTokenIndex > tokenSpan.startTokenIndex)
 			return Relation.OVERLAPS;
 		else if (this.startTokenIndex < tokenSpan.endTokenIndex && this.endTokenIndex > tokenSpan.endTokenIndex)
 			return Relation.OVERLAPS;

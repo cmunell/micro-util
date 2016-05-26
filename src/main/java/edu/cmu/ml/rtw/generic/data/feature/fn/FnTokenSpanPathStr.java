@@ -21,12 +21,13 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 		ALL
 	}
 	
-	private String[] parameterNames = { "mode", "pathLength", "spanFn1", "spanFn2", "spanFn3", "strFn" };
+	private String[] parameterNames = { "mode", "pathLength", "spanFn1", "spanFn2", "spanFn3", "strFn", "multiRelation" };
 	
 	private Mode mode = Mode.ALL;
 	private int pathLength = 1;
 	private List<Fn<TokenSpan, TokenSpan>> spanFns;
 	private Fn<TokenSpan, String> strFn;
+	private boolean multiRelation = false;
 	
 	private Context context;
 	
@@ -67,6 +68,8 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 				return this.spanFns.get(2).toParse();
 		else if (parameter.equals("strFn"))
 			return this.strFn.toParse();
+		else if (parameter.equals("multiRelation"))
+			return Obj.stringValue(String.valueOf(this.multiRelation));
 		else 
 			return null;
 	}
@@ -80,7 +83,9 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 		else if (parameter.equals("spanFn1") || parameter.equals("spanFn2") || parameter.equals("spanFn3")) {
 			if (parameterValue.getObjType() != Obj.Type.VALUE || ((Obj.Value)parameterValue).getType() == Obj.Value.Type.CURLY_BRACED)
 				this.spanFns.add(this.context.getMatchOrRunCommandTokenSpanFn(parameterValue));
-		} else if (parameter.equals("strFn"))
+		} else if (parameter.equals("multiRelation"))
+			this.multiRelation = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("strFn"))
 			this.strFn = this.context.getMatchOrConstructTokenSpanStrFn(parameterValue);
 		else
 			return false;
@@ -103,7 +108,7 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 			List<Pair<TokenSpan, List<String>>> nextSpans = new ArrayList<Pair<TokenSpan, List<String>>>(); 
 			for (Pair<TokenSpan, List<String>> currentSpan : currentSpans) {
 				singletonSpan.add(currentSpan.getFirst());
-				
+
 				nextSpans.addAll(computeTokenSpanStep(singletonSpan, currentSpan.getSecond(), visitedSpans, i == this.pathLength - 1));
 				singletonSpan.clear();
 			}
@@ -120,14 +125,13 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 
 	private List<Pair<TokenSpan, List<String>>> computeTokenSpanStep(List<TokenSpan> singletonSpan, List<String> paths, Set<TokenSpan> visitedSpans, boolean finalSpan) {
 		List<Pair<TokenSpan, List<String>>> nextPaths = new ArrayList<Pair<TokenSpan, List<String>>>();
-		
+		List<TokenSpan> allNextSpans = new ArrayList<>();
 		for (Fn<TokenSpan, TokenSpan> spanFn : this.spanFns) {
 			List<TokenSpan> nextSpans = spanFn.compute(singletonSpan, new ArrayList<TokenSpan>());	
+			allNextSpans.addAll(nextSpans);
 			for (TokenSpan nextSpan : nextSpans) {
-				if (visitedSpans.contains(nextSpan))
+				if (!this.multiRelation && visitedSpans.contains(nextSpan))
 					continue;
-				
-				visitedSpans.add(nextSpan);
 				
 				List<String> relationStrs = null;
 				if (this.mode == Mode.ALL || this.mode == Mode.ONLY_RELATIONS || this.mode == Mode.RELATIONS_AND_FINAL_SPAN) {
@@ -171,6 +175,8 @@ public class FnTokenSpanPathStr extends Fn<TokenSpan, String> {
 				nextPaths.add(new Pair<TokenSpan, List<String>>(nextSpan, nextPathSpanStrs));
 			}
 		}
+		
+		visitedSpans.addAll(allNextSpans);
 		
 		return nextPaths;
 	}
