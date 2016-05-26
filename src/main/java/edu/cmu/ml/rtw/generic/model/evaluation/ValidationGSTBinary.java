@@ -262,6 +262,8 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 						 (binaryTestData != null && binaryTestData.getDataSizeForLabel(true) < 20)) {
 					output.debugWriteln("Skipping " + labelIndicator.toString() + ".  Not enough positive examples. (test: " + binaryTestData.getDataSizeForLabel(true) + "/" + binaryTestData.size() + ")");
 					return binaryValidation;
+				} else {
+					output.debugWriteln("Running on " + labelIndicator.toString() + " (train: " + binaryTrainData.getDataSizeForLabel(true) + "dev: " + binaryDevData.getDataSizeForLabel(true) + "test:" + + binaryTestData.getDataSizeForLabel(true) + ")");
 				}
 					
 				if (!binaryValidation.runAndOutput()) {
@@ -289,7 +291,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 			ValidationGST<T, Boolean> validation = this.binaryValidations.get(i);
 			if (/* this.binaryValidations.get(i).trainData.getDataSizeForLabel(true) == 0
 					|| this.binaryValidations.get(i).devData.getDataSizeForLabel(true) == 0
-					|| */(this.binaryValidations.get(i).testData != null && this.binaryValidations.get(i).testData.getDataSizeForLabel(true)/(double)this.binaryValidations.get(i).testData.size() < 20)) {
+					|| */(this.binaryValidations.get(i).testData != null && this.binaryValidations.get(i).testData.getDataSizeForLabel(true) < 20)) {
 				output.resultsWriteln("Ignored " + this.trainData.getDatumTools().getLabelIndicators().get(i).toString() + " (lacking positive examples)");
 				continue;
 			}
