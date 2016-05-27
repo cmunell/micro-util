@@ -263,7 +263,7 @@ public class ValidationGSTBinary<T extends Datum<Boolean>, D extends Datum<L>, L
 					output.debugWriteln("Skipping " + labelIndicator.toString() + ".  Not enough positive examples. (test: " + binaryTestData.getDataSizeForLabel(true) + "/" + binaryTestData.size() + ")");
 					return binaryValidation;
 				} else {
-					output.resultsWriteln("Running (train/dev/test) " + labelIndicator.toString() + "\t" + binaryTrainData.getDataSizeForLabel(true) + "\t" + binaryDevData.getDataSizeForLabel(true) + "\t" + + binaryTestData.getDataSizeForLabel(true) + "");
+					output.resultsWriteln("Running (train/dev/test)\t" + labelIndicator.toString() + "\t" + binaryTrainData.getDataSizeForLabel(true) + "\t" + binaryDevData.getDataSizeForLabel(true) + "\t" + + binaryTestData.getDataSizeForLabel(true) + "");
 				}
 
 				if (!binaryValidation.runAndOutput()) {
