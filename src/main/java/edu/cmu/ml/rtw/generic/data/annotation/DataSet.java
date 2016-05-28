@@ -308,6 +308,9 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 			if (this.referenceName != null)
 				part.referenceName = this.referenceName + "_" + i;
 			
+			part.builder = this.builder;
+			part.built = this.built;
+			
 			offset += partSize;
 			partition.add(part);
 		}
