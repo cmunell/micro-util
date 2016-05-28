@@ -634,4 +634,28 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		
 		return filtered;
 	}
+	
+	public DataSet<D, L> subset(int size, int maxThreads) {
+		return subset(this.referenceName + "_" + size, size, maxThreads);
+	}
+	
+	public DataSet<D, L> subset(String referenceName, int size, int maxThreads) {
+		if (isBuildable() && !isBuilt() && !build())
+			return null;
+		
+		DataSet<D, L> subset = new DataSet<D, L>(this.referenceName, this.datumTools);
+		
+		int count = 0;
+		for (D datum : this) {
+			if (count >= size)
+				break;
+			subset.add(datum);
+			count++;
+		}
+		
+		subset.builder = this.builder;
+		subset.built = this.built;
+		
+		return subset;
+	}
 }

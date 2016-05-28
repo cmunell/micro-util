@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,21 @@ public class PlataniosUtil {
 					return new PredictedDataInstance<Vector, Double>(String.valueOf(datum.getId()), vector, label, null, 1);
 				}
 			}, data.getContext().getMaxThreads());
+		
+		dataInstances.sort(new Comparator<PredictedDataInstance<Vector, Double>>() {
+			@Override
+			public int compare(PredictedDataInstance<Vector, Double> o1,
+					PredictedDataInstance<Vector, Double> o2) {
+				if (o1 == null && o2 == null)
+					return 0;
+				else if (o1 == null && o2 != null)
+					return -1;
+				else if (o1 != null && o2 == null)
+					return 1;
+				else
+					return o1.name().compareTo(o2.name());
+			}
+		});
 		
 		// FIXME: Could do this faster by adding to list in thread mapper... but this is good enough for now
 		List<PredictedDataInstance<Vector, Double>> retDataInstances = new ArrayList<PredictedDataInstance<Vector, Double>>();

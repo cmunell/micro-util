@@ -487,6 +487,22 @@ public abstract class Datum<L> {
 				}
 			});
 			
+			addCommand("SubsetData", new Command<DataSet<D, L>>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public DataSet<D, L> run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+					AssignmentList parameters = fnObj.getParameters();
+					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
+					int size = Integer.valueOf(datumContext.getMatchValue(parameters.get("size").getValue()));
+					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					if (data.isBuildable() && !data.isBuilt() && !data.build())
+						return null;
+					
+					
+					return data.subset(referenceName, size, context.getMaxThreads());
+				}
+			});
+			
 			addCommand("UnionData", new Command<DataSet<D, L>>() {
 				@SuppressWarnings("unchecked")
 				@Override
