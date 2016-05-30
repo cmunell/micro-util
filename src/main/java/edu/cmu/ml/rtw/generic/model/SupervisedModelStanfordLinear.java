@@ -153,7 +153,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("classificationThreshold"))
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
-		return false;
+		else
+			return false;
+		return true;
 	}
 	
 	@Override
