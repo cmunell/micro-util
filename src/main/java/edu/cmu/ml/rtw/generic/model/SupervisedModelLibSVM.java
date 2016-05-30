@@ -226,9 +226,11 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 		svm_problem problem = constructProblem(data, true);
 		
 		svm_parameter param = new svm_parameter();
-	    param.probability = 1; // Determines whether p is estimated
+	    param.probability = 0;
 	    if (this.gamma != null)
 	    	param.gamma = this.gamma;
+	    else
+	    	param.gamma = 1.0 / data.getFeatures().getFeatureVocabularySize();
 	    param.nu = this.nu;
 	    param.C = this.C;
 	    param.svm_type = this.svmType.getIndex();
@@ -249,14 +251,11 @@ public class SupervisedModelLibSVM<D extends Datum<L>, L> extends SupervisedMode
 	@Override
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
 		Map<D, L> out = new HashMap<D, L>();
-		int totalClasses = 2;       
-		int[] labels = new int[totalClasses];
-		svm.svm_get_labels(this.model,labels);
 
 		for (D datum : data.getData()) {
 			svm_node[] svmDatum = constructSVMDatumVector(data, datum);
-			double[] prob_estimates = new double[totalClasses];
-			double v = svm.svm_predict_probability(this.model, svmDatum, prob_estimates);
+
+			double v = svm.svm_predict(this.model, svmDatum);
 			L label = null;
 			if (Double.compare(v, 0) >= 0)
 				label = this.positiveLabel;

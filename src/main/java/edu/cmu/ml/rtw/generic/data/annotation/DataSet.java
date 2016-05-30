@@ -282,6 +282,9 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 			if (this.referenceName != null)
 				part.referenceName = this.referenceName + "_" + i;
 			
+			part.builder = this.builder;
+			part.built = this.built;
+			
 			offset += partSize;
 			partition.add(part);
 		}
@@ -554,6 +557,8 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 
 	@Override
 	public String[] getParameterNames() {
+		if (this.builder == null)
+			return new String[0];
 		return this.builder.getParameterNames();
 	}
 
@@ -581,11 +586,15 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 
 	@Override
 	protected AssignmentList toParseInternal() {
+		if (this.builder == null)
+			return null;
 		return ((Obj.Function)(this.builder.toParse(true))).getInternalAssignments();
 	}
 
 	@Override
 	public String getGenericName() {
+		if (this.builder == null)
+			return null;
 		return this.builder.getGenericName();
 	}
 	
@@ -616,7 +625,7 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		if (isBuildable() && !isBuilt() && !build())
 			return null;
 		
-		DataSet<D, L> filtered = new DataSet<D, L>(this.referenceName, this.datumTools);
+		DataSet<D, L> filtered = new DataSet<D, L>(referenceName, this.datumTools);
 		
 		this.map(new Fn<D, Boolean>() {
 			@Override
@@ -646,7 +655,7 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 		if (isBuildable() && !isBuilt() && !build())
 			return null;
 		
-		DataSet<D, L> subset = new DataSet<D, L>(this.referenceName, this.datumTools);
+		DataSet<D, L> subset = new DataSet<D, L>(referenceName, this.datumTools);
 		
 		int count = 0;
 		for (D datum : this) {

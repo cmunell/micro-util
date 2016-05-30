@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +28,8 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
 
 public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends SupervisedModel<D, L> {
-	private String[] hyperParameterNames = { };
+	private double classificationThreshold = -1.0;
+	private String[] hyperParameterNames = { "classificationThreshold" };
 	
 	private Classifier<String, String> classifier;
 	
@@ -86,6 +88,16 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			}
 			
 			posterior = MathUtil.normalize(posterior, sum);
+			
+			if (Double.compare(this.classificationThreshold, 0.0) > 0) {
+				List<L> toRemove = new ArrayList<L>();
+				for (Entry<L, Double> entry : posterior.entrySet())
+					if (Double.compare(entry.getValue(), this.classificationThreshold) < 0)
+						toRemove.add(entry.getKey());
+				for (L l : toRemove)
+					posterior.remove(l);
+			}
+					
 			posteriors.put(datum, posterior);
 			
 			i++;
@@ -96,15 +108,32 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	
 	@Override
 	public Map<D, L> classify(DataFeatureMatrix<D, L> data) {
-		GeneralDataset<String,String> rvfData = makeData(data, false);
 		Map<D, L> classifications = new HashMap<D, L>();
-		int i = 0; 
-		for (D datum : data.getData()) {
-			classifications.put(datum, 
-				this.context.getDatumTools().labelFromString(this.classifier.classOf(rvfData.getDatum(i))));
-			i++;
+		if (Double.compare(this.classificationThreshold, 0.0) > 0) {
+			Map<D, Map<L, Double>> p = posterior(data);
+			for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
+				double max = Double.NEGATIVE_INFINITY;
+				L maxLabel = null;
+				for (Entry<L, Double> entry2 : entry.getValue().entrySet()) {
+					if (Double.compare(max, entry2.getValue()) <= 0) {
+						max = entry2.getValue();
+						maxLabel = entry2.getKey();
+					}
+				}
+				
+				if (maxLabel != null)
+					classifications.put(entry.getKey(), maxLabel);
+			}
+		} else {
+			GeneralDataset<String,String> rvfData = makeData(data, false);
+			int i = 0; 
+			for (D datum : data.getData()) {
+				classifications.put(datum, 
+					this.context.getDatumTools().labelFromString(this.classifier.classOf(rvfData.getDatum(i))));
+				i++;
+			}
 		}
-
+		
 		return classifications;
 	}
 
@@ -115,11 +144,15 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	
 	@Override
 	public Obj getParameterValue(String parameter) {
+		if (parameter.equals("classificationThreshold"))
+			return Obj.stringValue(String.valueOf(this.classificationThreshold));
 		return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
+		if (parameter.equals("classificationThreshold"))
+			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		return false;
 	}
 	

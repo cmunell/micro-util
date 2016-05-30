@@ -511,6 +511,7 @@ public abstract class Datum<L> {
 					Obj.Array dataSets = (Obj.Array)parameters.get("data").getValue();
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					DataSet<D, L> unionedData = new DataSet<D, L>(referenceName, Tools.this, null);
+
 					for (int i = 0; i < dataSets.size(); i++) {
 						DataSet<D, L> data = datumContext.getMatchDataSet(dataSets.get(i));
 						if (data.isBuildable() && !data.isBuilt() && !data.build())
