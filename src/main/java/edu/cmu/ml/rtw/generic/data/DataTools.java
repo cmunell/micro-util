@@ -722,11 +722,15 @@ public class DataTools {
 	 * 
 	 */
 	public Random makeLocalRandom(long seed) {
-		return new Random(seed); 
+		return new Random(seed);
 	}
 	
 	public Random makeLocalRandom() {
 		return new Random(this.randomSeed); 
+	}
+	
+	public long getRandomSeed() {
+		return this.randomSeed;
 	}
 	
 	public Timer getTimer() {
