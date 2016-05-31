@@ -50,8 +50,6 @@ public class PlataniosUtil {
 	 * @return a 'learn' library data set
 	 */
 	public static <T extends Datum<Boolean>> DataSetInMemory<PredictedDataInstance<Vector, Double>> makePlataniosDataSet(DataFeatureMatrix<T, Boolean> data, boolean weightedLabels, double minPositiveSampleRate, boolean onlyLabeled, boolean infiniteVectorsWithBias) {
-		
-		
 		double pos = (data.getData().getDataSizeForLabel(true) > 0) ? data.getData().getDataSizeForLabel(true) : 1.0;
 		double neg = (data.getData().getDataSizeForLabel(false) > 0) ? data.getData().getDataSizeForLabel(false) : 0.0;
 		double posFrac = pos/(pos+neg);
@@ -64,35 +62,34 @@ public class PlataniosUtil {
 		final double finalNegFrac = negFrac;
 		final Random r = data.getData().getDatumTools().getDataTools().makeLocalRandom();
 		
-		List<PredictedDataInstance<Vector, Double>> dataInstances = data.getData().map(new ThreadMapper.Fn<T, PredictedDataInstance<Vector, Double>>() {
-				@Override
-				public PredictedDataInstance<Vector, Double> apply(T datum) {
-					Vector vector = null;
-					if (infiniteVectorsWithBias) {
-						Vector features = data.getFeatureVocabularyValues(datum, false);
-						Map<Integer, Double> vectorMap = new HashMap<Integer, Double>();
-						vectorMap.put(0, 1.0);
-						for (VectorElement featureElement : features)
-							vectorMap.put(featureElement.index() + 1, featureElement.value());
-						vector = new SparseVector(Integer.MAX_VALUE, vectorMap);
-					} else {
-						vector = data.getFeatureVocabularyValues(datum, false);
-					}
-					
-					Double label = null;
-					if (datum.getLabel() != null) {
-						if (!(Boolean)datum.getLabel() && r.nextDouble() > finalNegFrac)
-							return null;					
-						if (weightedLabels) {
-							label = datum.getLabelWeight(new Boolean(true));
-						} else {
-							label = (Boolean)datum.getLabel() ? 1.0 : 0.0;
-						}
-					}
-				
-					return new PredictedDataInstance<Vector, Double>(String.valueOf(datum.getId()), vector, label, null, 1);
+		List<PredictedDataInstance<Vector, Double>> dataInstances = new ArrayList<>();
+		
+		for (T datum : data.getData()) {
+			Vector vector = null;
+			if (infiniteVectorsWithBias) {
+				Vector features = data.getFeatureVocabularyValues(datum, false);
+				Map<Integer, Double> vectorMap = new HashMap<Integer, Double>();
+				vectorMap.put(0, 1.0);
+				for (VectorElement featureElement : features)
+					vectorMap.put(featureElement.index() + 1, featureElement.value());
+				vector = new SparseVector(Integer.MAX_VALUE, vectorMap);
+			} else {
+				vector = data.getFeatureVocabularyValues(datum, false);
+			}
+			
+			Double label = null;
+			if (datum.getLabel() != null) {
+				if (!(Boolean)datum.getLabel() && r.nextDouble() > finalNegFrac) // this is a dumb way to do this, but it's here for historical reasons
+					continue;					
+				if (weightedLabels) {
+					label = datum.getLabelWeight(new Boolean(true));
+				} else {
+					label = (Boolean)datum.getLabel() ? 1.0 : 0.0;
 				}
-			}, data.getContext().getMaxThreads());
+			}
+		
+			dataInstances.add(new PredictedDataInstance<Vector, Double>(String.valueOf(datum.getId()), vector, label, null, 1));
+		}
 		
 		dataInstances.sort(new Comparator<PredictedDataInstance<Vector, Double>>() {
 			@Override
