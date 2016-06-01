@@ -121,14 +121,14 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 		output.debugWriteln("Areg training platanios model...");
 		
-		if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .000001) == 0) {
+		/*FIXME Remove if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .000001) == 0) {
 			StringBuilder str = new StringBuilder();
 			for (int i = 0; i < plataniosData.size(); i++) {
-				str.append(plataniosData.get(i).name() + "\t" + plataniosData.get(i).label());
+				str.append(plataniosData.get(i).name() + "\t" + plataniosData.get(i).label()).append("\n");
 			}
 			output.debugWriteln(str.toString());
 			System.exit(0);
-		}
+		}*/
 		
 		SupervisedModel<D, L> thisModel = this;
 		this.classifier =
@@ -252,6 +252,11 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		}
 		
 		this.nonZeroFeatureNames = data.getFeatures().getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
+		
+		if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .000001) == 0) {
+			System.out.println(this.nonZeroFeatureNames.size());
+			System.exit(0);
+		}
 		
 		output.debugWriteln("Areg finished training platanios model."); 
 		
