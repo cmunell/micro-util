@@ -2,6 +2,7 @@ package edu.cmu.ml.rtw.generic.model.evaluation;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -360,6 +361,15 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 	 		}
 	 	}
  		
+		this.gridEvaluation.sort(new Comparator<EvaluatedGridPosition>() {
+			@Override
+			public int compare(GridSearch<D, L>.EvaluatedGridPosition o1,
+					GridSearch<D, L>.EvaluatedGridPosition o2) {
+				return o1.toString().compareTo(o2.toString());
+			}
+			
+		});
+		
  		return this.gridEvaluation;
 	}
 	

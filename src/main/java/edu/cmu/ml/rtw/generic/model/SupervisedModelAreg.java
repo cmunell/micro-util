@@ -121,6 +121,15 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 		output.debugWriteln("Areg training platanios model...");
 		
+		if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .000001) == 0) {
+			StringBuilder str = new StringBuilder();
+			for (int i = 0; i < plataniosData.size(); i++) {
+				str.append(plataniosData.get(i).name() + "\t" + plataniosData.get(i).label());
+			}
+			output.debugWriteln(str.toString());
+			System.exit(0);
+		}
+		
 		SupervisedModel<D, L> thisModel = this;
 		this.classifier =
 				new LogisticRegressionAdaGrad.Builder(plataniosData.get(0).features().size())

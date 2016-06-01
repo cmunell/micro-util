@@ -6,12 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.TreeMap;
 
-import org.platanios.learn.data.DataSetInMemory;
-import org.platanios.learn.data.PredictedDataInstance;
 import org.platanios.learn.math.matrix.SparseVector;
 import org.platanios.learn.math.matrix.Vector;
 import org.platanios.learn.math.matrix.Vector.VectorElement;
@@ -386,7 +383,7 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 	 * 
 	 * @return a 'learn' library data set
 	 */
-	public DataSetInMemory<PredictedDataInstance<Vector, Double>> makePlataniosDataSet(boolean weightedLabels, double minPositiveSampleRate, boolean onlyLabeled, boolean infiniteVectorsWithBias) {
+	/*public DataSetInMemory<PredictedDataInstance<Vector, Double>> makePlataniosDataSet(boolean weightedLabels, double minPositiveSampleRate, boolean onlyLabeled, boolean infiniteVectorsWithBias) {
 		double pos = (this.labeledData.get(true) != null) ? this.labeledData.get(true).size() : 1.0;
 		double neg = (this.labeledData.get(false) != null) ? this.labeledData.get(false).size() : 0.0;
 		double posFrac = pos/(pos+neg);
@@ -440,5 +437,5 @@ public class FeaturizedDataSet<D extends Datum<L>, L> extends DataSet<D, L> {
 		}
 		
 		return new DataSetInMemory<PredictedDataInstance<Vector, Double>>(retDataInstances);
-	}
+	}*/
 }
