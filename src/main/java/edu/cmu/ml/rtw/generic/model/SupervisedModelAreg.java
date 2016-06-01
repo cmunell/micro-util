@@ -253,10 +253,11 @@ public class SupervisedModelAreg<D extends Datum<L>, L> extends SupervisedModel<
 		
 		this.nonZeroFeatureNames = data.getFeatures().getFeatureVocabularyNamesForIndices(nonZeroWeightIndices);
 		
-		if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .000001) == 0) {
-			System.out.println(this.nonZeroFeatureNames.size());
-			System.exit(0);
-		}
+		//if (data.getReferenceName().contains("_business_business_operation") && Double.compare(l2, .1) == 0) {
+		//	output.debugWriteln(this.toParse(true).toString());
+			/*System.out.println(this.nonZeroFeatureNames.size() + " " + weightsArray[weightsArray.length - 1]);
+			System.exit(0);*/
+		//}
 		
 		output.debugWriteln("Areg finished training platanios model."); 
 		
