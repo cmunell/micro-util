@@ -9,17 +9,17 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
-/**
- * FnHead computes the head tokens of a collection
- * of token spans
- * 
- * @author Bill McDowell
- *
- */
+
 public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
+	public enum Mode {
+		ONLY,
+		NONE
+	}
+	
 	private String tagClassName;
 	private PoSTag[] tagClass;
-	private String[] parameterNames = { "tagClass" };
+	private Mode mode = Mode.ONLY;
+	private String[] parameterNames = { "tagClass", "mode" };
 	
 	private Context context;
 	
@@ -40,6 +40,8 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("tagClass"))
 			return Obj.stringValue(this.tagClassName);
+		else if (parameter.equals("mode"))
+			return Obj.stringValue(this.mode.toString());
 		return null;
 	}
 
@@ -48,6 +50,8 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 		if (parameter.equals("tagClass")) {
 			this.tagClassName = this.context.getMatchValue(parameterValue);
 			this.tagClass = PoSTagClass.fromString(this.tagClassName);
+		} else if (parameter.equals("mode")) {
+			this.mode = parameterValue == null ? Mode.ONLY : Mode.valueOf(this.context.getMatchValue(parameterValue));
 		} else
 			return false;
 		return true;
@@ -55,12 +59,12 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 
 	@Override
 	public <C extends Collection<TokenSpan>> C compute(Collection<TokenSpan> input, C output) {
-		for (TokenSpan span : input) {
-			
+		for (TokenSpan span : input) {	
 			boolean passesFilter = true;
 			for (int i = span.getStartTokenIndex(); i < span.getEndTokenIndex(); i++) {
 				PoSTag tag = span.getDocument().getPoSTag(span.getSentenceIndex(), i);
-				if (!PoSTagClass.classContains(this.tagClass, tag)) {
+				if ((this.mode == Mode.ONLY && !PoSTagClass.classContains(this.tagClass, tag))
+						|| (this.mode == Mode.NONE && PoSTagClass.classContains(this.tagClass, tag))) {
 					passesFilter = false;
 					break;
 				}

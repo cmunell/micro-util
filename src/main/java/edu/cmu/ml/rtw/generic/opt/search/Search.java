@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.Assignment;
@@ -34,7 +35,8 @@ public abstract class Search extends CtxParsableFunction {
 	public Search(Context context) {
 		this.context = context;
 		this.dimensions = new ArrayList<Dimension>();
-		this.evaluations = new ConcurrentHashMap<Position, Pair<ParameterSearchable, Double>>();
+		//this.evaluations = new ConcurrentHashMap<Position, Pair<ParameterSearchable, Double>>();
+		this.evaluations = new ConcurrentSkipListMap<Position, Pair<ParameterSearchable, Double>>();
 	}
 	
 	protected abstract List<Position> getNextPositions();

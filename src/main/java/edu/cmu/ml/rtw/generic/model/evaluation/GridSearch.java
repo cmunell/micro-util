@@ -79,8 +79,8 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 				return this.values;
 			else if (parameter.equals("trainingDimension"))
 				return Obj.stringValue(String.valueOf(this.trainingDimension));
-			else if (parameter.equals("parentValueIndex") && this.parentValueIndex != null)
-				return Obj.stringValue(String.valueOf(this.parentValueIndex));
+			else if (parameter.equals("parentValueIndex"))
+				return (this.parentValueIndex == null) ? null : Obj.stringValue(String.valueOf(this.parentValueIndex));
 			else
 				return null;
 		}
@@ -94,7 +94,7 @@ public class GridSearch<D extends Datum<L>, L> extends CtxParsableFunction {
 			else if (parameter.equals("trainingDimension"))
 				this.trainingDimension = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 			else if (parameter.equals("parentValueIndex"))
-				this.parentValueIndex = Integer.valueOf(this.context.getMatchValue(parameterValue));
+				this.parentValueIndex = (parameterValue == null) ? null : Integer.valueOf(this.context.getMatchValue(parameterValue));
 			else
 				return false;
 			return true;

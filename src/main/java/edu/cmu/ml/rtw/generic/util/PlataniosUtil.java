@@ -54,7 +54,7 @@ public class PlataniosUtil {
 		double neg = (data.getData().getDataSizeForLabel(false) > 0) ? data.getData().getDataSizeForLabel(false) : 0.0;
 		double posFrac = pos/(pos+neg);
 		double negFrac = 1.0;
-		if (posFrac < minPositiveSampleRate) {
+		if (Double.compare(posFrac, minPositiveSampleRate) < 0) {
 			double targetNeg = (pos-minPositiveSampleRate*pos)/minPositiveSampleRate;
 			negFrac = targetNeg/neg;
 		}
@@ -79,7 +79,7 @@ public class PlataniosUtil {
 			
 			Double label = null;
 			if (datum.getLabel() != null) {
-				if (!(Boolean)datum.getLabel() && r.nextDouble() > finalNegFrac) // this is a dumb way to do this, but it's here for historical reasons
+				if (!(Boolean)datum.getLabel() && Double.compare(r.nextDouble(), finalNegFrac) > 0) // this is a dumb way to do this, but it's here for historical reasons
 					continue;					
 				if (weightedLabels) {
 					label = datum.getLabelWeight(new Boolean(true));

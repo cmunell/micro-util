@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,15 +18,18 @@ import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
+import edu.cmu.ml.rtw.generic.util.StringUtil;
 
 public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private double classificationThreshold = -1.0;
@@ -168,16 +172,34 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		return new SupervisedModelStanfordLinear<D, L>(context);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected boolean fromParseInternalHelper(AssignmentList internalAssignments) {
-		// FIXME
+		if (internalAssignments == null || !internalAssignments.contains("classifier"))
+			return true;
+		
+		try {
+			this.classifier = (Classifier<String, String>)StringUtil.deserializeFromBase64String(((Obj.Value)internalAssignments.get("classifier").getValue()).getStr());
+		} catch (Exception e) {
+			return false;
+		}
 		return true;
 	}
-	
+
 	@Override
-	protected AssignmentList toParseInternalHelper(
-			AssignmentList internalAssignments) {
-		// FIXME
+	protected AssignmentList toParseInternalHelper(AssignmentList internalAssignments) {
+		if (this.classifier == null) 
+			return internalAssignments;
+		
+		try {
+			String classifier = StringUtil.serializeToBase64String(this.classifier);
+			internalAssignments.add(
+					Assignment.assignmentTyped(null, 
+					Context.ObjectType.VALUE.toString(), "classifier", Obj.stringValue(classifier)));
+		} catch (IOException e) {
+			return null;
+		}
+		
 		return internalAssignments;
 	}
 	

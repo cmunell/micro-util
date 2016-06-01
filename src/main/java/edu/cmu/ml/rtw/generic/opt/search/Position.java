@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
-public class Position {
+public class Position implements Comparable<Position> {
 	protected Map<Dimension, Obj> coordinates;
 	protected Context context;
 	
@@ -127,5 +127,10 @@ public class Position {
 			hashCode ^= entry.getKey().hashCode() ^ entry.getValue().hashCode();
 		
 		return hashCode;
+	}
+
+	@Override
+	public int compareTo(Position o) {
+		return this.toString().compareTo(o.toString());
 	}
 }

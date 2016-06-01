@@ -484,7 +484,7 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 	}
 	
 	public <T> List<T> map(final ThreadMapper.Fn<D, T> fn, int maxThreads) {
-		List<DataSet<D, L>> threadDataPartition  = this.makePartition(maxThreads, this.datumTools.getDataTools().getGlobalRandom());
+		List<DataSet<D, L>> threadDataPartition = this.makePartition(maxThreads, this.datumTools.getDataTools().getGlobalRandom());
 		
 		ThreadMapper<DataSet<D, L>, List<T>> threadMapper 
 		= new ThreadMapper<DataSet<D, L>, List<T>>(new ThreadMapper.Fn<DataSet<D, L>, List<T>>() {
