@@ -529,6 +529,10 @@ public class DataTools {
 				List<String> objParams = (parameters.contains("params")) ?
 											context.getMatchArray(parameters.get("params").getValue())
 										  : null;
+											
+				List<String> objNames= (parameters.contains("names")) ?
+											context.getMatchArray(parameters.get("names").getValue())
+										  : null;
 				
 				SerializerAssignmentListString serializer = new SerializerAssignmentListString(DataTools.this);
 				AssignmentList list = new AssignmentList();
@@ -542,7 +546,7 @@ public class DataTools {
 						obj = ctxObj.toParse();
 					}
 					
-					list.add(Assignment.assignmentTyped(null, objTypes.get(i), objRefs.getStr(i), obj));
+					list.add(Assignment.assignmentTyped(null, objTypes.get(i), (objNames != null) ? objNames.get(i) : objRefs.getStr(i), obj));
 				}
 				
 				return String.valueOf(
