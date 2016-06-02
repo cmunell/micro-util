@@ -652,17 +652,31 @@ public class DataSet<D extends Datum<L>, L> extends CtxParsableFunction implemen
 	}
 	
 	public DataSet<D, L> subset(String referenceName, int size, int maxThreads) {
+		return subset(referenceName, size, maxThreads, false);
+	}
+	
+	public DataSet<D, L> subset(String referenceName, int size, int maxThreads, boolean shuffle) {
 		if (isBuildable() && !isBuilt() && !build())
 			return null;
 		
 		DataSet<D, L> subset = new DataSet<D, L>(referenceName, this.datumTools);
-		
 		int count = 0;
-		for (D datum : this) {
-			if (count >= size)
-				break;
-			subset.add(datum);
-			count++;
+		
+		if (!shuffle) {	
+			for (D datum : this) {
+				if (count >= size)
+					break;
+				subset.add(datum);
+				count++;
+			}
+		} else {
+			List<Integer> dataPermutation = constructRandomDataPermutation(this.datumTools.getDataTools().getGlobalRandom());
+			for (Integer id : dataPermutation) {
+				if (count >= size)
+					break;
+				subset.add(getDatumById(id));
+				count++;
+			}
 		}
 		
 		subset.builder = this.builder;

@@ -11,13 +11,14 @@ import java.util.Map.Entry;
 import org.platanios.learn.math.matrix.Vector;
 import org.platanios.learn.math.matrix.Vector.VectorElement;
 
-import edu.stanford.nlp.classify.Classifier;
 import edu.stanford.nlp.classify.GeneralDataset;
+import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Triple;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -35,7 +36,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	private double classificationThreshold = -1.0;
 	private String[] hyperParameterNames = { "classificationThreshold" };
 	
-	private Classifier<String, String> classifier;
+	private LinearClassifier<String, String> classifier;
 	
 	public SupervisedModelStanfordLinear() {
 		
@@ -51,20 +52,21 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 
 		LinearClassifierFactory<String,String> linearFactory = new LinearClassifierFactory<String,String>();
 	    this.classifier = linearFactory.trainClassifier(rvfData);
-		
-		return true;
+
+		return true; 
 	}
 
 	private GeneralDataset<String, String> makeData(DataFeatureMatrix<D, L> data, boolean onlyLabeled) {
 		Iterator<D> iter = onlyLabeled ? data.getData().iterator(DataFilter.OnlyLabeled) : data.getData().iterator();
 		GeneralDataset<String, String> rvfData = new RVFDataset<String,String>();
+		List<String> names = data.getFeatures().getFeatureVocabularyNames();
 		while (iter.hasNext()) {
 			D datum = iter.next();
 			Vector f = data.getFeatureVocabularyValues(datum, false);
 			Counter<String> feats = new ClassicCounter<String>();
 			
 			for (VectorElement e : f) {
-				feats.setCount(String.valueOf(e.index()), e.value());
+				feats.setCount(String.valueOf(e.index() + "_" + names.get(e.index())), e.value());
 			}
 			
 			rvfData.add(
@@ -179,7 +181,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			return true;
 		
 		try {
-			this.classifier = (Classifier<String, String>)StringUtil.deserializeFromBase64String(((Obj.Value)internalAssignments.get("classifier").getValue()).getStr());
+			this.classifier = (LinearClassifier<String, String>)StringUtil.deserializeFromBase64String(((Obj.Value)internalAssignments.get("classifier").getValue()).getStr());
 		} catch (Exception e) {
 			return false;
 		}
@@ -196,6 +198,15 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			internalAssignments.add(
 					Assignment.assignmentTyped(null, 
 					Context.ObjectType.VALUE.toString(), "classifier", Obj.stringValue(classifier)));
+			
+			List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
+			for (Triple<String, String, Double> featureWeight : fw) {
+				Obj.Array arr = Obj.array(new String[] { featureWeight.first(), featureWeight.second(), String.valueOf(featureWeight.third()) });
+				internalAssignments.add(
+						Assignment.assignmentTyped(null, 
+						Context.ObjectType.ARRAY.toString(), "w_" + featureWeight.first() + "_" + featureWeight.second(), arr));
+
+			}
 		} catch (IOException e) {
 			return null;
 		}

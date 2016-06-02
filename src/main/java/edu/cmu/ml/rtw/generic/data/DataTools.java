@@ -92,11 +92,16 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateArgument;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPredicateSense;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnPrepositionOfClause;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnRelationStr;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnRemoveLongStringParts;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSentencePosition;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnSplit;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnStemStringParts;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringCase;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringReplace;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenAnnotation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTrim;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetLemma;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetSynset;
 
@@ -355,6 +360,11 @@ public class DataTools {
 		this.addGenericStrFn(new FnIdentity<String>());
 		this.addGenericStrFn(new FnClean());
 		this.addGenericStrFn(new FnCat());
+		this.addGenericStrFn(new FnRemoveLongStringParts());
+		this.addGenericStrFn(new FnStemStringParts());
+		this.addGenericStrFn(new FnStringCase());
+		this.addGenericStrFn(new FnStringReplace());
+		this.addGenericStrFn(new FnTrim());
 		
 		this.addGenericStructureFn(new FnGreedyStructureRules<WeightedStructureGraph>());
 		this.addGenericStructureFn(new FnGraphPaths());

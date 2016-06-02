@@ -495,11 +495,15 @@ public abstract class Datum<L> {
 					DatumContext<D, L> datumContext = (DatumContext<D, L>)context;
 					int size = Integer.valueOf(datumContext.getMatchValue(parameters.get("size").getValue()));
 					DataSet<D, L> data = datumContext.getMatchDataSet(parameters.get("data").getValue());
+					
+					boolean shuffle = false;
+					if (parameters.contains("shuffle"))
+						shuffle = Boolean.valueOf(datumContext.getMatchValue(parameters.get("shuffle").getValue()));
+					
 					if (data.isBuildable() && !data.isBuilt() && !data.build())
 						return null;
 					
-					
-					return data.subset(referenceName, size, context.getMaxThreads());
+					return data.subset(referenceName, size, context.getMaxThreads(), shuffle);
 				}
 			});
 			
