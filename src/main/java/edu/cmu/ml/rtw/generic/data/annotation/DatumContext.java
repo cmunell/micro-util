@@ -259,7 +259,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 												.except(ObjectType.CLASSIFY_TASK.toString())
 												.except(ObjectType.STRUCTURIZER.toString()).toParse()))
 													.getInternalAssignments().makeObjMap();
-		
+
 		// FIXME For now this just works assuming we only need to resolve fn references...
 		obj.resolveValues(ctx);
 		

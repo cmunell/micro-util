@@ -293,7 +293,11 @@ public abstract class Obj extends Serializable {
 			if (!context.containsKey(this.str))
 				return false;
 			
-			Obj.Value value = (Obj.Value)context.get(this.str);
+			Obj obj = context.get(this.str);
+			if (obj.getObjType() != Obj.Type.VALUE)
+				return false;
+			
+			Obj.Value value = (Obj.Value)obj;
 			this.type = value.type;
 			this.str = value.str;
 			
