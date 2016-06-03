@@ -96,14 +96,14 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			
 			posterior = MathUtil.normalize(posterior, sum);
 			
-			if (Double.compare(this.classificationThreshold, 0.0) > 0) {
+			/*if (Double.compare(this.classificationThreshold, 0.0) > 0) {
 				List<L> toRemove = new ArrayList<L>();
 				for (Entry<L, Double> entry : posterior.entrySet())
 					if (Double.compare(entry.getValue(), this.classificationThreshold) < 0)
 						toRemove.add(entry.getKey());
 				for (L l : toRemove)
 					posterior.remove(l);
-			}
+			}*/
 					
 			posteriors.put(datum, posterior);
 			
