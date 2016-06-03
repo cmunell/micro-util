@@ -34,7 +34,8 @@ import edu.cmu.ml.rtw.generic.util.StringUtil;
 
 public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private double classificationThreshold = -1.0;
-	private String[] hyperParameterNames = { "classificationThreshold" };
+	private L defaultLabel = null;
+	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel" };
 	
 	private LinearClassifier<String, String> classifier;
 	
@@ -120,10 +121,21 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
 				double max = Double.NEGATIVE_INFINITY;
 				L maxLabel = null;
-				for (Entry<L, Double> entry2 : entry.getValue().entrySet()) {
-					if (Double.compare(max, entry2.getValue()) <= 0) {
-						max = entry2.getValue();
-						maxLabel = entry2.getKey();
+				
+				if (this.defaultLabel != null) {
+					if (entry.getValue().containsKey(this.defaultLabel) 
+							&& Double.compare(entry.getValue().get(this.defaultLabel), this.classificationThreshold) >= 0) {
+						maxLabel = this.defaultLabel;
+						max = entry.getValue().get(maxLabel);
+					}
+				} 
+				
+				if (maxLabel == null) {
+					for (Entry<L, Double> entry2 : entry.getValue().entrySet()) {
+						if (Double.compare(max, entry2.getValue()) <= 0) {
+							max = entry2.getValue();
+							maxLabel = entry2.getKey();
+						}
 					}
 				}
 				
@@ -152,6 +164,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("classificationThreshold"))
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
+		else if (parameter.equals("defaultLabel"))
+			return (this.defaultLabel != null) ? Obj.stringValue(this.defaultLabel.toString()) : null;
 		return null;
 	}
 
@@ -159,6 +173,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("classificationThreshold"))
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("defaultLabel"))
+			this.defaultLabel = (parameterValue != null) ? this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue)) : null;
 		else
 			return false;
 		return true;

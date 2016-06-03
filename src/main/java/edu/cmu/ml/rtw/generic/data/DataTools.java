@@ -399,6 +399,18 @@ public class DataTools {
 			public RuleSet make(String name, Context parentContext) {
 				return new RuleSet(parentContext); } });
 		
+		this.addCommand("MultiplyValues", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				double value1 = Double.valueOf(context.getMatchValue(parameters.get("value1").getValue()));
+				double value2 = Double.valueOf(context.getMatchValue(parameters.get("value2").getValue()));
+				boolean round = !parameters.contains("round") ? false : Boolean.valueOf(context.getMatchValue(parameters.get("round").getValue()));
+				
+				return (round) ? String.valueOf((int)Math.floor(value1*value2)) : String.valueOf(value1*value2);
+			}
+		});
+		
 		addCommand("InitMultiClassifyMethod", new Command<MethodMultiClassification>() {
 			@Override
 			public MethodMultiClassification run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
