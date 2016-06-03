@@ -56,7 +56,7 @@ public abstract class EvaluationClassificationMeasure<D extends Datum<L>, L> ext
 	
 	@Override
 	public String toString() {
-		return getReferenceName() + ":\t" + compute();
+		return getReferenceName() + ":\t" + compute(true);
 	}
 	
 	protected abstract EvaluationClassificationMeasure<D, L> makeInstance();
