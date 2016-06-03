@@ -467,6 +467,11 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 	public List<SupervisedModel<D, L>> getModels() {
 		return getObjects(this.models);
 	}
+	
+	public List<FeatureSet<D, L>> getFeatureSets() {
+		return getObjects(this.featureSets);
+	}
+
 
 	public List<GridSearch<D, L>> getGridSearches() {
 		return getObjects(this.gridSearches);
