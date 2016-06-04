@@ -132,7 +132,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 				
 				if (maxLabel == null) {
 					for (Entry<L, Double> entry2 : entry.getValue().entrySet()) {
-						if (Double.compare(max, entry2.getValue()) <= 0) {
+						if (!entry2.getKey().equals(this.defaultLabel) && Double.compare(max, entry2.getValue()) <= 0) {
 							max = entry2.getValue();
 							maxLabel = entry2.getKey();
 						}
