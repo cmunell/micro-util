@@ -350,8 +350,11 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			if (tokenSpanAnnotation == null) 
 				return Collections.emptyList();
 			anno = new ArrayList<Pair<TokenSpan, T>>();
-			for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
-				anno.add(new Pair<TokenSpan, T>(span.getFirst(), getAnnotation(annotationType, span.getSecond())));
+			for (Pair<TokenSpan, ?> span : tokenSpanAnnotation) {
+				if (tokenSpan.hasRelationTo(span.getFirst(), relationsToAnnotations))
+					anno.add(new Pair<TokenSpan, T>(span.getFirst(), getAnnotation(annotationType, span.getSecond())));
+			}
+				
 			return anno;
 		} else {
 			return Collections.emptyList();
@@ -413,7 +416,8 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			
 			anno = new ArrayList<Triple<TokenSpan, T, Double>>();
 			for (Triple<TokenSpan, ?, Double> span : tokenSpanAnnotation)
-				anno.add(new Triple<TokenSpan, T, Double>(span.getFirst(), getAnnotation(annotationType, span.getSecond()), span.getThird()));
+				if (tokenSpan.hasRelationTo(span.getFirst(), relationsToAnnotations))
+					anno.add(new Triple<TokenSpan, T, Double>(span.getFirst(), getAnnotation(annotationType, span.getSecond()), span.getThird()));
 			return anno;
 		} else {
 			return null;
