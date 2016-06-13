@@ -21,7 +21,6 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan.Relation;
 import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
-import edu.cmu.ml.rtw.generic.util.Storable;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 /**

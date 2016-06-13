@@ -54,6 +54,9 @@ public class FnPrepositionOfClause extends Fn<TokenSpan, TokenSpan> {
 				continue;
 			
 			Constituent tokenConst = parse.getTokenConstituent(spanHead.getStartTokenIndex());
+			if (tokenConst == null)
+				continue;
+				
 			Constituent parent = tokenConst.getParent();
 			if (parent == null)
 				continue;
