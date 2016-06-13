@@ -313,8 +313,9 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 	}
 	
 	protected <T> T getAnnotation(AnnotationTypeNLP<T> annotationType, Object annoObj) {
-		if (annotationType.getSerializationType() == SerializationType.STORED)
+		if (annotationType.getSerializationType() == SerializationType.STORED) {
 			return this.dataTools.getStoredItemSetManager().resolveStoreReference((StoreReference)annoObj, true);
+		}
 		return annotationType.getAnnotationClass().cast(annoObj);
 	}
 	

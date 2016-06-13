@@ -180,7 +180,7 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		
 		if (this.serializationType == SerializationType.STORED)
 			this.serializer = null;
-		if (this.serializationType == SerializationType.ENUM) 
+		else if (this.serializationType == SerializationType.ENUM) 
 			this.serializer = this.enumSerializer;
 		else if (this.serializationType == SerializationType.IDENTITY)
 			this.serializer = this.identitySerializer;
