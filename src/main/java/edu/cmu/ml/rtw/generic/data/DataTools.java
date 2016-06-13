@@ -530,6 +530,23 @@ public class DataTools {
 			}
 		});
 		
+		this.addCommand("OutputContext", new Command<String>() {
+			@Override
+			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {
+				AssignmentList parameters = fnObj.getParameters();
+				String storageName = context.getMatchValue(parameters.get("storage").getValue());
+				String collectionName = context.getMatchValue(parameters.get("collection").getValue());
+				String id = context.getMatchValue(parameters.get("id").getValue());
+				SerializerAssignmentListString serializer = new SerializerAssignmentListString(DataTools.this);
+				
+				return String.valueOf(
+					DataTools.this.getStoredItemSetManager()
+						.getItemSet(storageName, collectionName, true, serializer)
+						.addItem(new NamedIterable<AssignmentList, Assignment>(id, ((Obj.Function)context.getRootContext().toParse(true)).getInternalAssignments())
+					));
+			}
+		});
+		
 		this.addCommand("OutputParses", new Command<String>() {
 			@Override
 			public String run(Context context, List<String> modifiers, String referenceName, Function fnObj) {

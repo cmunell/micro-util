@@ -1041,7 +1041,13 @@ public class Context extends CtxParsableFunction {
 			visited.add(curContext);
 		}
 		
-		
 		return null;
+	}
+	
+	public Context getRootContext() {
+		Context curContext = this;
+		while (curContext.parentContext != null)
+			curContext = parentContext;
+		return curContext;
 	}
 }

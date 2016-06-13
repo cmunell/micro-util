@@ -14,6 +14,8 @@ import edu.cmu.ml.rtw.generic.data.feature.DataFeatureMatrix;
 import edu.cmu.ml.rtw.generic.data.feature.FeatureSet;
 import edu.cmu.ml.rtw.generic.model.SupervisedModel;
 import edu.cmu.ml.rtw.generic.model.evaluation.metric.SupervisedModelEvaluation;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
+import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -148,12 +150,28 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 
 	@Override
 	protected boolean fromParseInternal(AssignmentList internalAssignments) {
+		if (internalAssignments == null)
+			return true;
+		if (internalAssignments.contains("m")) {
+			AssignmentTyped assignment = (AssignmentTyped)internalAssignments.get("m");
+			Obj.Function fnObj = (Obj.Function)assignment.getValue();
+			SupervisedModel<D, L> model = this.context.getDatumTools().makeModelInstance(fnObj.getName(), this.context);
+			if (!model.fromParse(assignment.getModifiers(), assignment.getName(), fnObj))
+				return false;
+			
+			this.model = model;
+			this.initialized = true;
+		}
+		
 		return true;
 	}
 
 	@Override
 	protected AssignmentList toParseInternal() {
-		return null;
+		AssignmentList assignments = new AssignmentList();
+		if (this.initialized && this.model != null)
+			assignments.add(Assignment.assignmentTyped(modifiers, "model", "m", this.model.toParse(true)));
+		return assignments;
 	}
 
 	@Override
@@ -163,9 +181,12 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 
 	@Override
 	public MethodClassification<D, L> clone(String referenceName) {
+		SupervisedModel<D, L> temp = this.model;
+		this.model = null;
 		MethodClassificationSupervisedModel<D, L> clone = new MethodClassificationSupervisedModel<D, L>(this.context);
 		if (!clone.fromParse(this.getModifiers(), this.getReferenceName(), toParse()))
 			return null;
+		this.model = temp;
 		clone.model = this.model.clone();
 		clone.initialized = this.initialized;
 		clone.referenceName = referenceName;
