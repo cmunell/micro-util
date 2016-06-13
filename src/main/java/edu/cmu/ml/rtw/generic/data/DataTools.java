@@ -67,6 +67,8 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpansDatum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.Word2Vec;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.WordNet;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.NormalizedTimeValue;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression;
 import edu.cmu.ml.rtw.generic.data.feature.SerializerDataFeatureMatrixBSONString;
 import edu.cmu.ml.rtw.generic.data.feature.fn.Fn;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnAffix;
@@ -714,6 +716,11 @@ public class DataTools {
 		serializers.put(gSerializer.getName(), gSerializer);
 		SerializerDataFeatureMatrixBSONString dSerializer = new SerializerDataFeatureMatrixBSONString(this);
 		serializers.put(dSerializer.getName(), dSerializer);
+		
+		SerializerJSONBSON<TimeExpression> timeExpressionSerializer = new SerializerJSONBSON<TimeExpression>("TimeExpression", new TimeExpression(this));
+		serializers.put(timeExpressionSerializer.getName(), timeExpressionSerializer);
+		SerializerJSONBSON<NormalizedTimeValue> timeValueSerializer = new SerializerJSONBSON<NormalizedTimeValue>("NormalizedTimeValue", new NormalizedTimeValue(this));
+		serializers.put(timeValueSerializer.getName(), timeValueSerializer);
 		
 		return serializers;
 	}

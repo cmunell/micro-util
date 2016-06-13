@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.Document;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
@@ -31,7 +33,9 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public static final AnnotationTypeNLP<PoSTag> POS = new AnnotationTypeNLP<PoSTag>("pos", PoSTag.class, Target.TOKEN);
 	public static final AnnotationTypeNLP<Token> TOKEN = new AnnotationTypeNLP<Token>("token", Token.class, Target.TOKEN);
 	public static final AnnotationTypeNLP<String> LEMMA = new AnnotationTypeNLP<String>("lemma", String.class, Target.TOKEN);
-	public static final AnnotationTypeNLP<Predicate> PREDICATE = new AnnotationTypeNLP<Predicate>("predicate", Predicate.class, Target.TOKEN_SPAN);
+	public static final AnnotationTypeNLP<Predicate> PREDICATE = new AnnotationTypeNLP<Predicate>("predicate", Predicate.class, Target.TOKEN_SPAN);	
+	public static final AnnotationTypeNLP<TimeExpression> CREATION_TIME = new AnnotationTypeNLP<TimeExpression>("dct", TimeExpression.class, Target.DOCUMENT);
+	public static final AnnotationTypeNLP<TimeExpression> TIME_EXPRESSION = new AnnotationTypeNLP<TimeExpression>("timex", TimeExpression.class, Target.TOKEN_SPAN);
 	
 	protected static abstract class Serializer<T> {
 		protected T makeInstance(Class<T> annotationClass, Document document, int sentenceIndex) {
@@ -174,6 +178,8 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		super(type, annotationClass);
 		this.target = target;
 		
+		if (this.serializationType == SerializationType.STORED)
+			this.serializer = null;
 		if (this.serializationType == SerializationType.ENUM) 
 			this.serializer = this.enumSerializer;
 		else if (this.serializationType == SerializationType.IDENTITY)
@@ -200,20 +206,33 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	public T deserialize(Document document, Object obj) {
 		if (this.target == Target.SENTENCE)
 			throw new IllegalArgumentException("Deserialization should be given a sentence index if target is sentence.");
-		return this.serializer.deserialize(document, -1, obj);
+		
+		if (this.serializationType == SerializationType.STORED)
+			return document.getDataTools().getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON((JSONObject)obj), false);
+		else
+			return this.serializer.deserialize(document, -1, obj);
 	}
 	
 	public T deserialize(Document document, int sentenceIndex, Object obj) {
-		return this.serializer.deserialize(document, sentenceIndex, obj);
+		if (this.serializationType == SerializationType.STORED)
+			return document.getDataTools().getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON((JSONObject)obj), false);
+		else
+			return this.serializer.deserialize(document, sentenceIndex, obj);
 	}
 	
 	// FIXME This should really take a T (not an Object), but for now this allows for easy serialization
 	// in DocumentNLPSerializers of annotation types where T is a wild card
 	public Object serialize(Object obj) {
-		return this.serializer.serialize(this.annotationClass.cast(obj));
+		if (this.serializationType == SerializationType.STORED)
+			return ((StoreReference)obj).toJSON();
+		else
+			return this.serializer.serialize(this.annotationClass.cast(obj));
 	}
 
     public String toHTML(Object obj) {
-    	return this.serializer.toHTML(this.annotationClass.cast(obj));
+    	if (this.serializationType == SerializationType.STORED)
+			return ((StoreReference)obj).toJSON().toString();
+		else
+			return this.serializer.toHTML(this.annotationClass.cast(obj));
     }
 }

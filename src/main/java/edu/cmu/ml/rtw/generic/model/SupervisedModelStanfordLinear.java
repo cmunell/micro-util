@@ -1,7 +1,6 @@
 package edu.cmu.ml.rtw.generic.model;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -216,12 +215,13 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 					Context.ObjectType.VALUE.toString(), "classifier", Obj.stringValue(classifier)));
 			
 			List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
+			int i = 0;
 			for (Triple<String, String, Double> featureWeight : fw) {
 				Obj.Array arr = Obj.array(new String[] { featureWeight.first(), featureWeight.second(), String.valueOf(featureWeight.third()) });
 				internalAssignments.add(
 						Assignment.assignmentTyped(null, 
-						Context.ObjectType.ARRAY.toString(), "w_" + featureWeight.first() + "_" + featureWeight.second(), arr));
-
+						Context.ObjectType.ARRAY.toString(), "w_" + i, arr));
+				i++;
 			}
 		} catch (IOException e) {
 			return null;

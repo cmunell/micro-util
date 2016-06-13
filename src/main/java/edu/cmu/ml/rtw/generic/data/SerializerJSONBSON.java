@@ -54,7 +54,7 @@ public class SerializerJSONBSON<E extends StoredJSONSerializable> extends Serial
 	@Override
 	public StoredJSONSerializable deserialize(Document object,
 			StoreReference storeReference) {
-		StoredJSONSerializable obj = this.genericObj.makeInstance(storeReference);
+		StoredJSONSerializable obj = (StoredJSONSerializable)this.genericObj.makeInstance(storeReference);
 		if (!obj.fromJSON(JSONUtil.convertBSONToJSON(object)))
 			return null;
 		else

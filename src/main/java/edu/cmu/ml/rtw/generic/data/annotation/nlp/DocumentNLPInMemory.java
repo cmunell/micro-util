@@ -7,9 +7,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
+import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType.SerializationType;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
@@ -19,6 +21,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan.Relation;
 import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Storable;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 /**
@@ -309,12 +312,18 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		return annotationTypes;
 	}
 	
+	protected <T> T getAnnotation(AnnotationTypeNLP<T> annotationType, Object annoObj) {
+		if (annotationType.getSerializationType() == SerializationType.STORED)
+			return this.dataTools.getStoredItemSetManager().resolveStoreReference((StoreReference)annoObj, true);
+		return annotationType.getAnnotationClass().cast(annoObj);
+	}
+	
 	@Override
 	public <T> T getDocumentAnnotation(AnnotationTypeNLP<T> annotationType) {		
 		T anno = super.getDocumentAnnotation(annotationType);
 		if (anno != null)
 			return anno;
-		return annotationType.getAnnotationClass().cast(this.otherDocumentAnnotations.get(annotationType).getFirst());
+		return getAnnotation(annotationType, this.otherDocumentAnnotations.get(annotationType).getFirst());
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -328,7 +337,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		if (!sentenceAnnotation.containsKey(sentenceIndex))
 			return null;
 	
-		return annotationType.getAnnotationClass().cast(((Pair)sentenceAnnotation.get(sentenceIndex)).getFirst());
+		return getAnnotation(annotationType, ((Pair)sentenceAnnotation.get(sentenceIndex)).getFirst());
 	}
 	
 	@Override
@@ -342,7 +351,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 				return Collections.emptyList();
 			anno = new ArrayList<Pair<TokenSpan, T>>();
 			for (Pair<TokenSpan, ?> span : tokenSpanAnnotation)
-				anno.add(new Pair<TokenSpan, T>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond())));
+				anno.add(new Pair<TokenSpan, T>(span.getFirst(), getAnnotation(annotationType, span.getSecond())));
 			return anno;
 		} else {
 			return Collections.emptyList();
@@ -359,7 +368,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			throw new IndexOutOfBoundsException("Failed to get " + annotationType.getType() + " in " + this.getName() + " at (" + sentenceIndex + ", " + tokenIndex + ")");
 		}
 		
-		return annotationType.getAnnotationClass().cast(annos[sentenceIndex][tokenIndex].getFirst());
+		return getAnnotation(annotationType, annos[sentenceIndex][tokenIndex].getFirst());
 	}
 	
 	@Override
@@ -404,7 +413,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			
 			anno = new ArrayList<Triple<TokenSpan, T, Double>>();
 			for (Triple<TokenSpan, ?, Double> span : tokenSpanAnnotation)
-				anno.add(new Triple<TokenSpan, T, Double>(span.getFirst(), annotationType.getAnnotationClass().cast(span.getSecond()), span.getThird()));
+				anno.add(new Triple<TokenSpan, T, Double>(span.getFirst(), getAnnotation(annotationType, span.getSecond()), span.getThird()));
 			return anno;
 		} else {
 			return null;
@@ -533,6 +542,13 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 									   );
 	}
 
+	private Object getAnnotationToSet(AnnotationTypeNLP<?> annotationType, Object annotationObj) {
+		if (annotationType.getSerializationType() == SerializationType.STORED)
+			return ((Storable)annotationObj).getStoreReference();
+		else 
+			return annotationObj;
+	}
+	
 	@Override
 	public boolean setDocumentAnnotation(String annotator, AnnotationTypeNLP<?> annotationType, Pair<?, Double> annotation) {
 		if (annotationType.equals(AnnotationTypeNLP.LANGUAGE)) {
@@ -549,7 +565,8 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			this.otherAnnotatorNames.put(annotationType, annotator);
 			if (this.otherDocumentAnnotations == null)
 				this.otherDocumentAnnotations = new HashMap<AnnotationTypeNLP<?>, Pair<?, Double>>();
-			this.otherDocumentAnnotations.put(annotationType, annotation);
+			
+			this.otherDocumentAnnotations.put(annotationType, new Pair<Object, Double>(getAnnotationToSet(annotationType, annotation.getFirst()), annotation.getSecond()));
 		}
 		
 		return true;
@@ -591,7 +608,17 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			this.otherAnnotatorNames.put(annotationType, annotator);
 			if (this.otherSentenceAnnotations == null)
 				this.otherSentenceAnnotations = new HashMap<AnnotationTypeNLP<?>, Map<Integer, ?>>();
-			this.otherSentenceAnnotations.put(annotationType, annotation);
+			
+			if (annotationType.getSerializationType() != SerializationType.STORED) {
+				this.otherSentenceAnnotations.put(annotationType, annotation);
+			} else {
+				Map<Integer, Pair<Object, Double>> newAnno = new HashMap<>();
+				for (Entry<Integer, ?> entry : annotation.entrySet()) {
+					Pair<?, Double> annoPair = (Pair<?, Double>)entry.getValue();		
+					newAnno.put(entry.getKey(), new Pair<Object, Double>(getAnnotationToSet(annotationType, annoPair.getFirst()), annoPair.getSecond()));
+				}
+				this.otherSentenceAnnotations.put(annotationType,  newAnno);
+			}
 		}
 		
 		return true;
@@ -627,6 +654,10 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			for (Triple<TokenSpan, ?, Double> span : annotation) {
 				if (!annotationMap.containsKey(span.getFirst().getSentenceIndex()))
 					annotationMap.put(span.getFirst().getSentenceIndex(), new ArrayList<Triple<TokenSpan, ?, Double>>());
+				
+				if (annotationType.getSerializationType() == SerializationType.STORED)
+					span = new Triple<TokenSpan, Object, Double>(span.getFirst(), getAnnotationToSet(annotationType, span.getSecond()), span.getThird());
+				
 				annotationMap.get(span.getFirst().getSentenceIndex()).add(span);
 			}
 			this.otherTokenSpanAnnotations.put(annotationType, annotationMap);
@@ -635,6 +666,7 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean setTokenAnnotation(String annotator, AnnotationTypeNLP<?> annotationType, Pair<?, Double>[][] annotation) {
 		if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
@@ -683,7 +715,19 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 			
 			if (this.otherTokenAnnotations == null)
 				this.otherTokenAnnotations = new HashMap<AnnotationTypeNLP<?>, Pair<?, Double>[][]>();
-			this.otherTokenAnnotations.put(annotationType, annotation);
+				
+			if (annotationType.getSerializationType() != SerializationType.STORED) {
+				this.otherTokenAnnotations.put(annotationType, annotation);
+			} else {
+				Pair<Object, Double>[][] newAnnotation = new Pair[annotation.length][];
+				for (int i = 0; i < newAnnotation.length; i++) {
+					newAnnotation[i] = new Pair[annotation[i].length];
+					for (int j = 0; j < newAnnotation[i].length; j++) {
+						newAnnotation[i][j] = new Pair<Object, Double>(getAnnotationToSet(annotationType, annotation[i][j].getFirst()), annotation[i][j].getSecond());
+					}
+				}
+				this.otherTokenAnnotations.put(annotationType, newAnnotation);
+			}
 		}
 		
 		return true;

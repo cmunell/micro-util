@@ -1,13 +1,22 @@
 package edu.cmu.ml.rtw.generic.model.annotator.nlp;
 
+import java.io.StringReader;
+
+import org.bson.Document;
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.cmu.ml.rtw.generic.data.DataTools;
+import edu.cmu.ml.rtw.generic.data.Serializer;
+import edu.cmu.ml.rtw.generic.data.StoredItemSet;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPInMemory;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLPMutable;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.NormalizedTimeValue;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression;
 import edu.cmu.ml.rtw.generic.model.annotator.nlp.stanford.JSONTokenizer;
+import edu.cmu.ml.rtw.generic.util.OutputWriter;
+import edu.cmu.ml.rtw.generic.util.Properties;
 
 public class NLPAnnotatorStanfordTest {
 	@Test
@@ -39,6 +48,31 @@ public class NLPAnnotatorStanfordTest {
 		Assert.assertEquals(PoSTag.DT, document.getPoSTag(0, 0));
 		Assert.assertEquals(PoSTag.NN, document.getPoSTag(0, 1));
 		Assert.assertEquals(PoSTag.VBZ, document.getPoSTag(0, 2));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testSUTime() {
+		DataTools dataTools = new DataTools(new OutputWriter(), 
+				new Properties(new StringReader(
+						"debug_dir=\n" +
+						"storage_fs_bson_testBson=/test/bson\n" +
+						"storage_fs_str_testStr=/test/str"
+						)));
+		StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> timeValues = dataTools.getStoredItemSetManager().getItemSet("BSONMemory", "TimeValues", true, (Serializer<NormalizedTimeValue, Document>)dataTools.getSerializers().get("JSONBSONNormalizedTimeValue"));
+		StoredItemSet<TimeExpression, TimeExpression> timeExpressions = dataTools.getStoredItemSetManager().getItemSet("BSONMemory", "TimeExpressions", true, (Serializer<TimeExpression, Document>)dataTools.getSerializers().get("JSONBSONTimeExpression"));
+
+		PipelineNLPStanford pipeline = new PipelineNLPStanford();
+		pipeline.initialize(null, null, timeExpressions, timeValues);
+		
+		DocumentNLPMutable document = new DocumentNLPInMemory(new DataTools(), 
+				   "document", 
+				   "Lunch will be served at 12:30, and dinner will be served at 5:00.");
+
+		pipeline.run(document);
+		
+		//StoredItemSet<?, ?> outputEvals = dataTools.getStoredItemSetManager().getItemSet("BSONMemory", "TimeValues");
+		//System.out.println(outputEvals.getStoredItems().toString());
 	}
 	
 	/* FIXME Refactor later @Test

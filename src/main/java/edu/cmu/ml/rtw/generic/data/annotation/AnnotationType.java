@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.data.annotation;
 
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
+import edu.cmu.ml.rtw.generic.util.Storable;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
 /**
@@ -21,6 +22,7 @@ public class AnnotationType<T> {
 		IDENTITY,  // deserialize to string, boolean, integer, or double
 		JSON,      // deserialize to JSONSerializable
 		STRING,    // deserialize to StringSerializable
+		STORED,
 		OTHER
 	}
 	
@@ -32,6 +34,8 @@ public class AnnotationType<T> {
 		this.type = type;
 		this.annotationClass = annotationClass;
 		
+		if (Storable.class.isAssignableFrom(this.annotationClass))
+			this.serializationType = SerializationType.STORED;
 		if (JSONSerializable.class.isAssignableFrom(this.annotationClass))
 			this.serializationType = SerializationType.JSON;
 		else if (StringSerializable.class.isAssignableFrom(this.annotationClass))

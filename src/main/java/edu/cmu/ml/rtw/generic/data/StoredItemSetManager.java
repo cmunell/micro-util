@@ -32,7 +32,7 @@ public class StoredItemSetManager {
 		}
 		
 		this.storages.put("StringMemory", new StorageInMemory<String>("StringMemory"));
-		this.storages.put("BSONMemory", new StorageInMemory<String>("BSONMemory"));
+		this.storages.put("BSONMemory", new StorageInMemory<Document>("BSONMemory"));
 	}
 	
 	public <E> E resolveStoreReference(StoreReference reference) {

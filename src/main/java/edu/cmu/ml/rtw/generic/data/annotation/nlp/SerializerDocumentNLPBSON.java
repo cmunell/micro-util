@@ -364,7 +364,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 	}
 	
 	private Object serializeAnnotation(AnnotationTypeNLP<?> annotationType, Object object) {
-		if (annotationType.getSerializationType() == SerializationType.JSON) {
+		if (annotationType.getSerializationType() == SerializationType.JSON || annotationType.getSerializationType() == SerializationType.STORED) {
 			return JSONUtil.convertJSONToBSON((JSONObject)annotationType.serialize(object));
 		} else {
 			return annotationType.serialize(object);
@@ -376,7 +376,7 @@ public class SerializerDocumentNLPBSON extends SerializerDocument<DocumentNLPMut
 		
 		if (bsonAnnotation == null) {
 			throw new UnsupportedOperationException("Missing annotation of " + annotationType.getType() + " in document " + document.getName() + " during BSON deserialization.");
-		} else if (annotationType.getSerializationType() == SerializationType.JSON) {
+		} else if (annotationType.getSerializationType() == SerializationType.JSON || annotationType.getSerializationType() == SerializationType.STORED) {
 			if (annotationType.getTarget() == Target.SENTENCE)
 				annotation = annotationType.deserialize(document, sentenceIndex, JSONUtil.convertBSONToJSON((Document)bsonAnnotation));
 			else

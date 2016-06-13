@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Map.Entry;
 
+import edu.cmu.ml.rtw.generic.data.StoredItemSet;
 import edu.cmu.ml.rtw.generic.data.annotation.AnnotationType;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse;
@@ -23,11 +24,17 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpanCluster;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.ConstituencyParse.Constituent;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse.Dependency;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse.Node;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.NormalizedTimeValue;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression.TimeMLDocumentFunction;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression.TimeMLType;
+import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Triple;
 import edu.stanford.nlp.hcoref.data.CorefChain;
 import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -41,6 +48,9 @@ import edu.stanford.nlp.pipeline.Annotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
+import edu.stanford.nlp.time.SUTime.Temporal;
+import edu.stanford.nlp.time.TimeAnnotations;
+import edu.stanford.nlp.time.TimeAnnotator;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
@@ -86,14 +96,20 @@ public class PipelineNLPStanford extends PipelineNLP {
 	}
 	
 	public boolean initialize() {
-		return initialize(null, null);
+		return initialize(null);
 	}
 	
 	public boolean initialize(AnnotationTypeNLP<?> disableFrom) {
-		return initialize(disableFrom, null);
+		return initialize(disableFrom, null, null, null);
 	}
 	
 	public boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer) {
+		return initialize(disableFrom, tokenizer, null, null);
+	}
+	
+	public boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer, 
+							  StoredItemSet<TimeExpression, TimeExpression> storedTimexes, 
+							  StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues) {
 		Properties props = new Properties();
 		
 		if (tokenizer != null) {
@@ -131,6 +147,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 		
 		props.put("annotators", propsStr);
 		this.nlpPipeline = new StanfordCoreNLP(props);
+		
+		if (storedTimexes != null && storedTimeValues != null) {
+			this.nlpPipeline.addAnnotator(new TimeAnnotator("sutime", props));
+		}
 		
 		clearAnnotators();
 		
@@ -170,7 +190,15 @@ public class PipelineNLPStanford extends PipelineNLP {
 		if (disableFrom != null && disableFrom.equals(AnnotationTypeNLP.COREF))
 			return true;
 		
-		if (!addAnnotator(AnnotationTypeNLP.COREF))
+		if (disableFrom == null || !disableFrom.equals(AnnotationTypeNLP.COREF)) {
+			if (!addAnnotator(AnnotationTypeNLP.COREF))
+				return false;
+		}
+		
+		if (storedTimexes == null || storedTimeValues == null)
+			return true;
+		
+		if (!addTimexAnnotator(storedTimexes, storedTimeValues))
 			return false;
 		
 		return true;
@@ -186,7 +214,6 @@ public class PipelineNLPStanford extends PipelineNLP {
 		else
 			return this.originalToValidSentenceIndices[sentenceIndex];
 	}
-	
 	
 	private boolean addAnnotator(AnnotationType<?> annotationType) {
 		if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
@@ -539,6 +566,72 @@ public class PipelineNLPStanford extends PipelineNLP {
 		
 		return false;
 	}
+	
+	private boolean addTimexAnnotator(StoredItemSet<TimeExpression, TimeExpression> storedTimexes, StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues) {
+		addAnnotator(AnnotationTypeNLP.TIME_EXPRESSION,  new AnnotatorTokenSpan<TimeExpression>() {
+			public String getName() { return "stanford_3.6.0"; }
+			public AnnotationType<TimeExpression> produces() { return AnnotationTypeNLP.TIME_EXPRESSION; };
+			public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
+			public boolean measuresConfidence() { return false; }
+			public List<Triple<TokenSpan, TimeExpression, Double>> annotate(DocumentNLP document) {
+				List<Triple<TokenSpan, TimeExpression, Double>> annotations = new ArrayList<>();
+				List<CoreMap> timexAnnsAll = annotatedText.get(TimeAnnotations.TimexAnnotations.class);
+				for (CoreMap cm : timexAnnsAll) {
+					List<CoreLabel> tokens = cm.get(CoreAnnotations.TokensAnnotation.class);
+					if (tokens.get(0).sentIndex() != tokens.get(tokens.size() - 1).sentIndex())
+						continue;
+					
+					int sentenceIndex = getValidSentenceIndex(tokens.get(0).sentIndex());
+					int startTokenIndex = tokens.get(0).index();
+					int endTokenIndex = tokens.get(tokens.size() - 1).index() + 1;
+					TokenSpan span = new TokenSpan(document, sentenceIndex, startTokenIndex, endTokenIndex);
+					
+					String timexId = String.valueOf(document.getDataTools().getIncrementId());
+					String valueId = String.valueOf(document.getDataTools().getIncrementId());
+					
+					StoreReference timexRef = new StoreReference(timexId, storedTimexes.getName(), "id", String.valueOf(timexId));
+					StoreReference valueRef = new StoreReference(valueId, storedTimeValues.getName(), "id", String.valueOf(valueId));
+							
+					List<StoreReference> timexRefs = new ArrayList<>();
+					timexRefs.add(timexRef);
+					
+					Temporal temporal = cm.get(edu.stanford.nlp.time.TimeExpression.Annotation.class).getTemporal();
+					String valueStr = temporal.getTimexValue();
+					NormalizedTimeValue value = new NormalizedTimeValue(document.getDataTools(), 
+														    			valueRef, 
+														    			valueId, 
+														    			valueStr, 
+														    			timexRefs);
+			        
+			        TimeExpression timex = new TimeExpression(document.getDataTools(), 
+							  timexRef,
+							  span,
+							  timexId,
+							  "",
+							  TimeMLType.TIME,
+							  null,
+							  null,
+							  null,
+							  null,
+							  valueRef,
+							  TimeMLDocumentFunction.NONE,
+							  false,
+							  null,
+							  null,
+							  null);
+			        
+			        storedTimexes.getStoredItems().addItem(timex);
+			        storedTimeValues.getStoredItems().addItem(value);
+			        
+			        annotations.add(new Triple<TokenSpan, TimeExpression, Double>(span, timex, 1.0));
+				}
+			
+				return annotations;
+			}
+		});
+		
+		return true;
+	}
 
 	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
 		if (this.nlpPipeline == null)
@@ -546,6 +639,11 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return null;
 		
 		this.annotatedText = new Annotation(document.getOriginalText());
+		
+		if (document.hasAnnotationType(AnnotationTypeNLP.CREATION_TIME)) {
+			this.annotatedText.set(CoreAnnotations.DocDateAnnotation.class, 			
+						document.getDocumentAnnotation(AnnotationTypeNLP.CREATION_TIME).getValue().getValue());
+		}
 		
 		synchronized (this.nlpPipeline) {
 			this.nlpPipeline.annotate(this.annotatedText);
