@@ -203,19 +203,19 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 		return this.target;
 	}
 	
-	public T deserialize(Document document, Object obj) {
+	public Object deserialize(Document document, Object obj) {
 		if (this.target == Target.SENTENCE)
 			throw new IllegalArgumentException("Deserialization should be given a sentence index if target is sentence.");
 		
 		if (this.serializationType == SerializationType.STORED)
-			return document.getDataTools().getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON((JSONObject)obj), false);
+			return StoreReference.makeFromJSON((JSONObject)obj);
 		else
 			return this.serializer.deserialize(document, -1, obj);
 	}
 	
-	public T deserialize(Document document, int sentenceIndex, Object obj) {
+	public Object deserialize(Document document, int sentenceIndex, Object obj) {
 		if (this.serializationType == SerializationType.STORED)
-			return document.getDataTools().getStoredItemSetManager().resolveStoreReference(StoreReference.makeFromJSON((JSONObject)obj), false);
+			return StoreReference.makeFromJSON((JSONObject)obj);
 		else
 			return this.serializer.deserialize(document, sentenceIndex, obj);
 	}

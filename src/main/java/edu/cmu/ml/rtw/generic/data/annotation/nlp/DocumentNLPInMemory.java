@@ -544,10 +544,10 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 	}
 
 	private Object getAnnotationToSet(AnnotationTypeNLP<?> annotationType, Object annotationObj) {
-		if (annotationType.getSerializationType() == SerializationType.STORED)
+		/* FIXME Remove if (annotationType.getSerializationType() == SerializationType.STORED)
 			return ((Storable)annotationObj).getStoreReference();
-		else 
-			return annotationObj;
+		else*/ 
+		return annotationObj;
 	}
 	
 	@Override

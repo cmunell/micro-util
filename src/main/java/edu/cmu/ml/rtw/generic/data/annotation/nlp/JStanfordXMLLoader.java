@@ -380,7 +380,7 @@ public class JStanfordXMLLoader {
                     String constituencyParseStr = getXmlVal(sentStr, parsePatt2, false);
                     if (constituencyParseStr != null) {
                         ConstituencyParse constituencyParse = 
-                                AnnotationTypeNLP.CONSTITUENCY_PARSE.deserialize(ret, sentenceId, constituencyParseStr);
+                                (ConstituencyParse)AnnotationTypeNLP.CONSTITUENCY_PARSE.deserialize(ret, sentenceId, constituencyParseStr);
                         while (ourConstituencyParses.size() <= sentenceId) ourConstituencyParses.add(null);
                         ourConstituencyParses.set(sentenceId, constituencyParse);
                     }

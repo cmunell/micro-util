@@ -335,7 +335,7 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 					List<Triple<TokenSpan, String, Double>> nerSpans = new ArrayList<Triple<TokenSpan, String, Double>>();
 					for (int j = 0; j < nerSpansJson.length(); j++)
 						nerSpans.add(new Triple<TokenSpan, String, Double>(TokenSpan.fromJSON(nerSpansJson.getJSONObject(j).getJSONObject("tokenSpan"), document, sentenceIndex),
-																AnnotationTypeNLP.NER.deserialize(document, sentenceIndex, nerSpansJson.getJSONObject(j).get("type")), null));
+																(String)AnnotationTypeNLP.NER.deserialize(document, sentenceIndex, nerSpansJson.getJSONObject(j).get("type")), null));
 					
 					ner.addAll(nerSpans);
 				}
@@ -354,7 +354,7 @@ public class SerializerDocumentNLPJSONLegacy extends SerializerDocument<Document
 					List<Triple<TokenSpan, TokenSpanCluster, Double>> corefSpans = new ArrayList<Triple<TokenSpan, TokenSpanCluster, Double>>();
 					for (int j = 0; j < corefSpansJson.length(); j++)
 						corefSpans.add(new Triple<TokenSpan, TokenSpanCluster, Double>(TokenSpan.fromJSON(corefSpansJson.getJSONObject(j).getJSONObject("tokenSpan"), document, sentenceIndex),
-																AnnotationTypeNLP.COREF.deserialize(document, sentenceIndex, corefSpansJson.getJSONObject(j).get("type")), null));
+																(TokenSpanCluster)AnnotationTypeNLP.COREF.deserialize(document, sentenceIndex, corefSpansJson.getJSONObject(j).get("type")), null));
 					
 					coref.addAll(corefSpans);
 				}

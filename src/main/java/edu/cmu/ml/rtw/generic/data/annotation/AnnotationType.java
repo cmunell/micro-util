@@ -36,7 +36,7 @@ public class AnnotationType<T> {
 		
 		if (Storable.class.isAssignableFrom(this.annotationClass))
 			this.serializationType = SerializationType.STORED;
-		if (JSONSerializable.class.isAssignableFrom(this.annotationClass))
+		else if (JSONSerializable.class.isAssignableFrom(this.annotationClass))
 			this.serializationType = SerializationType.JSON;
 		else if (StringSerializable.class.isAssignableFrom(this.annotationClass))
 			this.serializationType = SerializationType.STRING;
