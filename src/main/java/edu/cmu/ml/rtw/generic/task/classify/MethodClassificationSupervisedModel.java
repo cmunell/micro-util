@@ -79,7 +79,7 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 			if (parameterValue == null)
 				this.model = null;
 			SupervisedModel<D, L> model = this.context.getMatchModel(parameterValue);
-			if (!model.getReferenceName().equals(this.model.getReferenceName()))
+			if (this.model == null || !model.getReferenceName().equals(this.model.getReferenceName()))
 				this.model = model; // FIXME This is a hack to allow deserialization to work without interference from evaluation parameter settings
 		} else if (parameter.equals("trainEvaluation"))
 			this.trainEvaluation = (parameterValue == null) ? null : this.context.getMatchEvaluation(parameterValue);
