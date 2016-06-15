@@ -76,7 +76,11 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 		if (parameter.equals("data"))
 			this.data = (parameterValue == null) ? null : this.context.getMatchDataFeatures(parameterValue);
 		else if (parameter.equals("model")) {
-			this.model = (parameterValue == null) ? null : this.context.getMatchModel(parameterValue);
+			if (parameterValue == null)
+				this.model = null;
+			SupervisedModel<D, L> model = this.context.getMatchModel(parameterValue);
+			if (!model.getReferenceName().equals(this.model.getReferenceName()))
+				this.model = model; // FIXME This is a hack to allow deserialization to work without interference from evaluation parameter settings
 		} else if (parameter.equals("trainEvaluation"))
 			this.trainEvaluation = (parameterValue == null) ? null : this.context.getMatchEvaluation(parameterValue);
 		else if (parameter.equals("trainOnInit"))
@@ -158,7 +162,6 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 			SupervisedModel<D, L> model = this.context.getDatumTools().makeModelInstance(fnObj.getName(), this.context);
 			if (!model.fromParse(assignment.getModifiers(), assignment.getName(), fnObj))
 				return false;
-			
 			this.model = model;
 			this.initialized = true;
 		}
