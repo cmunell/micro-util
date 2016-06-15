@@ -317,10 +317,8 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 
 	@Override
 	protected boolean fromParseInternalHelper(AssignmentList internalAssignments) {
-		if (internalAssignments == null)
+		if (internalAssignments == null || !internalAssignments.contains("idfs"))
 			return true;
-		if (!internalAssignments.contains("idfs"))
-			return false;
 		
 		this.idfs = new HashMap<Integer, Double>();
 		
