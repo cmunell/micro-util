@@ -45,8 +45,9 @@ public abstract class Document {
 	
 	public boolean meetsAnnotatorRequirements(AnnotationType<?>[] requirements) {
 		for (AnnotationType<?> type : requirements)
-			if (!hasAnnotationType(type))
+			if (!hasAnnotationType(type)) {
 				return false;
+			}
 		return true;
 	}
 	

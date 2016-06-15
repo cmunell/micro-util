@@ -192,8 +192,9 @@ public class PipelineNLPStanford extends PipelineNLP {
 				return false;
 		}
 		
-		if (storedTimexes == null || storedTimeValues == null)
+		if (storedTimexes == null || storedTimeValues == null) {
 			return true;
+		}
 		
 		if (!addTimexAnnotator(storedTimexes, storedTimeValues))
 			return false;

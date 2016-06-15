@@ -45,7 +45,9 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 	
 	private DatumContext<D, L> context;
 	
+	private Obj featuresRef;
 	private FeatureSet<D, L> features;
+	private Obj dataRef;
 	private DataSet<D, L> data;
 	private String[] parameterNames = { "features", "data" };
 	
@@ -157,20 +159,22 @@ public class DataFeatureMatrix<D extends Datum<L>, L> extends CtxParsableFunctio
 	@Override
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("data"))
-			return this.data.getReferenceName() == null ? null : Obj.curlyBracedValue(this.data.getReferenceName());
+			return this.dataRef;
 		else if (parameter.equals("features"))
-			return this.features.getReferenceName() == null ? null : Obj.curlyBracedValue(this.features.getReferenceName());
+			return this.featuresRef;
 		else
 			return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("data"))
+		if (parameter.equals("data")) {
+			this.dataRef = parameterValue;
 			this.data = parameterValue == null ? null : this.context.getMatchDataSet(parameterValue);
-		else if (parameter.equals("features"))
+		} else if (parameter.equals("features")) {
+			this.featuresRef = parameterValue;
 			this.features = parameterValue == null ? null : this.context.getMatchFeatureSet(parameterValue);
-		else
+		} else
 			return false;
 		return true;
 	}
