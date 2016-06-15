@@ -589,9 +589,9 @@ public class PipelineNLPStanford extends PipelineNLP {
 					String timexId = String.valueOf(document.getDataTools().getIncrementId());
 					String valueId = String.valueOf(document.getDataTools().getIncrementId());
 					
-					StoreReference timexRef = new StoreReference(timexId, storedTimexes.getName(), "id", String.valueOf(timexId));
-					StoreReference valueRef = new StoreReference(valueId, storedTimeValues.getName(), "id", String.valueOf(valueId));
-							
+					StoreReference timexRef = new StoreReference(storedTimexes.getStoredItems().getStorageName(), storedTimexes.getName(), "id", String.valueOf(timexId));
+					StoreReference valueRef = new StoreReference(storedTimeValues.getStoredItems().getStorageName(), storedTimeValues.getName(), "id", String.valueOf(valueId));
+					
 					List<StoreReference> timexRefs = new ArrayList<>();
 					timexRefs.add(timexRef);
 					

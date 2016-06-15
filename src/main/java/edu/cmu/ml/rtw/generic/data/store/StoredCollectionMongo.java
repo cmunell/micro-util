@@ -184,4 +184,9 @@ public class StoredCollectionMongo<I> extends StoredCollection<I, Document> {
 		// FIXME Implement
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Storage<?, Document> getStorage() {
+		return this.storage;
+	}
 }

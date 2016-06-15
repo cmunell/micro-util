@@ -729,7 +729,7 @@ public class DatumContext<D extends Datum<L>, L> extends Context {
 	}
 	
 	public static <D extends Datum<L>, L> DatumContext<D, L> run(Datum.Tools<D, L> datumTools, File file) {
-		return run(datumTools, FileUtil.getFileReader(file.getAbsolutePath()));
+		return run(datumTools, FileUtil.getFileReader(file.getPath()));
 	}
 	
 	public static <D extends Datum<L>, L> DatumContext<D, L> run(Datum.Tools<D, L> datumTools, String str) {

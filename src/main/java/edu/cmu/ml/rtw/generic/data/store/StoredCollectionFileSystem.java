@@ -265,4 +265,9 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 			return new StoreReference(this.storage.getName(), this.name, fields, values);
 		}
 	}
+
+	@Override
+	public Storage<?, S> getStorage() {
+		return this.storage;
+	}
 }

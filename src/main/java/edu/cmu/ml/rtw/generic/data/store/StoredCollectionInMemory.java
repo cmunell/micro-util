@@ -35,6 +35,7 @@ public class StoredCollectionInMemory<I, S> extends StoredCollection<I, S> {
 	}
 	
 	private Serializer<I, S> serializer;
+	private StorageInMemory<S> storage;
 	
 	/*
 	 * FIXME This data structure makes this class super inefficient, but that's
@@ -42,6 +43,11 @@ public class StoredCollectionInMemory<I, S> extends StoredCollection<I, S> {
 	 */
 	private List<Pair<List<Object>, S>> collection;
 	
+	public StoredCollectionInMemory(String name, StorageInMemory<S> storage) {
+		super(name);
+		this.storage = storage;
+		this.collection = new ArrayList<Pair<List<Object>, S>>();
+	}
 	
 	public StoredCollectionInMemory(String name, Serializer<I, S> serializer) {
 		super(name);
@@ -56,6 +62,8 @@ public class StoredCollectionInMemory<I, S> extends StoredCollection<I, S> {
 
 	@Override
 	public Serializer<I, S> getSerializer() {
+		if (this.serializer == null)
+			this.serializer = this.storage.getCollectionSerializer(this.name);
 		return this.serializer;
 	}
 
@@ -163,5 +171,10 @@ public class StoredCollectionInMemory<I, S> extends StoredCollection<I, S> {
 			List<Object> indexValues) {
 		// FIXME Implement
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Storage<?, S> getStorage() {
+		return this.storage;
 	}
 }

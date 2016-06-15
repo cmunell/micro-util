@@ -69,6 +69,11 @@ public abstract class StoredCollection<I, S> implements Iterable<I> {
 		return getIndex(indexField, -1, new Random());
 	}
 	
+	public String getStorageName() {
+		Storage<?, ?> storage = getStorage();
+		return (storage == null) ? null : storage.getName();
+	}
+	
 	public abstract Serializer<I, S> getSerializer();
 	public abstract Set<String> getIndex(String indexField, int limit, Random r);
 	public abstract List<I> getItemsByIndex(String indexField, Object indexValue);
@@ -77,5 +82,6 @@ public abstract class StoredCollection<I, S> implements Iterable<I> {
 	public abstract List<BufferedReader> getReadersByIndices(List<String> indexFields, List<Object> indexValues);
 	
 	public abstract boolean addItem(I item);
-	public abstract boolean addItems(List<I> items);	
+	public abstract boolean addItems(List<I> items);
+	public abstract Storage<?, S> getStorage();
 }

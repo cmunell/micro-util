@@ -924,7 +924,7 @@ public class Context extends CtxParsableFunction {
 	}
 	
 	public static Context run(DataTools dataTools, File file) {
-		return run(file.getName(), dataTools, FileUtil.getFileReader(file.getAbsolutePath()));
+		return run(file.getName(), dataTools, FileUtil.getFileReader(file.getPath()));
 	}
 	
 	public static Context run(String referenceName, DataTools dataTools, String str) {
