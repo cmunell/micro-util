@@ -187,9 +187,6 @@ public class PipelineNLPStanford extends PipelineNLP {
 		if (!addAnnotator(AnnotationTypeNLP.NER))
 			return false;
 		
-		if (disableFrom != null && disableFrom.equals(AnnotationTypeNLP.COREF))
-			return true;
-		
 		if (disableFrom == null || !disableFrom.equals(AnnotationTypeNLP.COREF)) {
 			if (!addAnnotator(AnnotationTypeNLP.COREF))
 				return false;
