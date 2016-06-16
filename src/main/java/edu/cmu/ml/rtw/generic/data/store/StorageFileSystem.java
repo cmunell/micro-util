@@ -139,8 +139,10 @@ public class StorageFileSystem<S> implements Storage<StoredCollectionFileSystem<
 					continue;
 				Document document = Document.parse(line.trim());
 				if (document.getString("collection").equals(collectionName)) {
-					if (newCollectionName != null)
+					if (newCollectionName != null) {
 						document.put("collection", newCollectionName);
+						documents.add(document);
+					}
 				} else {
 					documents.add(document);
 				}

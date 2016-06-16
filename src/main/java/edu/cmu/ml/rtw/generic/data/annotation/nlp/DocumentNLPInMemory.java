@@ -21,6 +21,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.nlp.AnnotationTypeNLP.Target;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan.Relation;
 import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.Pair;
+import edu.cmu.ml.rtw.generic.util.Storable;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 /**
@@ -547,10 +548,13 @@ public class DocumentNLPInMemory extends DocumentNLPMutable {
 	}
 
 	private Object getAnnotationToSet(AnnotationTypeNLP<?> annotationType, Object annotationObj) {
-		/* FIXME Remove if (annotationType.getSerializationType() == SerializationType.STORED)
-			return ((Storable)annotationObj).getStoreReference();
-		else*/ 
-		return annotationObj;
+		if (annotationType.getSerializationType() == SerializationType.STORED)
+			if (Storable.class.isAssignableFrom(annotationObj.getClass()))
+				return ((Storable)annotationObj).getStoreReference();
+			else 
+				return annotationObj;
+		else 
+			return annotationObj;
 	}
 	
 	@Override
