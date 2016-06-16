@@ -618,8 +618,8 @@ public class PipelineNLPStanford extends PipelineNLP {
 							  null,
 							  null);
 			        
-			        storedTimexes.getStoredItems().addItem(timex);
-			        storedTimeValues.getStoredItems().addItem(value);
+			        storedTimexes.addItem(timex);
+			        storedTimeValues.addItem(value);
 			        
 			        annotations.add(new Triple<TokenSpan, TimeExpression, Double>(span, timex, 1.0));
 				}
