@@ -19,4 +19,5 @@ public abstract class StoredItemSet<E, I extends E> implements Iterable<E>  {
 	
 	public abstract String getName();
 	public abstract <T> List<T> map(ThreadMapper.Fn<E, T> fn, int threads, Random r);
+	public abstract boolean addItem(I item);
 }

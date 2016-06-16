@@ -9,6 +9,8 @@ import edu.cmu.ml.rtw.generic.data.annotation.Document;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.time.TimeExpression;
 import edu.cmu.ml.rtw.generic.data.store.StoreReference;
 import edu.cmu.ml.rtw.generic.util.JSONSerializable;
+import edu.cmu.ml.rtw.generic.util.Storable;
+import edu.cmu.ml.rtw.generic.util.StoredJSONSerializable;
 import edu.cmu.ml.rtw.generic.util.StringSerializable;
 
 /**
@@ -223,15 +225,15 @@ public class AnnotationTypeNLP<T> extends AnnotationType<T> {
 	// FIXME This should really take a T (not an Object), but for now this allows for easy serialization
 	// in DocumentNLPSerializers of annotation types where T is a wild card
 	public Object serialize(Object obj) {
-		if (this.serializationType == SerializationType.STORED)
-			return ((StoreReference)obj).toJSON();
-		else
+		if (this.serializationType == SerializationType.STORED) {
+			return ((Storable)obj).getStoreReference().toJSON();
+		} else
 			return this.serializer.serialize(this.annotationClass.cast(obj));
 	}
 
     public String toHTML(Object obj) {
     	if (this.serializationType == SerializationType.STORED)
-			return ((StoreReference)obj).toJSON().toString();
+			return ((StoredJSONSerializable)obj).toJSON().toString();
 		else
 			return this.serializer.toHTML(this.annotationClass.cast(obj));
     }

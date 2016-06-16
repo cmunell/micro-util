@@ -24,7 +24,7 @@ public class StoredItemSetManager {
 		Map<String, String> fsBsonStorage = properties.getFileSystemStorageBSONDirectories();
 		for (Entry<String, String> entry : fsBsonStorage.entrySet()) {
 			this.storages.put(entry.getKey(), new StorageFileSystem<Document>(entry.getKey(), entry.getValue(), serializers));
-		}	
+		}
 		
 		Map<String, String> fsStringStorage = properties.getFileSystemStorageStringDirectories();
 		for (Entry<String, String> entry : fsStringStorage.entrySet()) {
@@ -44,7 +44,6 @@ public class StoredItemSetManager {
 		StoredItemSetInMemoryLazy<E, ?> itemSet = (StoredItemSetInMemoryLazy<E, ?> )getItemSet(reference.getStorageName(), reference.getCollectionName(), false, null);
 		if (itemSet == null)
 			return null;
-		
 		// FIXME For now, this just assumes that reference has single index matching item set 
 		return itemSet.getItemByIndex(reference.getIndexValues().get(0).toString(), keepInMemory);
 	}

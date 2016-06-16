@@ -97,6 +97,7 @@ public class StoredItemSetInMemoryLazy<E, I extends E> extends StoredItemSet<E, 
 		}
 	}
 	
+	@Override
 	public boolean addItem(I item) {
 		if (!this.storedItems.addItem(item))
 			return false;
