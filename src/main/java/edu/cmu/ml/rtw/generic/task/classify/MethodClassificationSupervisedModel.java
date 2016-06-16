@@ -113,20 +113,14 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 				  this.data.getFeatures());
 		
 		Map<D, Pair<L, Double>> scores = new HashMap<D, Pair<L, Double>>();
+		Map<D, L> classifications = this.model.classify(mat);
 		Map<D, Map<L, Double>> p = this.model.posterior(mat);
-		for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
-			if (entry.getValue().size() == 0)
+		for (Entry<D, L> entry : classifications.entrySet()) {
+			L label = entry.getValue();
+			if (label == null)
 				continue;
-			double maxValue = Double.NEGATIVE_INFINITY;
-			L maxLabel = null;
-			for (Entry<L, Double> labelEntry : entry.getValue().entrySet()) {
-				if (Double.compare(labelEntry.getValue(), maxValue) > 0) {
-					maxLabel = labelEntry.getKey();
-					maxValue = labelEntry.getValue();
-				}
-			}
-			
-			scores.put(entry.getKey(), new Pair<L, Double>(maxLabel, maxValue));
+			double score = p.get(entry.getKey()).get(label);
+			scores.put(entry.getKey(), new Pair<L, Double>(label, score));
 		}
 		
 		return scores;
@@ -280,13 +274,29 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 
 	@Override
 	public L classify(D datum) {
-		// FIXME Implement later;
-		throw new UnsupportedOperationException();
+		// FIXME This is slow and stupid
+		DataSet<D, L> data = new DataSet<D, L>(null);
+		data.add(datum);
+		Map<D, L> c = classify(data);
+		if (c.size() == 0)
+			return null;
+		else
+			return c.get(datum);
 	}
 
 	@Override
 	public Pair<L, Double> classifyWithScore(D datum) {
-		// FIXME Implement later;
-		throw new UnsupportedOperationException();
+		// FIXME This is slow and stupid
+		DataSet<D, L> data = new DataSet<D, L>(null);
+		data.add(datum);
+		Map<D, Pair<L, Double>> c = classifyWithScore(data);
+		if (c.size() == 0)
+			return null;
+		else
+			return c.get(datum);
+	}
+	
+	public SupervisedModel<D, L> getSupervisedModel() {
+		return this.model;
 	}
 }
