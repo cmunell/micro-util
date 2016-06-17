@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,12 +31,14 @@ import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.MathUtil;
+import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.StringUtil;
 
 public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private double classificationThreshold = -1.0;
 	private L defaultLabel = null;
-	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel" };
+	private boolean searchThreshold = false;
+	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold" };
 	
 	private LinearClassifier<String, String> classifier;
 	
@@ -53,7 +57,52 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		LinearClassifierFactory<String,String> linearFactory = new LinearClassifierFactory<String,String>();
 	    this.classifier = linearFactory.trainClassifier(rvfData);
 
+	    if (this.searchThreshold && this.defaultLabel != null)
+	    	this.classificationThreshold = searchF1Threshold(testData);
+	    	
 		return true; 
+	}
+	
+	private double searchF1Threshold(DataFeatureMatrix<D, L> testData) {
+		Map<D, Map<L, Double>> p = posterior(testData);
+		List<Pair<D, Double>> sortedData = new ArrayList<>();
+		double totalPositive = 0.0;
+		for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
+			sortedData.add(new Pair<>(entry.getKey(), entry.getValue().get(this.defaultLabel)));
+			if (entry.getKey().getLabel().equals(this.defaultLabel))
+				totalPositive++;
+		}
+		
+		
+		sortedData.sort(new Comparator<Pair<D, Double>>() {
+			@Override
+			public int compare(Pair<D, Double> o1, Pair<D, Double> o2) {
+				return Double.compare(o2.getSecond(), o1.getSecond());
+			}
+		});
+		
+		double tp = 0;
+		double fp = 0;
+		double maxF1 = Double.NEGATIVE_INFINITY;
+		double threshold = -1.0;
+		for (Pair<D, Double> entry : sortedData) {
+			if (entry.getFirst().getLabel().equals(this.defaultLabel))
+				tp++;
+			else
+				fp++;
+			
+			double fn = totalPositive - tp;
+			double prec = Double.compare(tp + fp, 0.0) == 0 ? 1.0 : tp/(tp + fp);
+			double recall = Double.compare(tp + fn, 0.0) == 0 ? 1.0 : tp/(tp + fn);
+			double f1 = 2.0 * prec * recall / (prec + recall);
+			
+			if (Double.compare(f1, maxF1) >= 0) {
+				maxF1 = f1;
+				threshold = entry.getSecond();
+			}
+		}
+		
+		return threshold;
 	}
 
 	private GeneralDataset<String, String> makeData(DataFeatureMatrix<D, L> data, boolean onlyLabeled) {
@@ -161,7 +210,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("classificationThreshold"))
+		if (parameter.equals("searchThreshold")) 
+			return Obj.stringValue(String.valueOf(this.searchThreshold));
+		else if (parameter.equals("classificationThreshold"))
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
 		else if (parameter.equals("defaultLabel"))
 			return (this.defaultLabel != null) ? Obj.stringValue(this.defaultLabel.toString()) : null;
@@ -170,6 +221,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
+		if (parameter.equals("searchThreshold"))
+			this.searchThreshold = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		if (parameter.equals("classificationThreshold"))
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("defaultLabel"))
