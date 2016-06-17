@@ -70,7 +70,10 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		double totalPositive = 0.0;
 		L defaultLabel = this.context.getDatumTools().labelFromString(this.defaultLabel);
 		for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
-			sortedData.add(new Pair<>(entry.getKey(), entry.getValue().get(defaultLabel)));
+			if (!entry.getValue().containsKey(defaultLabel)) {
+				sortedData.add(new Pair<>(entry.getKey(), entry.getValue().get(defaultLabel)));
+			}
+			
 			if (entry.getKey().getLabel().equals(defaultLabel))
 				totalPositive++;
 		}
