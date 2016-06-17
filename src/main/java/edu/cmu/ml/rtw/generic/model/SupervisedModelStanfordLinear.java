@@ -36,9 +36,10 @@ import edu.cmu.ml.rtw.generic.util.StringUtil;
 
 public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends SupervisedModel<D, L> {
 	private double classificationThreshold = -1.0;
-	private L defaultLabel = null;
+	private String defaultLabel = null;
 	private boolean searchThreshold = false;
-	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold" };
+	private double searchThresholdFB = 1.0;
+	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB" };
 	
 	private LinearClassifier<String, String> classifier;
 	
@@ -58,18 +59,19 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	    this.classifier = linearFactory.trainClassifier(rvfData);
 
 	    if (this.searchThreshold && this.defaultLabel != null)
-	    	this.classificationThreshold = searchF1Threshold(testData);
+	    	this.classificationThreshold = searchFBThreshold(testData);
 	    	
 		return true; 
 	}
 	
-	private double searchF1Threshold(DataFeatureMatrix<D, L> testData) {
+	private double searchFBThreshold(DataFeatureMatrix<D, L> testData) {
 		Map<D, Map<L, Double>> p = posterior(testData);
 		List<Pair<D, Double>> sortedData = new ArrayList<>();
 		double totalPositive = 0.0;
+		L defaultLabel = this.context.getDatumTools().labelFromString(this.defaultLabel);
 		for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
-			sortedData.add(new Pair<>(entry.getKey(), entry.getValue().get(this.defaultLabel)));
-			if (entry.getKey().getLabel().equals(this.defaultLabel))
+			sortedData.add(new Pair<>(entry.getKey(), entry.getValue().get(defaultLabel)));
+			if (entry.getKey().getLabel().equals(defaultLabel))
 				totalPositive++;
 		}
 		
@@ -85,8 +87,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		double fp = 0;
 		double maxF1 = Double.NEGATIVE_INFINITY;
 		double threshold = -1.0;
+		double B = this.searchThresholdFB;
 		for (Pair<D, Double> entry : sortedData) {
-			if (entry.getFirst().getLabel().equals(this.defaultLabel))
+			if (entry.getFirst().getLabel().equals(defaultLabel))
 				tp++;
 			else
 				fp++;
@@ -94,10 +97,10 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			double fn = totalPositive - tp;
 			double prec = Double.compare(tp + fp, 0.0) == 0 ? 1.0 : tp/(tp + fp);
 			double recall = Double.compare(tp + fn, 0.0) == 0 ? 1.0 : tp/(tp + fn);
-			double f1 = 2.0 * prec * recall / (prec + recall);
+			double fB = (1 + B*B) * prec * recall / (B*B*prec + recall);
 			
-			if (Double.compare(f1, maxF1) >= 0) {
-				maxF1 = f1;
+			if (Double.compare(fB, maxF1) >= 0) {
+				maxF1 = fB;
 				threshold = entry.getSecond();
 			}
 		}
@@ -166,21 +169,24 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		Map<D, L> classifications = new HashMap<D, L>();
 		if (Double.compare(this.classificationThreshold, 0.0) > 0) {
 			Map<D, Map<L, Double>> p = posterior(data);
+			L defaultLabel = null;
+			if (this.defaultLabel != null)
+				defaultLabel = this.context.getDatumTools().labelFromString(this.defaultLabel);
 			for (Entry<D, Map<L, Double>> entry : p.entrySet()) {
 				double max = Double.NEGATIVE_INFINITY;
 				L maxLabel = null;
 				
-				if (this.defaultLabel != null) {
-					if (entry.getValue().containsKey(this.defaultLabel) 
-							&& Double.compare(entry.getValue().get(this.defaultLabel), this.classificationThreshold) >= 0) {
-						maxLabel = this.defaultLabel;
+				if (defaultLabel != null) {
+					if (entry.getValue().containsKey(defaultLabel) 
+							&& Double.compare(entry.getValue().get(defaultLabel), this.classificationThreshold) >= 0) {
+						maxLabel = defaultLabel;
 						max = entry.getValue().get(maxLabel);
 					}
 				} 
 				
 				if (maxLabel == null) {
 					for (Entry<L, Double> entry2 : entry.getValue().entrySet()) {
-						if (!entry2.getKey().equals(this.defaultLabel) && Double.compare(max, entry2.getValue()) <= 0) {
+						if (!entry2.getKey().equals(defaultLabel) && Double.compare(max, entry2.getValue()) <= 0) {
 							max = entry2.getValue();
 							maxLabel = entry2.getKey();
 						}
@@ -210,7 +216,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("searchThreshold")) 
+		if (parameter.equals("searchThresholdFB"))
+			return Obj.stringValue(String.valueOf(this.searchThresholdFB));
+		else if (parameter.equals("searchThreshold")) 
 			return Obj.stringValue(String.valueOf(this.searchThreshold));
 		else if (parameter.equals("classificationThreshold"))
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
@@ -221,12 +229,14 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		if (parameter.equals("searchThreshold"))
+		if (parameter.equals("searchThresholdFB"))
+			this.searchThresholdFB = Double.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("searchThreshold"))
 			this.searchThreshold = Boolean.valueOf(this.context.getMatchValue(parameterValue));
-		if (parameter.equals("classificationThreshold"))
+		else if (parameter.equals("classificationThreshold"))
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("defaultLabel"))
-			this.defaultLabel = (parameterValue != null) ? this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue)) : null;
+			this.defaultLabel = (parameterValue != null) ? this.context.getMatchValue(parameterValue) : null;
 		else
 			return false;
 		return true;
