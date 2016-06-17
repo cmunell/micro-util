@@ -601,7 +601,10 @@ public class DataTools {
 				List<Object> list = new ArrayList<Object>();
 				for (int i = 0; i < objRefs.size(); i++) {
 					List<?> objs = context.getAssignedMatches(objRefs.get(i));
-					list.add(objs.get(0));
+					String name = objRefs.get(i).getStr();
+					if (name.contains("."))
+						name = name.substring(0, name.lastIndexOf('.'));
+					list.add(new Pair<String, Object>(name, objs.get(0)));
 				}
 				
 				if (!parameters.contains("serializer")) {

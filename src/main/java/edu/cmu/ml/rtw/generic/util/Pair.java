@@ -86,4 +86,9 @@ public class Pair<F, S> {
     		h ^= this.second.hashCode(); 
     	return h;
     }
+    
+    @Override
+    public String toString() {
+    	return this.first.toString() + ", " + this.second.toString();
+    }
 }
