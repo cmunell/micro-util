@@ -96,4 +96,9 @@ public class StoredItemSetManager {
 	public Storage<?, ?> getStorage(String storageName) {
 		return this.storages.get(storageName);
 	}
+	
+	public boolean addStorage(Storage<?, ?> storage) {
+		this.storages.put(storage.getName(), storage);
+		return true;
+	}
 }
