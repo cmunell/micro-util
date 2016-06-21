@@ -1133,7 +1133,7 @@ public class DataTools {
 	
 	public synchronized WordNet getWordNet() {
 		if (this.wordNet == null)
-			this.wordNet = new WordNet(this.properties);
+			this.wordNet = new WordNet();
 		return this.wordNet;
 	}
 	

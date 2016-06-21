@@ -1,17 +1,15 @@
 package edu.cmu.ml.rtw.generic.data.annotation.nlp;
 
-import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.ml.rtw.generic.util.Properties;
-import net.didion.jwnl.JWNL;
-import net.didion.jwnl.JWNLException;
-import net.didion.jwnl.data.IndexWord;
-import net.didion.jwnl.data.POS;
-import net.didion.jwnl.data.Synset;
-import net.didion.jwnl.dictionary.Dictionary;
+import net.sf.extjwnl.JWNLException;
+import net.sf.extjwnl.data.IndexWord;
+import net.sf.extjwnl.data.POS;
+import net.sf.extjwnl.data.Synset;
+import net.sf.extjwnl.dictionary.Dictionary;
 
 /**
  * WordNet represents various aspects of English WordNet
@@ -23,12 +21,14 @@ import net.didion.jwnl.dictionary.Dictionary;
  * @authors Bill McDowell
  */
 public class WordNet {
-	public WordNet(Properties properties) {
+	private Dictionary dictionary;
+	
+	public WordNet() {
 		try {
-			JWNL.initialize(new FileInputStream(properties.getWordNetJWNLConfigFile()));
-		} catch (Exception e) {
-			throw new IllegalArgumentException("Failed to load wordnet from properties file : " + e.getMessage());
-		} 
+			this.dictionary = Dictionary.getDefaultResourceInstance();
+		} catch (JWNLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private POS convertPoSTag(PoSTag tag) {
@@ -54,11 +54,10 @@ public class WordNet {
 			POS pos = convertPoSTag(tag);
 			if (pos == null)
 				return synsets;
-			IndexWord iword = Dictionary.getInstance().lookupIndexWord(pos, word);
+			IndexWord iword = this.dictionary.lookupIndexWord(pos, word);
 			if (iword == null)
 				return synsets;
-			
-			Synset[] synsetArray = iword.getSenses();
+			List<Synset> synsetArray = iword.getSenses();
 			if (synsetArray == null)
 				return synsets;
 			
@@ -92,7 +91,7 @@ public class WordNet {
 			POS pos = convertPoSTag(tag);
 			if (pos == null)
 				return null;
-			IndexWord iword = Dictionary.getInstance().lookupIndexWord(pos, word);
+			IndexWord iword = this.dictionary.lookupIndexWord(pos, word);
 			if (iword == null)
 				return null;
 			String lemma = iword.getLemma();

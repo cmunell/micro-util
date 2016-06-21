@@ -111,10 +111,6 @@ public class Properties {
 		return files.values().iterator().next();
 	}
 	
-	public File getWordNetJWNLConfigFile() {
-		return new File(loadProperty("wordnet_jwnl_config_file"));
-	}
-	
 	private Map<String, String> getFileSystemStorageDirectories(String type) {
 		Map<String, String> info = new HashMap<String, String>();
 		Set<String> propertyKeys = this.properties.stringPropertyNames();

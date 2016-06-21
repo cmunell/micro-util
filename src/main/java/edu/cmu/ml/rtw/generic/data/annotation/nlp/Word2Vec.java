@@ -12,7 +12,6 @@ public class Word2Vec {
 	private WordVectors vec;
 	
 	public Word2Vec(Properties properties) {
-		
 		File gModel = properties.getWord2VecVectorFile();
 		
 		try {
