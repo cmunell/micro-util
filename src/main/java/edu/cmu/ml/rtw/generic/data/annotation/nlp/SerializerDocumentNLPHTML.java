@@ -59,9 +59,21 @@ public class SerializerDocumentNLPHTML extends SerializerDocument<DocumentNLPMut
 		for (AnnotationType<?> annotationType : annotationTypes) {
 			AnnotationTypeNLP<?> annotationTypeNLP = (AnnotationTypeNLP<?>)annotationType;
 			if (annotationTypeNLP.getTarget() == Target.DOCUMENT && !annotationTypeNLP.equals(AnnotationTypeNLP.ORIGINAL_TEXT)) {
-				htmlBuilder.append("<div class=\"annotation\">\n");
-				htmlBuilder.append(annotationTypeNLP.toHTML(document.getDocumentAnnotation(annotationTypeNLP)));
-				htmlBuilder.append("</div>\n");
+				Object annotation = document.getDocumentAnnotation(annotationTypeNLP);	
+				int sentenceStart = 0;
+				int sentenceEnd = document.getToken(document.getSentenceCount() - 1, 
+						document.getSentenceTokenCount(document.getSentenceCount() - 1) - 1).getCharSpanEnd();
+				
+				htmlBuilder.append("<div class=\"annotation\"");
+				htmlBuilder.append(" spanStart=\"" + sentenceStart + "\"");
+				htmlBuilder.append(" spanEnd=\"" + sentenceEnd + "\"");
+				htmlBuilder.append(">\n");
+				htmlBuilder.append("Type: " + annotationTypeNLP.toString());
+				if (document.hasConfidence(annotationTypeNLP))
+					htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Score: " + String.format("%.04f", document.getDocumentAnnotationConfidence(annotationTypeNLP)));
+				htmlBuilder.append("&nbsp;&nbsp;&nbsp;&nbsp;Value: " + annotationTypeNLP.toHTML(annotation));
+				htmlBuilder.append("</div>\n");	
+
 			}		
 		}
 
