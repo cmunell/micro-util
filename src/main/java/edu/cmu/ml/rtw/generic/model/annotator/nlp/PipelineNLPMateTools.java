@@ -25,6 +25,10 @@ public class PipelineNLPMateTools extends PipelineNLP {
 	private Properties properties;
 	
 	public PipelineNLPMateTools(Properties properties) {
+		this(properties, 0);
+	}
+	
+	public PipelineNLPMateTools(Properties properties, int maxSentenceLength) {
 		super();
 		this.properties = properties;
 		
@@ -38,6 +42,9 @@ public class PipelineNLPMateTools extends PipelineNLP {
 				MateTools tools = PipelineNLPMateTools.this.mateTools;
 				try {
 					for (int i = 0; i < document.getSentenceCount(); i++) {
+						if (maxSentenceLength > 0 && document.getSentenceTokenCount(i) > maxSentenceLength)
+							continue;
+						
 						Sentence sentence = null;
 						synchronized (tools) {
 							sentence = tools.parseSentence(document.getSentence(i));

@@ -580,8 +580,8 @@ public class PipelineNLPStanford extends PipelineNLP {
 						continue;
 					
 					int sentenceIndex = getValidSentenceIndex(tokens.get(0).sentIndex());
-					int startTokenIndex = tokens.get(0).index();
-					int endTokenIndex = tokens.get(tokens.size() - 1).index() + 1;
+					int startTokenIndex = tokens.get(0).index() - 1;
+					int endTokenIndex = tokens.get(tokens.size() - 1).index();
 					TokenSpan span = new TokenSpan(document, sentenceIndex, startTokenIndex, endTokenIndex);
 					
 					String timexId = String.valueOf(document.getDataTools().getIncrementId());

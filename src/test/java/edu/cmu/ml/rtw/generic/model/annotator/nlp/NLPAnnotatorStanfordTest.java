@@ -75,6 +75,21 @@ public class NLPAnnotatorStanfordTest {
 		//System.out.println(outputEvals.getStoredItems().toString());
 	}
 	
+	@Test
+	public void testLongSentence() {
+		PipelineNLPStanford pipeline = new PipelineNLPStanford(10);
+		
+		DocumentNLPMutable document = new DocumentNLPInMemory(new DataTools(), 
+				   "document", 
+				   "This is a short sentence.  " +
+				   "This is a very, very, very, very, very, very long sentence.  " +
+				   "This is another short sentence. ");
+
+		pipeline.run(document);
+		
+		Assert.assertEquals(2, document.getSentenceCount());
+	}
+	
 	/* FIXME Refactor later @Test
 	public void scratchSentenceParse() {
 		NLPAnnotatorStanford annotator = new NLPAnnotatorStanford();
