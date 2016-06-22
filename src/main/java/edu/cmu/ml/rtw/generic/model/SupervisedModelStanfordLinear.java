@@ -42,6 +42,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB" };
 	
 	private LinearClassifier<String, String> classifier;
+	private List<String> featureNames = null;
 	
 	public SupervisedModelStanfordLinear() {
 		
@@ -114,14 +115,17 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	private GeneralDataset<String, String> makeData(DataFeatureMatrix<D, L> data, boolean onlyLabeled) {
 		Iterator<D> iter = onlyLabeled ? data.getData().iterator(DataFilter.OnlyLabeled) : data.getData().iterator();
 		GeneralDataset<String, String> rvfData = new RVFDataset<String,String>();
-		List<String> names = data.getFeatures().getFeatureVocabularyNames();
+		synchronized (this) {
+			if (this.featureNames == null)
+				this.featureNames = data.getFeatures().getFeatureVocabularyNames();
+		}
 		while (iter.hasNext()) {
 			D datum = iter.next();
 			Vector f = data.getFeatureVocabularyValues(datum, false);
 			Counter<String> feats = new ClassicCounter<String>();
 			
 			for (VectorElement e : f) {
-				feats.setCount(String.valueOf(e.index() + "_" + names.get(e.index())), e.value());
+				feats.setCount(String.valueOf(e.index() + "_" + this.featureNames.get(e.index())), e.value());
 			}
 			
 			rvfData.add(
