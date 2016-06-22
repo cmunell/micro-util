@@ -631,7 +631,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 		return true;
 	}
 
-	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
+	public synchronized DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
 		if (this.nlpPipeline == null)
 			if (!initialize())
 				return null;
@@ -643,11 +643,10 @@ public class PipelineNLPStanford extends PipelineNLP {
 						document.getDocumentAnnotation(AnnotationTypeNLP.CREATION_TIME).getValue().getValue());
 		}
 		
-		synchronized (this.nlpPipeline) {
-			this.nlpPipeline.annotate(this.annotatedText);
-		}
+		this.nlpPipeline.annotate(this.annotatedText);
 		
 		List<CoreMap> sentences = this.annotatedText.get(SentencesAnnotation.class);
+		
 		if (this.maxSentenceLength == 0) {
 			this.validSentenceCount = sentences.size();
 			this.originalToValidSentenceIndices = null;
