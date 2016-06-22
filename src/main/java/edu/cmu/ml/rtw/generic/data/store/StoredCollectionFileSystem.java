@@ -217,6 +217,7 @@ public class StoredCollectionFileSystem<I, S> extends StoredCollection<I, S> {
 			w.write(serializer.serializeToString(item));
 			w.close();
 		} catch (IOException e) {
+			e.printStackTrace();
 			return false;
 		}
 		

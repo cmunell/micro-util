@@ -65,12 +65,25 @@ import edu.stanford.nlp.util.IntPair;
  *
  */
 public class PipelineNLPStanford extends PipelineNLP {
-	private StanfordCoreNLP nlpPipeline;
-	private Annotation annotatedText;
-	private int maxSentenceLength;
+	private abstract class AnnotatorTokenStanford<T> implements AnnotatorToken<T> {
+		public abstract Pair<T, Double>[][] annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices);
+	}
 	
-	private int validSentenceCount;
-	private int[] originalToValidSentenceIndices;
+	private abstract class AnnotatorSentenceStanford<T> implements AnnotatorSentence<T> {
+		public abstract Map<Integer, Pair<T, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices);
+	}
+	
+	private abstract class AnnotatorTokenSpanStanford<T> implements AnnotatorTokenSpan<T> {
+		public abstract List<Triple<TokenSpan, T, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices);
+	}
+	
+	private abstract class AnnotatorDocumentStanford<T> implements AnnotatorToken<T> {
+		public abstract Pair<T, Double> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices);
+	}
+	
+	
+	private StanfordCoreNLP nlpPipeline;
+	private int maxSentenceLength;
 	
 	public PipelineNLPStanford() {
 		super();
@@ -86,28 +99,25 @@ public class PipelineNLPStanford extends PipelineNLP {
 		super();
 		
 		this.nlpPipeline = pipeline.nlpPipeline;
-		this.annotatedText = pipeline.annotatedText;
 		this.maxSentenceLength = pipeline.maxSentenceLength;
-		this.validSentenceCount = pipeline.validSentenceCount;
-		this.originalToValidSentenceIndices = pipeline.originalToValidSentenceIndices;
 		
 		for (AnnotationType<?> annotationType : pipeline.annotationOrder)
 			addAnnotator(annotationType);
 	}
 	
-	public boolean initialize() {
+	public synchronized boolean initialize() {
 		return initialize(null);
 	}
 	
-	public boolean initialize(AnnotationTypeNLP<?> disableFrom) {
+	public synchronized  boolean initialize(AnnotationTypeNLP<?> disableFrom) {
 		return initialize(disableFrom, null, null, null);
 	}
 	
-	public boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer) {
+	public synchronized boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer) {
 		return initialize(disableFrom, tokenizer, null, null);
 	}
 	
-	public boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer, 
+	public synchronized boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer, 
 							  StoredItemSet<TimeExpression, TimeExpression> storedTimexes, 
 							  StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues) {
 		Properties props = new Properties();
@@ -202,31 +212,29 @@ public class PipelineNLPStanford extends PipelineNLP {
 		return true;
 	}
 	
-	private int getValidSentenceCount() {
-		return this.validSentenceCount;
-	}
 	
-	private int getValidSentenceIndex(int sentenceIndex) {
-		if (this.originalToValidSentenceIndices == null)
+	private int getValidSentenceIndex(int sentenceIndex, int[] originalToValidSentenceIndices) {
+		if (originalToValidSentenceIndices == null)
 			return sentenceIndex;
 		else
-			return this.originalToValidSentenceIndices[sentenceIndex];
+			return originalToValidSentenceIndices[sentenceIndex];
 	}
 	
 	private boolean addAnnotator(AnnotationType<?> annotationType) {
 		if (annotationType.equals(AnnotationTypeNLP.TOKEN)) {
-			addAnnotator(AnnotationTypeNLP.TOKEN,  new AnnotatorToken<Token>() {
+			addAnnotator(AnnotationTypeNLP.TOKEN,  new AnnotatorTokenStanford<Token>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<Token> produces() { return AnnotationTypeNLP.TOKEN; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.ORIGINAL_TEXT }; }
 				public boolean measuresConfidence() { return false; }
 				@SuppressWarnings("unchecked")
-				public Pair<Token, Double>[][] annotate(DocumentNLP document) {
+				@Override
+				public Pair<Token, Double>[][] annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<Token, Double>[][] tokens = (Pair<Token, Double>[][])(new Pair[getValidSentenceCount()][]);
+					Pair<Token, Double>[][] tokens = (Pair<Token, Double>[][])(new Pair[validSentenceCount][]);
 					for(int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -241,23 +249,27 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					return tokens;
 				}
+				@Override
+				public Pair<Token, Double>[][] annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
+				}
 			});
 			
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.POS)) {
-			addAnnotator(AnnotationTypeNLP.POS,  new AnnotatorToken<PoSTag>() {
+			addAnnotator(AnnotationTypeNLP.POS,  new AnnotatorTokenStanford<PoSTag>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<PoSTag> produces() { return AnnotationTypeNLP.POS; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN }; }
 				public boolean measuresConfidence() { return false; }
 				@SuppressWarnings("unchecked")
-				public Pair<PoSTag, Double>[][] annotate(DocumentNLP document) {
+				public Pair<PoSTag, Double>[][] annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<PoSTag, Double>[][] posTags = (Pair<PoSTag, Double>[][])new Pair[getValidSentenceCount()][];
+					Pair<PoSTag, Double>[][] posTags = (Pair<PoSTag, Double>[][])new Pair[validSentenceCount][];
 					
 					for (int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -274,23 +286,28 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					return posTags;
 				}
+				
+				@Override
+				public Pair<PoSTag, Double>[][] annotate(DocumentNLP document) {		
+					throw new UnsupportedOperationException();
+				}
 			});
 			
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.LEMMA)) {
-			addAnnotator(AnnotationTypeNLP.LEMMA,  new AnnotatorToken<String>() {
+			addAnnotator(AnnotationTypeNLP.LEMMA,  new AnnotatorTokenStanford<String>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<String> produces() { return AnnotationTypeNLP.LEMMA; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
 				public boolean measuresConfidence() { return false; }
 				@SuppressWarnings("unchecked")
-				public Pair<String, Double>[][] annotate(DocumentNLP document) {
+				public Pair<String, Double>[][] annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
-					Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[getValidSentenceCount()][];
+					Pair<String, Double>[][] lemmas = (Pair<String, Double>[][])new Pair[validSentenceCount][];
 					
 					for (int i = 0; i < sentences.size(); i++) {
 						List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -303,21 +320,25 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					return lemmas;
 				}
+				@Override
+				public Pair<String, Double>[][] annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
+				}
 			});
 		
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.CONSTITUENCY_PARSE)) {
-			addAnnotator(AnnotationTypeNLP.CONSTITUENCY_PARSE,  new AnnotatorSentence<ConstituencyParse>() {
+			addAnnotator(AnnotationTypeNLP.CONSTITUENCY_PARSE,  new AnnotatorSentenceStanford<ConstituencyParse>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<ConstituencyParse> produces() { return AnnotationTypeNLP.CONSTITUENCY_PARSE; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
 				public boolean measuresConfidence() { return false; }
-				public Map<Integer, Pair<ConstituencyParse, Double>> annotate(DocumentNLP document) {
+				public Map<Integer, Pair<ConstituencyParse, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					Map<Integer, Pair<ConstituencyParse, Double>> parses = new HashMap<Integer, Pair<ConstituencyParse, Double>>();
 
 					for(int i = 0; i < sentences.size(); i++) {
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -380,20 +401,26 @@ public class PipelineNLPStanford extends PipelineNLP {
 					}
 					return false;
 				}
+				
+				@Override
+				public Map<Integer, Pair<ConstituencyParse, Double>> annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
+				}
+				
 			});
 		
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.DEPENDENCY_PARSE)) {
-			addAnnotator(AnnotationTypeNLP.DEPENDENCY_PARSE,  new AnnotatorSentence<DependencyParse>() {
+			addAnnotator(AnnotationTypeNLP.DEPENDENCY_PARSE,  new AnnotatorSentenceStanford<DependencyParse>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<DependencyParse> produces() { return AnnotationTypeNLP.DEPENDENCY_PARSE; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE }; }
 				public boolean measuresConfidence() { return false; }
-				public Map<Integer, Pair<DependencyParse, Double>> annotate(DocumentNLP document) {
+				public Map<Integer, Pair<DependencyParse, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					Map<Integer, Pair<DependencyParse, Double>> parses = new HashMap<Integer, Pair<DependencyParse, Double>>();
 					for(int i = 0; i < sentences.size(); i++) {
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -456,16 +483,20 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					return parses;
 				}
+				@Override
+				public Map<Integer, Pair<DependencyParse, Double>> annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
+				}
 			});
 			
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.NER)) {
-			addAnnotator(AnnotationTypeNLP.NER,  new AnnotatorTokenSpan<String>() {
+			addAnnotator(AnnotationTypeNLP.NER,  new AnnotatorTokenSpanStanford<String>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<String> produces() { return AnnotationTypeNLP.NER; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE, AnnotationTypeNLP.DEPENDENCY_PARSE }; }
 				public boolean measuresConfidence() { return false; }
-				public List<Triple<TokenSpan, String, Double>> annotate(DocumentNLP document) {
+				public List<Triple<TokenSpan, String, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					// FIXME Don't need to do this in a two step process where construct
 					// array and then convert it into token span list.  This was just refactored
 					// from old code in a rush, but can be done more efficiently
@@ -473,7 +504,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 					List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 					String[][] ner = new String[sentences.size()][];
 					for(int i = 0; i < sentences.size(); i++) {
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -487,7 +518,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					List<Triple<TokenSpan, String, Double>> nerAnnotations = new ArrayList<Triple<TokenSpan, String, Double>>();
 					for (int i = 0; i < ner.length; i++) {
-						int validSentenceIndex = getValidSentenceIndex(i);
+						int validSentenceIndex = getValidSentenceIndex(i, originalToValidSentenceIndices);
 						if (validSentenceIndex < 0)
 							continue;
 						
@@ -509,23 +540,27 @@ public class PipelineNLPStanford extends PipelineNLP {
 					
 					return nerAnnotations;
 				}
+				@Override
+				public List<Triple<TokenSpan, String, Double>> annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
+				}
 			});
 			
 			return true;
 		} else if (annotationType.equals(AnnotationTypeNLP.COREF)) {
-			addAnnotator(AnnotationTypeNLP.COREF,  new AnnotatorTokenSpan<TokenSpanCluster>() {
+			addAnnotator(AnnotationTypeNLP.COREF,  new AnnotatorTokenSpanStanford<TokenSpanCluster>() {
 				public String getName() { return "stanford_3.6.0"; }
 				public AnnotationType<TokenSpanCluster> produces() { return AnnotationTypeNLP.COREF; };
 				public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS, AnnotationTypeNLP.CONSTITUENCY_PARSE, AnnotationTypeNLP.DEPENDENCY_PARSE, AnnotationTypeNLP.NER }; }
 				public boolean measuresConfidence() { return false; }
-				public List<Triple<TokenSpan, TokenSpanCluster, Double>> annotate(DocumentNLP document) {
+				public List<Triple<TokenSpan, TokenSpanCluster, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 					Map<Integer, CorefChain> corefGraph = annotatedText.get(CorefChainAnnotation.class);
 					List<Triple<TokenSpan, TokenSpanCluster, Double>> annotations = new ArrayList<Triple<TokenSpan, TokenSpanCluster, Double>>();
 					
 					for (Entry<Integer, CorefChain> entry : corefGraph.entrySet()) {
 						CorefChain corefChain = entry.getValue();
 						CorefMention representativeMention = corefChain.getRepresentativeMention();
-						int representativeSentIndex = getValidSentenceIndex(representativeMention.sentNum - 1);
+						int representativeSentIndex = getValidSentenceIndex(representativeMention.sentNum - 1, originalToValidSentenceIndices);
 						if (representativeSentIndex < 0)
 							continue;
 						
@@ -538,7 +573,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 						Map<IntPair, Set<CorefMention>> mentionMap = corefChain.getMentionMap();
 						for (Entry<IntPair, Set<CorefMention>> spanEntry : mentionMap.entrySet()) {
 							for (CorefMention mention : spanEntry.getValue()) {
-								int validSentenceIndex = getValidSentenceIndex(mention.sentNum - 1);
+								int validSentenceIndex = getValidSentenceIndex(mention.sentNum - 1, originalToValidSentenceIndices);
 								if (validSentenceIndex < 0)
 									continue;
 								
@@ -554,8 +589,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 							annotations.add(new Triple<TokenSpan, TokenSpanCluster, Double>(span, cluster, null));
 					}
 					
-					
 					return annotations;
+				}
+				
+				@Override
+				public List<Triple<TokenSpan, TokenSpanCluster, Double>> annotate(DocumentNLP document) {
+					throw new UnsupportedOperationException();
 				}
 			});
 			
@@ -566,12 +605,12 @@ public class PipelineNLPStanford extends PipelineNLP {
 	}
 	
 	private boolean addTimexAnnotator(StoredItemSet<TimeExpression, TimeExpression> storedTimexes, StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues) {
-		addAnnotator(AnnotationTypeNLP.TIME_EXPRESSION,  new AnnotatorTokenSpan<TimeExpression>() {
+		addAnnotator(AnnotationTypeNLP.TIME_EXPRESSION,  new AnnotatorTokenSpanStanford<TimeExpression>() {
 			public String getName() { return "stanford_3.6.0"; }
 			public AnnotationType<TimeExpression> produces() { return AnnotationTypeNLP.TIME_EXPRESSION; };
 			public AnnotationType<?>[] requires() { return new AnnotationType<?>[] { AnnotationTypeNLP.TOKEN, AnnotationTypeNLP.POS }; }
 			public boolean measuresConfidence() { return false; }
-			public List<Triple<TokenSpan, TimeExpression, Double>> annotate(DocumentNLP document) {
+			public List<Triple<TokenSpan, TimeExpression, Double>> annotateStanford(DocumentNLP document, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
 				List<Triple<TokenSpan, TimeExpression, Double>> annotations = new ArrayList<>();
 				List<CoreMap> timexAnnsAll = annotatedText.get(TimeAnnotations.TimexAnnotations.class);
 				for (CoreMap cm : timexAnnsAll) {
@@ -579,7 +618,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 					if (tokens.get(0).sentIndex() != tokens.get(tokens.size() - 1).sentIndex())
 						continue;
 					
-					int sentenceIndex = getValidSentenceIndex(tokens.get(0).sentIndex());
+					int sentenceIndex = getValidSentenceIndex(tokens.get(0).sentIndex(), originalToValidSentenceIndices);
 					int startTokenIndex = tokens.get(0).index() - 1;
 					int endTokenIndex = tokens.get(tokens.size() - 1).index();
 					TokenSpan span = new TokenSpan(document, sentenceIndex, startTokenIndex, endTokenIndex);
@@ -626,44 +665,79 @@ public class PipelineNLPStanford extends PipelineNLP {
 			
 				return annotations;
 			}
+			
+			@Override
+			public List<Triple<TokenSpan, TimeExpression, Double>> annotate(DocumentNLP document) {
+				throw new UnsupportedOperationException();
+			}
 		});
 		
 		return true;
 	}
 
-	public synchronized DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
+	@Override
+	public DocumentNLPMutable run(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators) {
 		if (this.nlpPipeline == null)
 			if (!initialize())
 				return null;
 		
-		this.annotatedText = new Annotation(document.getOriginalText());
+		Annotation annotatedText = new Annotation(document.getOriginalText());
 		
 		if (document.hasAnnotationType(AnnotationTypeNLP.CREATION_TIME)) {
-			this.annotatedText.set(CoreAnnotations.DocDateAnnotation.class, 			
+			annotatedText.set(CoreAnnotations.DocDateAnnotation.class, 			
 						document.getDocumentAnnotation(AnnotationTypeNLP.CREATION_TIME).getValue().getValue());
 		}
 		
-		this.nlpPipeline.annotate(this.annotatedText);
+		this.nlpPipeline.annotate(annotatedText);
 		
-		List<CoreMap> sentences = this.annotatedText.get(SentencesAnnotation.class);
+		List<CoreMap> sentences = annotatedText.get(SentencesAnnotation.class);
 		
+		
+		int validSentenceCount = 0;
+		int[] originalToValidSentenceIndices = null;
 		if (this.maxSentenceLength == 0) {
-			this.validSentenceCount = sentences.size();
-			this.originalToValidSentenceIndices = null;
+			validSentenceCount = sentences.size();
+			originalToValidSentenceIndices = null;
 		} else {
-			this.validSentenceCount = 0;
-			this.originalToValidSentenceIndices = new int[sentences.size()];
+			validSentenceCount = 0;
+			originalToValidSentenceIndices = new int[sentences.size()];
 			for(int i = 0; i < sentences.size(); i++) {
 				List<CoreLabel> sentenceTokens = sentences.get(i).get(TokensAnnotation.class);
 				if (sentenceTokens.size() <= this.maxSentenceLength) {
-					this.originalToValidSentenceIndices[i] = this.validSentenceCount;
-					this.validSentenceCount++;
+					originalToValidSentenceIndices[i] = validSentenceCount;
+					validSentenceCount++;
 				} else {
-					this.originalToValidSentenceIndices[i] = -1;
+					originalToValidSentenceIndices[i] = -1;
 				}
 			}
 		}
 		
-		return super.run(document, skipAnnotators);
+		return runHelper(document, skipAnnotators, annotatedText, validSentenceCount, originalToValidSentenceIndices);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private DocumentNLPMutable runHelper(DocumentNLPMutable document, Collection<AnnotationType<?>> skipAnnotators, Annotation annotatedText, int validSentenceCount, int[] originalToValidSentenceIndices) {
+		for (int annotatorIndex = 0; annotatorIndex < getAnnotatorCount(); annotatorIndex++) {
+			AnnotationTypeNLP<?> annotationType = (AnnotationTypeNLP<?>)getAnnotationType(annotatorIndex);
+			if (skipAnnotators != null && skipAnnotators.contains(annotationType)) {
+				continue;
+			}
+
+			if (!meetsAnnotatorRequirements(annotationType, document)) {
+				throw new UnsupportedOperationException("Document does not meet annotation type requirements for " + annotationType.getType() + " annotator.");
+			}
+				
+			if (annotationType.getTarget() == AnnotationTypeNLP.Target.DOCUMENT) {
+				document.setDocumentAnnotation(this.annotators.get(annotationType).getName(), annotationType, ((AnnotatorDocumentStanford<?>)this.annotators.get(annotationType)).annotateStanford(document, annotatedText, validSentenceCount, originalToValidSentenceIndices));
+			} else if (annotationType.getTarget() == AnnotationTypeNLP.Target.SENTENCE) {
+				document.setSentenceAnnotation(this.annotators.get(annotationType).getName(), annotationType, ((AnnotatorSentenceStanford<?>)this.annotators.get(annotationType)).annotateStanford(document, annotatedText, validSentenceCount, originalToValidSentenceIndices));
+			} else if (annotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN_SPAN) {
+				document.setTokenSpanAnnotation(this.annotators.get(annotationType).getName(), annotationType, ((AnnotatorTokenSpanStanford)this.annotators.get(annotationType)).annotateStanford(document, annotatedText, validSentenceCount, originalToValidSentenceIndices));			
+			} else if (annotationType.getTarget() == AnnotationTypeNLP.Target.TOKEN) {
+				document.setTokenAnnotation(this.annotators.get(annotationType).getName(), annotationType, ((AnnotatorTokenStanford<?>)this.annotators.get(annotationType)).annotateStanford(document, annotatedText, validSentenceCount, originalToValidSentenceIndices));
+			}
+		}
+		
+		return document;
 	}
 }
