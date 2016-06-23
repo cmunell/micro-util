@@ -61,7 +61,7 @@ public class SerializerDocumentNLPHTML extends SerializerDocument<DocumentNLPMut
 			if (annotationTypeNLP.getTarget() == Target.DOCUMENT && !annotationTypeNLP.equals(AnnotationTypeNLP.ORIGINAL_TEXT)) {
 				Object annotation = document.getDocumentAnnotation(annotationTypeNLP);	
 				int sentenceStart = 0;
-				int sentenceEnd = document.getToken(document.getSentenceCount() - 1, 
+				int sentenceEnd = document.getSentenceCount() == 0 ? 1 : document.getToken(document.getSentenceCount() - 1, 
 						document.getSentenceTokenCount(document.getSentenceCount() - 1) - 1).getCharSpanEnd();
 				
 				htmlBuilder.append("<div class=\"annotation\"");
