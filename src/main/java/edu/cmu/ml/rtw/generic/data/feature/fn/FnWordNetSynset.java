@@ -10,7 +10,8 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 
 public class FnWordNetSynset extends Fn<TokenSpan, String> {
-	private String[] parameterNames = { };
+	private boolean onlyFirst = false;
+	private String[] parameterNames = { "onlyFirst" };
 	
 	private Context context;
 	
@@ -29,12 +30,18 @@ public class FnWordNetSynset extends Fn<TokenSpan, String> {
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		return null;
+		if (parameter.equals("onlyFirst"))
+			return Obj.stringValue(String.valueOf(this.onlyFirst));
+		else
+			return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		return true;
+		if (parameter.equals("onlyFirst"))
+			return Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else
+			return false;
 	}
 
 	@Override
@@ -46,9 +53,13 @@ public class FnWordNetSynset extends Fn<TokenSpan, String> {
 			String tokenSpanStr = tokenSpan.toString();
 			PoSTag tag = tokenSpan.getDocument().getPoSTag(tokenSpan.getSentenceIndex(), tokenSpan.getEndTokenIndex() - 1);
 			Set<String> synsets = this.context.getDataTools().getWordNet().getImmediateSynsetNames(tokenSpanStr, tag);
-			if (synsets != null)
-				for (String synset : synsets)
+			if (synsets != null) {
+				for (String synset : synsets) {
 					output.add(synset);
+					if (this.onlyFirst)
+						break;
+				}
+			}
 		}
 		
 		return output;
