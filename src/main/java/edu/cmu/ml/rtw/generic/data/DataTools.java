@@ -624,7 +624,7 @@ public class DataTools {
 					return String.valueOf(
 							DataTools.this.getStoredItemSetManager()
 								.getItemSet(storageName, collectionName, true, serializer)
-								.addItem(list.get(0)
+								.addItem(((Pair<String, Object>)list.get(0)).getSecond()
 							));
 				}
 			}
