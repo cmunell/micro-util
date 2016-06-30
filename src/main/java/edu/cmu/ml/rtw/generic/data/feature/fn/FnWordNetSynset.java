@@ -53,12 +53,16 @@ public class FnWordNetSynset extends Fn<TokenSpan, String> {
 			
 			String tokenSpanStr = tokenSpan.toString();
 			PoSTag tag = tokenSpan.getDocument().getPoSTag(tokenSpan.getSentenceIndex(), tokenSpan.getEndTokenIndex() - 1);
-			Set<String> synsets = this.context.getDataTools().getWordNet().getImmediateSynsetNames(tokenSpanStr, tag);
-			if (synsets != null) {
-				for (String synset : synsets) {
+			if (this.firstOnly) {
+				String synset = this.context.getDataTools().getWordNet().getFirstImmediateSynsetName(tokenSpanStr, tag);
+				if (synset != null)
 					output.add(synset);
-					if (this.firstOnly)
-						break;
+			} else {
+				Set<String> synsets = this.context.getDataTools().getWordNet().getImmediateSynsetNames(tokenSpanStr, tag);
+				if (synsets != null) {
+					for (String synset : synsets) {
+						output.add(synset);
+					}
 				}
 			}
 		}

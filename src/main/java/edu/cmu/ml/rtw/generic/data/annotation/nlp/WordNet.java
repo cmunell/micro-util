@@ -79,6 +79,27 @@ public class WordNet {
 		return false;
 	}
 	
+	public synchronized String getFirstImmediateSynsetName(String word, PoSTag tag) {
+		try {
+			POS pos = convertPoSTag(tag);
+			if (pos == null)
+				return null;
+			
+			IndexWord iword = this.dictionary.lookupIndexWord(pos, word);
+			if (iword == null)
+				return null;
+			
+			List<Synset> synsetArray = iword.getSenses();
+			if (synsetArray == null)
+				return null;
+			
+			Synset s = synsetArray.get(0);
+			return getSynsetName(s);
+		} catch (Exception ex) { 
+			return null;
+		}
+	}
+	
 	public synchronized Set<String> getImmediateSynsetNames(String word, PoSTag tag) {
 		return getImmediateSynsets(word, tag).keySet();
 	}
