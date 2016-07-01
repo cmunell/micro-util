@@ -26,7 +26,7 @@ public class ClustererTokenSpanPoSTag extends Clusterer<TokenSpan> {
 		DocumentNLP document = tokenSpan.getDocument();
 		for (int i = tokenSpan.getStartTokenIndex(); i < tokenSpan.getEndTokenIndex(); i++) {
 			if (i < 0) 
-				compoundCluster.append("PRE-" + (i - 1)).append("_");
+				compoundCluster.append("PRE-" + (int)Math.abs(i + 1)).append("_");
 			else if (i >= document.getSentenceTokenCount(tokenSpan.getSentenceIndex()))
 				compoundCluster.append("POST-" + (i - document.getSentenceTokenCount(tokenSpan.getSentenceIndex()))).append("_");
 			else 
