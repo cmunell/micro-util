@@ -106,15 +106,15 @@ public class WordNet {
 	
 	public synchronized String getLemma(String word, PoSTag tag) {
 		if(word.indexOf('-') > -1 || word.indexOf('/') > -1)
-			return null;
+			return word;
 		
 		try {
 			POS pos = convertPoSTag(tag);
 			if (pos == null)
-				return null;
+				return word;
 			IndexWord iword = this.dictionary.lookupIndexWord(pos, word);
 			if (iword == null)
-				return null;
+				return word;
 			String lemma = iword.getLemma();
 			lemma = lemma.trim().replace(' ', '_');
 	        return lemma;
