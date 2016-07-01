@@ -32,7 +32,13 @@ public class FnNGramContext extends FnNGram {
 		BEFORE_AND_AFTER_INCLUDING
 	}
 	
-	private boolean allowSqueeze = false;
+	public enum SentenceBoundaryMode {
+		SQUEEZE,
+		STRICT,
+		NONE
+	}
+	
+	private SentenceBoundaryMode sentenceBoundaryMode = SentenceBoundaryMode.STRICT;
 	private Type type = Type.BEFORE;
 	
 	public FnNGramContext() {
@@ -44,23 +50,23 @@ public class FnNGramContext extends FnNGram {
 		
 		this.parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + 2);
 		this.parameterNames[this.parameterNames.length - 1] = "type";
-		this.parameterNames[this.parameterNames.length - 2] = "allowSqueeze";
+		this.parameterNames[this.parameterNames.length - 2] = "sentenceBoundaryMode";
 	}
 	
 	@Override
 	protected boolean getNGrams(TokenSpan tokenSpan, Collection<TokenSpan> ngrams) {
-		if ((this.type != Type.AFTER && this.type != Type.AFTER_INCLUDING) && (this.allowSqueeze || tokenSpan.getStartTokenIndex() - this.n >= 0)) {
+		if ((this.type != Type.AFTER && this.type != Type.AFTER_INCLUDING) && (this.sentenceBoundaryMode != SentenceBoundaryMode.STRICT || tokenSpan.getStartTokenIndex() - this.n >= 0)) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 									 tokenSpan.getSentenceIndex(), 
-									 Math.max(0, tokenSpan.getStartTokenIndex() - this.n), 
+									 (this.sentenceBoundaryMode == SentenceBoundaryMode.SQUEEZE) ? Math.max(0, tokenSpan.getStartTokenIndex() - this.n) : tokenSpan.getStartTokenIndex() - this.n, 
 									 tokenSpan.getStartTokenIndex() + ((this.type == Type.BEFORE || this.type == Type.BEFORE_AND_AFTER) ? 0 : tokenSpan.getLength())));
 		} 
 		
-		if ((this.type != Type.BEFORE && this.type != Type.BEFORE_INCLUDING) && (this.allowSqueeze || tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))) {
+		if ((this.type != Type.BEFORE && this.type != Type.BEFORE_INCLUDING) && (this.sentenceBoundaryMode != SentenceBoundaryMode.STRICT || tokenSpan.getEndTokenIndex() + this.n <= tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))) {
 			ngrams.add(new TokenSpan(tokenSpan.getDocument(), 
 					 				 tokenSpan.getSentenceIndex(), 
 					 				 tokenSpan.getEndTokenIndex() - ((this.type == Type.AFTER || this.type == Type.BEFORE_AND_AFTER) ? 0 : tokenSpan.getLength()), 
-					 				 Math.min(tokenSpan.getEndTokenIndex() + this.n, tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex()))));
+					 				 (this.sentenceBoundaryMode == SentenceBoundaryMode.SQUEEZE) ? Math.min(tokenSpan.getEndTokenIndex() + this.n, tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex())) : tokenSpan.getEndTokenIndex() + this.n));
 		}
 		
 		return true;
@@ -81,8 +87,8 @@ public class FnNGramContext extends FnNGram {
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("type"))
 			return Obj.stringValue(String.valueOf(this.type));
-		else if (parameter.equals("allowSqueeze"))
-			return Obj.stringValue(String.valueOf(this.allowSqueeze));
+		else if (parameter.equals("sentenceBoundaryMode"))
+			return Obj.stringValue(this.sentenceBoundaryMode.toString());
 		else 
 			return super.getParameterValue(parameter);
 	}
@@ -91,8 +97,8 @@ public class FnNGramContext extends FnNGram {
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("type"))
 			this.type = Type.valueOf(this.context.getMatchValue(parameterValue));
-		else if (parameter.equals("allowSqueeze"))
-			this.allowSqueeze = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("sentenceBoundaryMode"))
+			this.sentenceBoundaryMode = SentenceBoundaryMode.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return super.setParameterValue(parameter, parameterValue);
 		return true;

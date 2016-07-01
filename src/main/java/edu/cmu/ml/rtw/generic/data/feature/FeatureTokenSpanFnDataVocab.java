@@ -56,9 +56,9 @@ import edu.cmu.ml.rtw.generic.util.ThreadMapper;
  */
 public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<D, L> {
 	/**
-	 * 
+	 * FIXME Outdated documentation
 	 * Scale gives possible functions by which to scale the computed
-	 * feature vectors.  The INDICATOR function just returns 1 if an n-gram is 
+	 * feature vectors.  The INDICATOR function just returns 1 if an string is 
 	 * in F(T(d)) for datum d (F and T defined in documenation above).  The
 	 * NORMALIZED_LOG function applies log(1+tf(F(T(d)), v) to n-gram v, where
 	 * tf(x,v) computes the frequency of v in x.   Similarly, NORMALIZED_TFIDF
@@ -69,6 +69,7 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 	 */
 	public enum Scale {
 		INDICATOR,
+		COUNT,
 		NORMALIZED_LOG,
 		NORMALIZED_TFIDF
 	}
@@ -198,6 +199,11 @@ public class FeatureTokenSpanFnDataVocab<D extends Datum<L>, L> extends Feature<
 			for (String gram : gramsForDatum.keySet()) {
 				if (this.vocabulary.containsKey(gram))
 					vector.put(this.vocabulary.get(gram) + offset, 1.0);		
+			}
+		} else if (this.scale == Scale.COUNT) {
+			for (Entry<String, Integer> entry : gramsForDatum.entrySet()) {
+				if (this.vocabulary.containsKey(entry.getKey()))
+					vector.put(this.vocabulary.get(entry.getKey()) + offset, (double)entry.getValue().intValue());		
 			}
 		} else if (this.scale == Scale.NORMALIZED_LOG) {
 			double norm = 0.0;
