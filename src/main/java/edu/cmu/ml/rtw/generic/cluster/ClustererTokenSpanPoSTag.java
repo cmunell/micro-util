@@ -20,7 +20,7 @@ public class ClustererTokenSpanPoSTag extends Clusterer<TokenSpan> {
 	@Override
 	public List<String> getClusters(TokenSpan tokenSpan) {
 		List<String> clusters = new ArrayList<String>();
-		if (tokenSpan.getSentenceIndex() < 0 || tokenSpan.getStartTokenIndex() < 0)
+		if (tokenSpan.getSentenceIndex() < 0)
 			return clusters;
 		StringBuilder compoundCluster = new StringBuilder();
 		DocumentNLP document = tokenSpan.getDocument();
