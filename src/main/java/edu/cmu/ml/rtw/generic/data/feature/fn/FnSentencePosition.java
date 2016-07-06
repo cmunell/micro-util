@@ -25,13 +25,17 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 		NONE
 	}
 	
-	private String[] parameterNames = {  };
+	private Position filter = Position.NONE;
+	private String[] parameterNames = { "filter" };
+	
+	private Context context;
 	
 	public FnSentencePosition() {
 		
 	}
 	
 	public FnSentencePosition(Context context) {
+		this.context = context;
 	}
 
 	@Override
@@ -41,37 +45,45 @@ public class FnSentencePosition extends Fn<TokenSpan, String> {
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		return null;
+		if (parameter.equals("filter"))
+			return Obj.stringValue(this.filter.toString());
+		else
+			return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		return false;
+		if (parameter.equals("filter"))
+			this.filter = Position.valueOf(this.context.getMatchValue(parameterValue));
+		else
+			return false;
+		return true;
 	}
 
 	@Override
 	public <C extends Collection<String>> C compute(Collection<TokenSpan> input, C output) {
 		for (TokenSpan tokenSpan : input) {
-			if (tokenSpan.getSentenceIndex() < 0) {
+			if (tokenSpan.getSentenceIndex() < 0 && this.filter == Position.NONE) {
 				output.add(Position.NONE.toString());
 				continue;
 			}
 				
 			int sentenceTokenCount = tokenSpan.getDocument().getSentenceTokenCount(tokenSpan.getSentenceIndex());
 			if (tokenSpan.getStartTokenIndex() == 0 
-					&& tokenSpan.getEndTokenIndex() == sentenceTokenCount)
+					&& tokenSpan.getEndTokenIndex() == sentenceTokenCount && (this.filter == Position.NONE || this.filter == Position.ALL))
 				output.add(Position.ALL.toString());
-			else if (tokenSpan.getStartTokenIndex() == 0)
+			
+			if (tokenSpan.getStartTokenIndex() == 0 && (this.filter == Position.NONE || this.filter == Position.START))
 				output.add(Position.START.toString());
-			else if (tokenSpan.getEndTokenIndex() == sentenceTokenCount)
+			else if (tokenSpan.getEndTokenIndex() == sentenceTokenCount && (this.filter == Position.NONE || this.filter == Position.END))
 				output.add(Position.END.toString());
 			else {
-				if (tokenSpan.getStartTokenIndex() == 1)
+				if (tokenSpan.getStartTokenIndex() == 1 && (this.filter == Position.NONE || this.filter == Position.ALMOST_START))
 					output.add(Position.ALMOST_START.toString());
-				if (tokenSpan.getEndTokenIndex() == sentenceTokenCount - 1)
+				if (tokenSpan.getEndTokenIndex() == sentenceTokenCount - 1  && (this.filter == Position.NONE || this.filter == Position.ALMOST_END))
 					output.add(Position.ALMOST_END.toString());
-				
-				output.add(Position.MIDDLE.toString());
+				if (this.filter == Position.NONE || this.filter == Position.MIDDLE)
+					output.add(Position.MIDDLE.toString());
 			}
 		}
 		
