@@ -123,10 +123,14 @@ public class ConstituencyParse implements StringSerializable {
 		}
 		
 		public String toString() {
-			return toString(true);
+			return toString(true, true);
 		}
 		
 		public String toString(boolean includeTypes) {
+			return toString(includeTypes, true);
+		}
+		
+		public String toString(boolean includeTypes, boolean includeDirections) {
 			StringBuilder str = new StringBuilder();
 			for (int i = 0; i < this.constituents.size(); i++) {
 				String direction = "N";
@@ -137,7 +141,8 @@ public class ConstituencyParse implements StringSerializable {
 				
 				if (includeTypes)
 					str = str.append(this.constituents.get(i).getLabel()).append("-");
-				str = str.append(direction).append("/");
+				if (includeDirections)
+					str = str.append(direction).append("/");
 			}
 			if (str.length() > 0)
 				str = str.delete(str.length() - 1, str.length());

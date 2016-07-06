@@ -55,7 +55,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
 	protected boolean useRelationTypes = true;
 	protected boolean noLeaves = false;
-	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes", "noLeaves"};
+	protected boolean useRelationDirections = true;
+	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes", "useRelationDirections", "noLeaves"};
 	
 	public FeatureConstituencyPath() {
 		
@@ -97,7 +98,7 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 				ConstituentPath path = getShortestPath(sourceSpan, targetSpan);
 				if (path == null)
 					continue;
-				paths.add(path.toString(this.useRelationTypes));
+				paths.add(path.toString(this.useRelationTypes, this.useRelationDirections));
 			}
 		}
 		return paths;
@@ -173,6 +174,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			return Obj.stringValue((this.targetTokenExtractor == null) ? "" : this.targetTokenExtractor.toString());
 		else if (parameter.equals("useRelationTypes"))
 			return Obj.stringValue(String.valueOf(this.useRelationTypes));
+		else if (parameter.equals("useRelationDirections"))
+			return Obj.stringValue(String.valueOf(this.useRelationDirections));
 		else if (parameter.equals("noLeaves"))
 			return Obj.stringValue(String.valueOf(this.noLeaves));
 		return null;
@@ -188,6 +191,8 @@ public class FeatureConstituencyPath<D extends Datum<L>, L> extends Feature<D, L
 			this.targetTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("useRelationTypes"))
 			this.useRelationTypes = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("useRelationDirections"))
+			this.useRelationDirections = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("noLeaves"))
 			this.noLeaves = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
