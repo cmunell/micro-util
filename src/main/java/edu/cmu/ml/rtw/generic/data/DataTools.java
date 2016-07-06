@@ -103,6 +103,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringCase;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringListReplace;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringReplace;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenAnnotation;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanLengthFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTrim;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnWordNetLemma;
@@ -338,6 +339,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnFilterPoSTagClass());
 		this.addGenericTokenSpanFn(new FnPredicateArgument());
 		this.addGenericTokenSpanFn(new FnPrepositionOfClause());
+		this.addGenericTokenSpanFn(new FnTokenSpanLengthFilter());
 		
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanTokenSpanStr());
 		this.addGenericTokenSpanStrFn(new FnComposite.FnCompositeTokenSpanStrStr());
