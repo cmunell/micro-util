@@ -18,13 +18,17 @@ import edu.cmu.ml.rtw.generic.parse.Obj;
  */
 public class FnPoS extends Fn<TokenSpan, String> {
 	private ClustererTokenSpanPoSTag clusterer = new ClustererTokenSpanPoSTag();
-	private String[] parameterNames = {  };
+	private Context context;
+	
+	private boolean literalSymbols = false;
+	private String[] parameterNames = { "literalSymbols" };
 	
 	public FnPoS() {
 		
 	}
 	
 	public FnPoS(Context context) {
+		this.context = context;
 	}
 
 	@Override
@@ -34,18 +38,25 @@ public class FnPoS extends Fn<TokenSpan, String> {
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		return null;
+		if (parameter.equals("literalSymbols"))
+			return Obj.stringValue(String.valueOf(this.literalSymbols));
+		else
+			return null;
 	}
 
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
-		return false;
+		if (parameter.equals("literalSymbols"))
+			this.literalSymbols = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else
+			return false;
+		return true;
 	}
 
 	@Override
 	public <C extends Collection<String>> C compute(Collection<TokenSpan> input, C output) {
 		for (TokenSpan tokenSpan : input) {
-			output.addAll(this.clusterer.getClusters(tokenSpan));
+			output.addAll(this.clusterer.getClusters(tokenSpan, this.literalSymbols));
 		}
 		
 		return output;

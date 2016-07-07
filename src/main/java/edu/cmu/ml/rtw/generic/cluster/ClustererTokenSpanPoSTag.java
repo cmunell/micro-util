@@ -2,7 +2,9 @@ package edu.cmu.ml.rtw.generic.cluster;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DocumentNLP;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 
 /**
@@ -19,6 +21,10 @@ public class ClustererTokenSpanPoSTag extends Clusterer<TokenSpan> {
 	
 	@Override
 	public List<String> getClusters(TokenSpan tokenSpan) {
+		return getClusters(tokenSpan, false);
+	}
+	
+	public List<String> getClusters(TokenSpan tokenSpan, boolean literalSymbols) {
 		List<String> clusters = new ArrayList<String>();
 		if (tokenSpan.getSentenceIndex() < 0)
 			return clusters;
@@ -29,8 +35,17 @@ public class ClustererTokenSpanPoSTag extends Clusterer<TokenSpan> {
 				compoundCluster.append("PRE-" + (int)Math.abs(i + 1)).append("_");
 			else if (i >= document.getSentenceTokenCount(tokenSpan.getSentenceIndex()))
 				compoundCluster.append("POST-" + (i - document.getSentenceTokenCount(tokenSpan.getSentenceIndex()))).append("_");
-			else 
-				compoundCluster.append(document.getPoSTag(tokenSpan.getSentenceIndex(), i).toString()).append("_");
+			else {
+				PoSTag tag = document.getPoSTag(tokenSpan.getSentenceIndex(), i);
+				String tagStr = null;
+				
+				if (literalSymbols && tag == PoSTag.SYM)
+					tagStr = document.getTokenStr(tokenSpan.getSentenceIndex(), i);
+				else
+					tagStr = tag.toString();
+				
+				compoundCluster.append(tagStr).append("_");
+			}
 		}
 	
 		if (compoundCluster.length() == 0)
