@@ -39,7 +39,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	private String defaultLabel = null;
 	private boolean searchThreshold = false;
 	private double searchThresholdFB = 1.0;
-	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB" };
+	private int minFeatureOccurrence = 1;
+	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB", "minFeatureOccurrence" };
 	
 	private LinearClassifier<String, String> classifier;
 	private List<String> featureNames = null;
@@ -58,7 +59,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 
 		LinearClassifierFactory<String,String> linearFactory = new LinearClassifierFactory<String,String>();
 	    this.classifier = linearFactory.trainClassifier(rvfData);
-
+	    
 	    if (this.searchThreshold && this.defaultLabel != null)
 	    	this.classificationThreshold = searchFBThreshold(testData);
 	    	
@@ -133,6 +134,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			);
 		}
 	
+		if (this.minFeatureOccurrence > 1 && onlyLabeled)
+			rvfData.applyFeatureCountThreshold(this.minFeatureOccurrence);
+
 		return rvfData;
 	}
 	
@@ -231,6 +235,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			return Obj.stringValue(String.valueOf(this.classificationThreshold));
 		else if (parameter.equals("defaultLabel"))
 			return (this.defaultLabel != null) ? Obj.stringValue(this.defaultLabel.toString()) : null;
+		else if (parameter.equals("minFeatureOccurrence"))
+			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
 		return null;
 	}
 
@@ -244,6 +250,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			this.classificationThreshold = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("defaultLabel"))
 			this.defaultLabel = (parameterValue != null) ? this.context.getMatchValue(parameterValue) : null;
+		else if (parameter.equals("minFeatureOccurrence"))
+			this.minFeatureOccurrence = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
