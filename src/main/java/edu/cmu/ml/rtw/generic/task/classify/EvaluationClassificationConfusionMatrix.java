@@ -77,7 +77,7 @@ public class EvaluationClassificationConfusionMatrix<D extends Datum<L>, L> exte
 
 	@Override
 	public String toString() {
-		return compute().toString();
+		return getReferenceName() + ":\t" + compute().toString();
 	}
 
 	@Override
