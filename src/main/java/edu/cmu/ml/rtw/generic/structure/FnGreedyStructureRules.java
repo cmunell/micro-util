@@ -28,9 +28,9 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 	private Obj.Array splitFnsRefs;
 	private List<FnStructure<S, ?>> splitFns;
 	private int maxIterations = 0;
-	private boolean oneRuleSetPerIteration = false;
+	private boolean singleRuleSetPerIteration = false;
 	private int maxIterationSize = -1;
-	private String[] parameterNames = { "rules", "splitFns", "maxIterations", "oneRuleSetPerIteration", "maxIterationSize" };
+	private String[] parameterNames = { "rules", "splitFns", "maxIterations", "singleRuleSetPerIteration", "maxIterationSize" };
 	
 	public FnGreedyStructureRules() {
 		
@@ -53,8 +53,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			return (this.splitFnsRefs == null) ? null : this.splitFnsRefs;
 		} else if (parameter.equals("maxIterations")) {
 			return Obj.stringValue(String.valueOf(this.maxIterations));
-		} else if (parameter.equals("oneRuleSetPerIteration")) {
-			return Obj.stringValue(String.valueOf(this.oneRuleSetPerIteration));
+		} else if (parameter.equals("singleRuleSetPerIteration")) {
+			return Obj.stringValue(String.valueOf(this.singleRuleSetPerIteration));
 		} else if (parameter.equals("maxIterationSize")) {
 			return Obj.stringValue(String.valueOf(this.maxIterationSize));
 		} else 
@@ -84,8 +84,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			}
 		} else if (parameter.equals("maxIterations")) {
 			this.maxIterations = Integer.valueOf(this.context.getMatchValue(parameterValue));
-		} else if (parameter.equals("oneRuleSetPerIteration")) {
-			this.oneRuleSetPerIteration = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("singleRuleSetPerIteration")) {
+			this.singleRuleSetPerIteration = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("maxIterationSize")) {
 			this.maxIterationSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
 		} else 
@@ -95,7 +95,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 
 	@Override
 	protected <C extends Collection<S>, F extends WeightedStructure> C compute(Collection<S> input, C output, Collection<F> filter) {
-		if (!this.oneRuleSetPerIteration)
+		if (!this.singleRuleSetPerIteration)
 			return computeDefault(input, output, filter);
 		else
 			return computeOneRuleSetPerIteration(input, output, filter);	
