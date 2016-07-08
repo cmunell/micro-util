@@ -21,8 +21,8 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	private L filterLabel; 
 	private String[] parameterNames = { "filterLabel", "mode" };
 	
-	private double microNumerator = 0.0;
-	private double microDenominator = 0.0;
+	private int microNumerator = 0;
+	private int microDenominator = 0;
 	
 	public EvaluationClassificationMeasurePrecision() {
 		this(null);
@@ -72,8 +72,8 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 		}
 		
 		if (this.mode == Mode.MICRO) {
-			this.microNumerator = num;
-			this.microDenominator = den;
+			this.microNumerator = (int)num;
+			this.microDenominator = (int)den;
 		}
 		
 		if (den == 0.0) {
@@ -141,6 +141,6 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	
 	@Override
 	public String toString() {
-		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? "(" + this.microNumerator + "/" + this.microDenominator + ")" : "");
+		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? " (" + this.microNumerator + "/" + this.microDenominator + ")" : "");
 	}
 }
