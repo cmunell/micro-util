@@ -21,6 +21,9 @@ public class EvaluationClassificationMeasureRecall<D extends Datum<L> , L> exten
 	private L filterLabel; 
 	private String[] parameterNames = { "mode", "filterLabel" };
 	
+	private double microNumerator = 0.0;
+	private double microDenominator = 0.0;
+	
 	public EvaluationClassificationMeasureRecall() {
 		this(null);
 	}
@@ -68,11 +71,17 @@ public class EvaluationClassificationMeasureRecall<D extends Datum<L> , L> exten
 			}
 		}
 		
+		if (this.mode == Mode.MICRO) {
+			this.microNumerator = num;
+			this.microDenominator = den;
+		}
+			
+		
 		if (den == 0.0) {
 			num = 1.0;
 			den = 1.0;
-		}
-			
+		} 
+		
 		return (this.mode == Mode.MICRO) ? num/den : r;
 	}
 
@@ -129,5 +138,10 @@ public class EvaluationClassificationMeasureRecall<D extends Datum<L> , L> exten
 	@Override
 	public EvaluationClassification<D, L, ?> makeInstance(DatumContext<D, L> context) {
 		return new EvaluationClassificationMeasureRecall<D, L>(context);
+	}
+	
+	@Override
+	public String toString() {
+		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? "(" + this.microNumerator + "/" + this.microDenominator + ")" : "");
 	}
 }

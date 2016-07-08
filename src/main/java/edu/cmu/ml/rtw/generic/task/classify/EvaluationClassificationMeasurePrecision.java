@@ -21,6 +21,9 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	private L filterLabel; 
 	private String[] parameterNames = { "filterLabel", "mode" };
 	
+	private double microNumerator = 0.0;
+	private double microDenominator = 0.0;
+	
 	public EvaluationClassificationMeasurePrecision() {
 		this(null);
 	}
@@ -68,10 +71,15 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 			}
 		}
 		
+		if (this.mode == Mode.MICRO) {
+			this.microNumerator = num;
+			this.microDenominator = den;
+		}
+		
 		if (den == 0.0) {
 			num = 1.0;
 			den = 1.0;
-		}
+		} 
 		
 		return (this.mode == Mode.MICRO) ? num/den : p;
 	}
@@ -129,5 +137,10 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 	@Override
 	public EvaluationClassification<D, L, ?> makeInstance(DatumContext<D, L> context) {
 		return new EvaluationClassificationMeasurePrecision<D, L>(context);
+	}
+	
+	@Override
+	public String toString() {
+		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? "(" + this.microNumerator + "/" + this.microDenominator + ")" : "");
 	}
 }
