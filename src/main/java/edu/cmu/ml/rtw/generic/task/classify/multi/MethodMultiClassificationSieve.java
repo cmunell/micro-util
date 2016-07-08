@@ -202,27 +202,29 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 				
 				this.context.getDataTools().getOutputWriter().debugWriteln(method.getReferenceName() + " tried to add " + addedLinks + " to structures");
 				
-				if (this.threadStructure) {
-					ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
-						@Override
-						public Boolean apply(Entry entry) {
+				if (this.structureTransformFn != null) {
+					if (this.threadStructure) {
+						ThreadMapper<Entry, Boolean> threads = new ThreadMapper<Entry, Boolean>(new ThreadMapper.Fn<Entry, Boolean>() {
+							@Override
+							public Boolean apply(Entry entry) {
+								List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
+								WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
+								for (int j = 1; j < transformedStructures.size(); j++)
+									firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
+								entry.setValue(firstTransformed);
+								return true;
+							}
+							
+						});
+						threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
+					} else {
+						for (Entry entry : structures.entrySet()) {
 							List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
 							WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
 							for (int j = 1; j < transformedStructures.size(); j++)
 								firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
 							entry.setValue(firstTransformed);
-							return true;
 						}
-						
-					});
-					threads.run((Set)structures.entrySet(), this.context.getMaxThreads());
-				} else {
-					for (Entry entry : structures.entrySet()) {
-						List transformedStructures = ((FnStructure)structureTransformFn).listCompute((WeightedStructure)entry.getValue(), changes.get(entry.getKey()));
-						WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
-						for (int j = 1; j < transformedStructures.size(); j++)
-							firstTransformed = firstTransformed.merge((WeightedStructure)transformedStructures.get(j));		
-						entry.setValue(firstTransformed);
 					}
 				}
 				
