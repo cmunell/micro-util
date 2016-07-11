@@ -290,18 +290,21 @@ public class DependencyParse implements StringSerializable {
 		Stack<Node> toVisit = new Stack<Node>();
 		Map<Node, Node> paths = new HashMap<Node, Node>();
 		
-		toVisit.push(target);
-		paths.put(target, null);
+		toVisit.push(source);
+		paths.put(source, null);
 		while (!toVisit.isEmpty()) {
 			Node current = toVisit.pop();
 		
-			if (current.equals(source)) {
+			if (current.equals(target)) {
 				List<Node> path = new ArrayList<Node>();
 				Node pathCurrent = current;
 				while (pathCurrent != null) {
 					path.add(pathCurrent);
 					pathCurrent = paths.get(pathCurrent);
 				}
+				
+				Collections.reverse(path);
+				
 				return new DependencyPath(path);
 			}
 			
