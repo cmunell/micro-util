@@ -1,6 +1,9 @@
 package edu.cmu.ml.rtw.generic.data.feature.fn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.PoSTag;
@@ -16,7 +19,7 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 		NONE
 	}
 	
-	private String tagClassName;
+	private List<String> tagClassNames;
 	private PoSTag[] tagClass;
 	private Mode mode = Mode.ONLY;
 	private String[] parameterNames = { "tagClass", "mode" };
@@ -38,9 +41,13 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 
 	@Override
 	public Obj getParameterValue(String parameter) {
-		if (parameter.equals("tagClass"))
-			return Obj.stringValue(this.tagClassName);
-		else if (parameter.equals("mode"))
+		if (parameter.equals("tagClass")) {
+			if (this.tagClassNames.size() == 1)
+				return Obj.stringValue(this.tagClassNames.get(0));
+			else {
+				return Obj.array(this.tagClassNames);
+			}
+		} else if (parameter.equals("mode"))
 			return Obj.stringValue(this.mode.toString());
 		return null;
 	}
@@ -48,8 +55,17 @@ public class FnFilterPoSTagClass extends Fn<TokenSpan, TokenSpan> {
 	@Override
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("tagClass")) {
-			this.tagClassName = this.context.getMatchValue(parameterValue);
-			this.tagClass = PoSTagClass.fromString(this.tagClassName);
+			if (this.context.getMatchArray(parameterValue) != null) {
+				this.tagClassNames = this.context.getMatchArray(parameterValue);
+				List<PoSTag> tagClassList = new ArrayList<>();
+				for (String tagClassName : this.tagClassNames)
+					tagClassList.addAll(Arrays.asList(PoSTagClass.fromString(tagClassName)));
+				this.tagClass = tagClassList.toArray(new PoSTag[0]);
+			} else {
+				this.tagClassNames = new ArrayList<>();
+				this.tagClassNames.add(this.context.getMatchValue(parameterValue));
+				this.tagClass = PoSTagClass.fromString(this.tagClassNames.get(0));
+			}
 		} else if (parameter.equals("mode")) {
 			this.mode = parameterValue == null ? Mode.ONLY : Mode.valueOf(this.context.getMatchValue(parameterValue));
 		} else
