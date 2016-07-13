@@ -7,6 +7,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse;
+import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse.Dependency;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.DependencyParse.DependencyPath;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
@@ -92,10 +93,14 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 		
 		for (TokenSpan sourceSpan : sourceTokenSpans) {
 			for (TokenSpan targetSpan : targetTokenSpans){
-				DependencyPath path = getShortestPath(sourceSpan, targetSpan);
-				if (path == null)
-					continue;
-				paths.add(path.toString(this.useRelationTypes));
+				if (this.assumeTree) {
+					paths.add(getShortestPathStringAssumeTree(sourceSpan, targetSpan));
+				} else {
+					DependencyPath path = getShortestPath(sourceSpan, targetSpan);
+					if (path == null)
+						continue;
+					paths.add(path.toString(this.useRelationTypes));
+				}
 			}
 		}
 		return paths;
@@ -107,13 +112,6 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 				|| sourceSpan.getSentenceIndex() != targetSpan.getSentenceIndex())
 			return null;
 		
-		/*if (this.assumeTree)
-			return getShortestPathAssumeTree(sourceSpan, targetSpan);
-		else*/
-		return getShortestPathDefault(sourceSpan, targetSpan);
-	}
-	
-	private DependencyPath getShortestPathDefault(TokenSpan sourceSpan, TokenSpan targetSpan) {
 		DependencyPath shortestPath = null;
 		int sentenceIndex = sourceSpan.getSentenceIndex();
 		DependencyParse parse = sourceSpan.getDocument().getDependencyParse(sentenceIndex);
@@ -126,6 +124,69 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 		}
 
 		return shortestPath;
+	}
+	
+	// Note: This is only used if "assumeTree" is true.  There is generally no reason to use this
+	// in place of the other shortest path method above.  It was just necessary when replicating
+	// the results of the CAEVO temporal ordering system.
+	private String getShortestPathStringAssumeTree(TokenSpan sourceSpan, TokenSpan targetSpan) {
+		if (sourceSpan.getSentenceIndex() < 0 
+				|| targetSpan.getSentenceIndex() < 0 
+				|| sourceSpan.getSentenceIndex() != targetSpan.getSentenceIndex())
+			return null;
+		
+		int sentenceIndex = sourceSpan.getSentenceIndex();
+		List<Dependency> deps = sourceSpan.getDocument().getDependencyParse(sentenceIndex).toList();
+		String shortestPath = null;
+		int minDist = Integer.MAX_VALUE;
+		for (int i = sourceSpan.getStartTokenIndex(); i < sourceSpan.getEndTokenIndex(); i++){
+			for (int j = targetSpan.getStartTokenIndex(); j < targetSpan.getEndTokenIndex(); j++){
+				List<String> pathStrs = getPaths(deps, i, j, null);
+				for (String pathStr : pathStrs) {
+					int count = pathStr.split("->").length + pathStr.split("<-").length;
+					if (count < minDist) {
+						minDist = count;
+						shortestPath = pathStr;
+					}
+				}
+			}
+		}
+
+		return shortestPath;
+	}
+	
+	private List<String> getPaths(List<Dependency> deps, int start, int end, Set<Integer> visited) {
+		List<String> paths = new ArrayList<String>();
+		
+		if(start == end) {
+			paths.add("");
+			return paths;
+		}
+
+		if(visited == null) 
+			visited = new HashSet<Integer>();
+		
+		visited.add(start);
+	    
+		for(Dependency dep : deps) {
+			if(dep != null) {
+				String type = (this.useRelationTypes) ? dep.getType() : "_";
+				if (dep.getGoverningTokenIndex() == start && !visited.contains(dep.getDependentTokenIndex())) {
+					List<String> newpaths = getPaths(deps, dep.getDependentTokenIndex(), end, visited);
+					for(String newpath : newpaths) {
+						paths.add(type + "->" + newpath);
+					}
+				}
+		
+				if (dep.getDependentTokenIndex() == start && !visited.contains(dep.getGoverningTokenIndex())) {
+					List<String> newpaths = getPaths(deps, dep.getGoverningTokenIndex(), end, visited);
+					for(String newpath : newpaths)
+						paths.add(type + "<-" + newpath);
+				}
+			}
+		}
+
+	    return paths;
 	}
 	
 	@Override
