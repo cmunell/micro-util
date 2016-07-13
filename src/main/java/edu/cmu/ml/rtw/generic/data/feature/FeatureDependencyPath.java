@@ -94,7 +94,9 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 		for (TokenSpan sourceSpan : sourceTokenSpans) {
 			for (TokenSpan targetSpan : targetTokenSpans){
 				if (this.assumeTree) {
-					paths.add(getShortestPathStringAssumeTree(sourceSpan, targetSpan));
+					String pathStr = getShortestPathStringAssumeTree(sourceSpan, targetSpan);
+					if (pathStr != null)
+						paths.add(pathStr);
 				} else {
 					DependencyPath path = getShortestPath(sourceSpan, targetSpan);
 					if (path == null)
