@@ -224,6 +224,8 @@ public class DependencyParse implements StringSerializable {
 	private Node root;
 	private Node[] tokenNodes;
 	
+	private String sourceString;
+	
 	public DependencyParse(DocumentNLP document, int sentenceIndex, Node root, Node[] tokenNodes) {
 		this.document = document;
 		this.sentenceIndex = sentenceIndex;
@@ -358,17 +360,48 @@ public class DependencyParse implements StringSerializable {
 		return dependencies;
 	}
 	
+	public List<Dependency> toList() {
+		List<Dependency> list = new ArrayList<>();
+		
+		if (this.sourceString != null) {
+			String[] strParts = this.sourceString.split("\n");
+			
+			for (int i = 0; i < strParts.length; i++) {
+				Dependency dependency = (this.new Dependency()).fromString(strParts[i]);
+				if (dependency == null)
+					return null;
+				list.add(dependency);
+			}
+		} else {
+			if (this.root == null || this.tokenNodes == null)
+				return list;
+			
+			for (int i = 0; i < this.tokenNodes.length; i++) {
+				if (this.tokenNodes[i] != null) {
+					for (int j = 0; j < this.tokenNodes[i].getGovernors().length; j++) {
+						list.add(this.tokenNodes[i].getGovernors()[j]);
+					}
+				}
+			}	
+		}
+		
+		return list;
+	}
+	
 	public String toString() {
+		if (this.sourceString != null)
+			return this.sourceString;
 		if (this.root == null || this.tokenNodes == null)
 			return "";
 		
 		StringBuilder str = new StringBuilder();
 		
-		for (int i = 0; i < this.tokenNodes.length; i++)
+		for (int i = 0; i < this.tokenNodes.length; i++) {
 			if (this.tokenNodes[i] != null) {
 				for (int j = 0; j < this.tokenNodes[i].getGovernors().length; j++)
 					str = str.append(this.tokenNodes[i].getGovernors()[j].toString()).append("\n");
 			}
+		}
 		
 		return str.toString();
 	}
@@ -416,14 +449,15 @@ public class DependencyParse implements StringSerializable {
 			
 		this.root =  this.new Node(-1, new Dependency[0], nodesToDeps.get(-1).getSecond().toArray(new Dependency[0]));
 		this.tokenNodes = tokenNodes;
-				
+		this.sourceString = str;
+		
 		return true;
 	}
 	
 	public static DependencyParse fromString(String str, DocumentNLP document, int sentenceIndex) {
 		DependencyParse parse = new DependencyParse(document, sentenceIndex);
 		if (!parse.fromString(str))
-			return null;
+			return null;		
 		return parse;
 	}
 	
