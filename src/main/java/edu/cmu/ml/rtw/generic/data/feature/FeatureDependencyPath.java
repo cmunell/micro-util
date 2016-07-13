@@ -52,7 +52,8 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 	protected Datum.Tools.TokenSpanExtractor<D, L> sourceTokenExtractor;
 	protected Datum.Tools.TokenSpanExtractor<D, L> targetTokenExtractor;
 	protected boolean useRelationTypes = true;
-	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes"};
+	protected boolean assumeTree = false;
+	protected String[] parameterNames = {"minFeatureOccurrence", "sourceTokenExtractor", "targetTokenExtractor", "useRelationTypes", "assumeTree"};
 	
 	public FeatureDependencyPath() {
 		
@@ -100,12 +101,19 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 		return paths;
 	}
 	
-	private DependencyPath getShortestPath(TokenSpan sourceSpan, TokenSpan targetSpan){
+	private DependencyPath getShortestPath(TokenSpan sourceSpan, TokenSpan targetSpan) {
 		if (sourceSpan.getSentenceIndex() < 0 
 				|| targetSpan.getSentenceIndex() < 0 
 				|| sourceSpan.getSentenceIndex() != targetSpan.getSentenceIndex())
 			return null;
 		
+		/*if (this.assumeTree)
+			return getShortestPathAssumeTree(sourceSpan, targetSpan);
+		else*/
+		return getShortestPathDefault(sourceSpan, targetSpan);
+	}
+	
+	private DependencyPath getShortestPathDefault(TokenSpan sourceSpan, TokenSpan targetSpan) {
 		DependencyPath shortestPath = null;
 		int sentenceIndex = sourceSpan.getSentenceIndex();
 		DependencyParse parse = sourceSpan.getDocument().getDependencyParse(sentenceIndex);
@@ -169,6 +177,8 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 			return Obj.stringValue((this.targetTokenExtractor == null) ? "" : this.targetTokenExtractor.toString());
 		else if (parameter.equals("useRelationTypes"))
 			return Obj.stringValue(String.valueOf(this.useRelationTypes));
+		else if (parameter.equals("assumeTree"))
+			return Obj.stringValue(String.valueOf(this.assumeTree));
 		return null;
 	}
 	
@@ -182,6 +192,8 @@ public class FeatureDependencyPath<D extends Datum<L>, L> extends Feature<D, L> 
 			this.targetTokenExtractor = this.context.getDatumTools().getTokenSpanExtractor(this.context.getMatchValue(parameterValue));
 		else if (parameter.equals("useRelationTypes"))
 			this.useRelationTypes = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("assumeTree"))
+			this.assumeTree = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;

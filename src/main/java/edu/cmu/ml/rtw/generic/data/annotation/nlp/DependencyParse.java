@@ -282,20 +282,19 @@ public class DependencyParse implements StringSerializable {
 	}
 	
 	public DependencyPath getPath(int sourceTokenIndex, int targetTokenIndex) {
-		
 		Node source = getNode(sourceTokenIndex);
 		Node target = getNode(targetTokenIndex);;
 		// this can happen when the ccompressed path compresses a node into an arc, and i'm trying to find the path to that node.
 		if (source == null || target == null)
 			return null;
 		
-		Stack<Node> toVisit = new Stack<Node>();
+		Queue<Node> toVisit = new LinkedList<Node>();
 		Map<Node, Node> paths = new HashMap<Node, Node>();
 		
-		toVisit.push(source);
+		toVisit.add(source);
 		paths.put(source, null);
 		while (!toVisit.isEmpty()) {
-			Node current = toVisit.pop();
+			Node current = toVisit.poll();
 		
 			if (current.equals(target)) {
 				List<Node> path = new ArrayList<Node>();
@@ -315,7 +314,7 @@ public class DependencyParse implements StringSerializable {
 				Node governorNode = getNode(governor.getGoverningTokenIndex());
 				if (paths.containsKey(governorNode))
 					continue;
-				toVisit.push(governorNode);
+				toVisit.add(governorNode);
 				paths.put(governorNode, current);
 			}
 			
@@ -324,7 +323,7 @@ public class DependencyParse implements StringSerializable {
 				Node dependentNode = getNode(dependent.getDependentTokenIndex());
 				if (paths.containsKey(dependentNode))
 					continue;
-				toVisit.push(dependentNode);
+				toVisit.add(dependentNode);
 				paths.put(dependentNode, current);
 			}
 		}
