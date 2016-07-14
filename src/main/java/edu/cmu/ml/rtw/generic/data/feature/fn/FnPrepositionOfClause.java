@@ -70,7 +70,7 @@ public class FnPrepositionOfClause extends Fn<TokenSpan, TokenSpan> {
 			
 			if (parent != null && parent.getLabel().equals("S")) {
 				parent = parent.getParent();
-				if (parent == null || !parent.getLabel().equals("PP"));
+				if (parent == null || !parent.getLabel().equals("PP"))
 					continue;
 			}
 			
