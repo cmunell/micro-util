@@ -19,6 +19,7 @@ import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Triple;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
@@ -211,8 +212,14 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			GeneralDataset<String,String> rvfData = makeData(data, false);
 			int i = 0; 
 			for (D datum : data.getData()) {
+				Counter<String> scores = this.classifier.scoresOf(rvfData.getDatum(i));
+				Counters.logNormalizeInPlace(scores);
+				for (String label : scores.keySet()) {
+					scores.setCount(label, Math.exp(scores.getCount(label)));
+				}
+				
 				classifications.put(datum, 
-					this.context.getDatumTools().labelFromString(this.classifier.classOf(rvfData.getDatum(i))));
+					this.context.getDatumTools().labelFromString(Counters.argmax(scores)));
 				i++;
 			}
 		}
