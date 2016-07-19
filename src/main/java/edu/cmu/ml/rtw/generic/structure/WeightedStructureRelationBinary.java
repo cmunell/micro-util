@@ -74,7 +74,8 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	@Override
 	public boolean equals(Object o) {
 		WeightedStructureRelationBinary rel = (WeightedStructureRelationBinary)o;
-		return super.equals(rel) && this.r1.equals(rel.r1) && this.r2.equals(rel.r2);
+		return super.equals(rel) && this.r1.equals(rel.r1) && this.r2.equals(rel.r2)
+				|| (!this.ordered && this.r1.equals(rel.r2) && this.r2.equals(rel.r1));
 	}
 	
 	@Override

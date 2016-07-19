@@ -145,11 +145,12 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
-					for (Entry<String, List<Obj>> objList : objs.entrySet())
+					for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 						for (Obj obj : objList.getValue()) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							structure.add(newStructurePart, structurePart.getSecond(), filter);
 						}
+					}
 				}
 				
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running iteration " + iterations + " on size " + iterFilterSize + " (" + (System.currentTimeMillis() - startTime) + ")");
@@ -209,11 +210,12 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
-					for (Entry<String, List<Obj>> objList : objs.entrySet())
+					for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 						for (Obj obj : objList.getValue()) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
 							structure.add(newStructurePart, structurePart.getSecond(), filter);
 						}
+					}
 				}
 				
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running iteration " + iterations + " on size " + iterFilterSize + " (" + (System.currentTimeMillis() - startTime) + ")");

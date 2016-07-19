@@ -520,8 +520,10 @@ public class WeightedStructureGraph extends WeightedStructure {
 				continue;
 			
 			// Get all paths starting with this edge
-			String nodeId = edge.getSecond().getId();
-			Map<String, Map<WeightedStructureRelationBinary, Double>> nextEdges = this.edges.get(nodeId);
+			Map<String, Map<WeightedStructureRelationBinary, Double>> nextEdges = new HashMap<>();
+			nextEdges.putAll(this.edges.get(edge.getSecond().getId()));
+			if (!edge.isOrdered())
+				nextEdges.putAll(this.edges.get(edge.getFirst().getId()));
 			if (nextEdges != null) {
 				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : nextEdges.entrySet()) {
 					for (Entry<WeightedStructureRelationBinary, Double> entry2 : entry.getValue().entrySet()) {
@@ -538,10 +540,12 @@ public class WeightedStructureGraph extends WeightedStructure {
 			// Get all paths ending with this edge
 			for (Entry<String, Map<String, Map<WeightedStructureRelationBinary, Double>>> entry : this.edges.entrySet()) {
 				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry2 : entry.getValue().entrySet()) {
-					if (!entry2.getKey().equals(edge.getFirst().getId()))
+					if (!entry2.getKey().equals(edge.getFirst().getId()) && (edge.isOrdered() || !entry2.getKey().equals(edge.getSecond().getId())))
 						continue;
 					for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
 						if (ignoreTypes != null && ignoreTypes.contains(entry3.getKey().getType()))
+							continue;
+						if (entry3.getKey().equals(edge))
 							continue;
 						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 						seq.add(entry3.getKey(), entry3.getValue());
