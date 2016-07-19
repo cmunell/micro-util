@@ -529,8 +529,15 @@ public class WeightedStructureGraph extends WeightedStructure {
 					for (Entry<WeightedStructureRelationBinary, Double> entry2 : entry.getValue().entrySet()) {
 						if (ignoreTypes != null && ignoreTypes.contains(entry2.getKey().getType()))
 							continue;
+						
 						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
-						seq.add(edge, getWeight(edge));
+						
+						if (entry2.getKey().getFirst().getId().equals(edge.getSecond().getId())) {
+							seq.add(edge, getWeight(edge));
+						} else {
+							seq.add(edge.getReverse(), getWeight(edge));
+						}
+						
 						seq.add(entry2.getKey(), entry2.getValue());
 						paths.add(seq);
 					}
@@ -545,11 +552,15 @@ public class WeightedStructureGraph extends WeightedStructure {
 					for (Entry<WeightedStructureRelationBinary, Double> entry3 : entry2.getValue().entrySet()) {
 						if (ignoreTypes != null && ignoreTypes.contains(entry3.getKey().getType()))
 							continue;
-						if (entry3.getKey().equals(edge))
+						if (entry3.getKey().equals(edge) || (!entry3.getKey().isOrdered() && edges.contains(entry3.getKey())))
 							continue;
 						WeightedStructureSequence seq = new WeightedStructureSequence(this.context);
 						seq.add(entry3.getKey(), entry3.getValue());
-						seq.add(edge, getWeight(edge));
+						
+						if (entry2.getKey().equals(edge.getFirst().getId()))
+							seq.add(edge, getWeight(edge));
+						else
+							seq.add(edge.getReverse(), getWeight(edge));
 						paths.add(seq);
 					}
 				}
