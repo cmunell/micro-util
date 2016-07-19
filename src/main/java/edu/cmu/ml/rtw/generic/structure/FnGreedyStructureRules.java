@@ -170,6 +170,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			int iterations = 0;
 			int prevFilterSize = (filter != null) ? filter.size() : 0;
 			double weightChange = 0;
+			int splitFnIndex = 0;
 			do {
 				System.out.println("Iter " + iterations + "\n" + structure);
 				filter = limitFilterSize(structure, filter, iterations);
@@ -178,7 +179,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					
 				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
 				
-				int splitFnIndex = iterations % this.splitFns.size();
+				splitFnIndex = iterations % this.splitFns.size();
 				FnStructure<S, ?> splitFn = this.splitFns.get(splitFnIndex);
 				
 				List<?> splitStructure = splitFn.listCompute(structure, filter);
@@ -202,8 +203,11 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					
 				});
 				
-				prevFilterSize = (filter != null) ? filter.size() : 0;
-				filter = new HashSet<F>();
+				if (splitFnIndex == this.splitFns.size() - 1) {
+					prevFilterSize = (filter != null) ? filter.size() : 0;
+					filter = new HashSet<F>();
+				}
+				
 				double totalWeight = structure.getTotalWeight();
 				
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running on iteration " + iterations + " trying to add " + orderedStructureParts.size() + " to graph ");
@@ -221,8 +225,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running iteration " + iterations + " on size " + iterFilterSize + " (" + (System.currentTimeMillis() - startTime) + ")");
 				
 				iterations++;
-				weightChange = structure.getTotalWeight() - totalWeight;
-			} while ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize || weightChange > EPSILON));
+				weightChange = Math.abs(structure.getTotalWeight() - totalWeight);
+			} while (splitFnIndex != this.splitFns.size() - 1 || ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize || weightChange > EPSILON)));
 			
 			System.out.println("FINAL\n" + structure);
 			output.add(structure);
