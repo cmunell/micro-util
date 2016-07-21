@@ -22,6 +22,9 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	private List<String> filterTasks;
 	private String[] parameterNames = { "mode", "filterLabels", "filterTasks" };
 	
+	private int microNumerator;
+	private int microDenominator;
+	
 	public EvaluationMultiClassificationMeasurePrecision() {
 		this(null);
 	}
@@ -84,6 +87,11 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 			}
 			
 			i++;
+		}
+		
+		if (this.mode == Mode.MICRO) {
+			this.microNumerator = (int)num;
+			this.microDenominator = (int)den;
 		}
 		
 		if (den == 0.0) {
@@ -151,5 +159,10 @@ public class EvaluationMultiClassificationMeasurePrecision extends EvaluationMul
 	@Override
 	public EvaluationMultiClassification<Double> makeInstance(Context context) {
 		return new EvaluationMultiClassificationMeasurePrecision(context);
+	}
+	
+	@Override
+	public String toString() {
+		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? " (" + this.microNumerator + "/" + this.microDenominator + ")" : "");
 	}
 }
