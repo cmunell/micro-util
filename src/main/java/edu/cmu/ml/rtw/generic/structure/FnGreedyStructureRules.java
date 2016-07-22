@@ -172,7 +172,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			double weightChange = 0;
 			int splitFnIndex = 0;
 			do {
-				System.out.println("Iter " + iterations + "\n" + structure);
+				//System.out.println("Iter " + iterations + "\n" + structure);
 				filter = limitFilterSize(structure, filter, iterations);
 				
 				//long startTime = System.currentTimeMillis();
@@ -228,7 +228,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				weightChange = Math.abs(structure.getTotalWeight() - totalWeight);
 			} while (splitFnIndex != this.splitFns.size() - 1 || ((this.maxIterations == 0 || iterations <= this.maxIterations) && filter.size() > 0 && (filter.size() != prevFilterSize || weightChange > EPSILON)));
 			
-			System.out.println("FINAL\n" + structure);
+			//System.out.println("FINAL\n" + structure);
 			output.add(structure);
 		}
 		
