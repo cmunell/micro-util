@@ -131,7 +131,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			}
 			
 			rvfData.add(
-				new RVFDatum<String,String>(feats,  datum.getLabel() != null ? datum.getLabel().toString() : null)
+				new RVFDatum<String,String>(feats,  datum.getLabel() != null ? datum.getLabel().toString() : "null")
 			);
 		}
 	
