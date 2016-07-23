@@ -63,14 +63,6 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	    
 	    if (this.searchThreshold && this.defaultLabel != null)
 	    	this.classificationThreshold = searchFBThreshold(testData);
-	    	
-	    List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
-		
-	    System.out.println("START " + this.referenceName);
-		for (Triple<String, String, Double> featureWeight : fw) {
-			System.out.println(featureWeight.first() + " " + featureWeight.second() + " " + featureWeight.third());
-		}
-		System.out.println("END " + this.referenceName);
 	    
 		return true; 
 	}
@@ -143,9 +135,10 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			);
 		}
 	
-		if (this.minFeatureOccurrence > 1 && onlyLabeled)
+		if (this.minFeatureOccurrence > 1 && onlyLabeled) {
 			rvfData.applyFeatureCountThreshold(this.minFeatureOccurrence);
-
+		}
+			
 		return rvfData;
 	}
 	
