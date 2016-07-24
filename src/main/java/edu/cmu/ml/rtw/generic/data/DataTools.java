@@ -102,6 +102,7 @@ import edu.cmu.ml.rtw.generic.data.feature.fn.FnString;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringCase;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringListReplace;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnStringReplace;
+import edu.cmu.ml.rtw.generic.data.feature.fn.FnTail;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenAnnotation;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanLengthFilter;
 import edu.cmu.ml.rtw.generic.data.feature.fn.FnTokenSpanPathStr;
@@ -329,6 +330,7 @@ public class DataTools {
 		this.addGenericTokenSpanFn(new FnComposite.FnCompositeTokenSpan());
 		this.addGenericTokenSpanFn(new FnCompositeAppend.FnCompositeAppendTokenSpan());
 		this.addGenericTokenSpanFn(new FnHead());
+		this.addGenericTokenSpanFn(new FnTail());
 		this.addGenericTokenSpanFn(new FnNGramContext());
 		this.addGenericTokenSpanFn(new FnNGramDocument());
 		this.addGenericTokenSpanFn(new FnNGramInside());

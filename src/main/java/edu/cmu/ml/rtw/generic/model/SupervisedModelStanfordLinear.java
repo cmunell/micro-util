@@ -12,15 +12,15 @@ import java.util.Map.Entry;
 import org.platanios.learn.math.matrix.Vector;
 import org.platanios.learn.math.matrix.Vector.VectorElement;
 
-import edu.stanford.nlp.legacy.classify.GeneralDataset;
-import edu.stanford.nlp.legacy.classify.LinearClassifier;
-import edu.stanford.nlp.legacy.classify.LinearClassifierFactory;
-import edu.stanford.nlp.legacy.classify.RVFDataset;
-import edu.stanford.nlp.legacy.ling.RVFDatum;
-import edu.stanford.nlp.legacy.stats.ClassicCounter;
-import edu.stanford.nlp.legacy.stats.Counter;
-import edu.stanford.nlp.legacy.stats.Counters;
-import edu.stanford.nlp.legacy.util.Triple;
+import edu.stanford.nlp/*.legacy*/.classify.GeneralDataset;
+import edu.stanford.nlp/*.legacy*/.classify.LinearClassifier;
+import edu.stanford.nlp/*.legacy*/.classify.LinearClassifierFactory;
+import edu.stanford.nlp/*.legacy*/.classify.RVFDataset;
+import edu.stanford.nlp/*.legacy*/.ling.RVFDatum;
+import edu.stanford.nlp/*.legacy*/.stats.ClassicCounter;
+import edu.stanford.nlp/*.legacy*/.stats.Counter;
+import edu.stanford.nlp/*.legacy*/.stats.Counters;
+import edu.stanford.nlp/*.legacy*/.util.Triple;
 import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.data.annotation.DataSet.DataFilter;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -64,6 +64,12 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	    if (this.searchThreshold && this.defaultLabel != null)
 	    	this.classificationThreshold = searchFBThreshold(testData);
 	    
+	    
+        List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
+        for (Triple<String, String, Double> featureWeight : fw) {
+            System.out.println(featureWeight.first() + " " + featureWeight.second() + " " + featureWeight.third());
+        }
+
 		return true; 
 	}
 	
@@ -116,21 +122,22 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 
 	private GeneralDataset<String, String> makeData(DataFeatureMatrix<D, L> data, boolean onlyLabeled) {
 		Iterator<D> iter = onlyLabeled ? data.getData().iterator(DataFilter.OnlyLabeled) : data.getData().iterator();
-		GeneralDataset<String, String> rvfData = new RVFDataset<String,String>();
+		GeneralDataset<String, String> rvfData = /*new Dataset<String, String>();*/new RVFDataset<String,String>();
 		synchronized (this) {
 			if (this.featureNames == null)
 				this.featureNames = data.getFeatures().getFeatureVocabularyNames();
 		}
+		
 		while (iter.hasNext()) {
 			D datum = iter.next();
 			Vector f = data.getFeatureVocabularyValues(datum, false);
 			Counter<String> feats = new ClassicCounter<String>();
 			
 			for (VectorElement e : f) {
-				feats.setCount(String.valueOf(e.index() + "_" + this.featureNames.get(e.index())), e.value());
+				feats.incrementCount(String.valueOf(e.index() + "_" + this.featureNames.get(e.index())), e.value());
 			}
 			
-			rvfData.add(
+			rvfData.add(	
 				new RVFDatum<String,String>(feats,  datum.getLabel() != null ? datum.getLabel().toString() : "null")
 			);
 		}
