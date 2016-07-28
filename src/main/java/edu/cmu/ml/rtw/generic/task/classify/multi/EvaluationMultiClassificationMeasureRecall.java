@@ -163,6 +163,6 @@ public class EvaluationMultiClassificationMeasureRecall extends EvaluationMultiC
 	
 	@Override
 	public String toString() {
-		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? " (" + this.microNumerator + "/" + this.microDenominator + ")" : "");
+		return getReferenceName() + ":\t" + compute() + ((this.mode == Mode.MICRO) ? "\t(" + this.microNumerator + "/" + this.microDenominator + ")" : "");
 	}
 }
