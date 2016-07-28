@@ -64,11 +64,11 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	    if (this.searchThreshold && this.defaultLabel != null)
 	    	this.classificationThreshold = searchFBThreshold(testData);
 	    
-	    
+	    /*
         List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
         for (Triple<String, String, Double> featureWeight : fw) {
             System.out.println(featureWeight.first() + " " + featureWeight.second() + " " + featureWeight.third());
-        }
+        }*/
 
 		return true; 
 	}
@@ -134,8 +134,21 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			Counter<String> feats = new ClassicCounter<String>();
 			
 			for (VectorElement e : f) {
-				feats.incrementCount(String.valueOf(e.index() + "_" + this.featureNames.get(e.index())), e.value());
+				feats.incrementCount(e.index() + "_" + this.featureNames.get(e.index()), e.value());
 			}
+			
+			/*if (onlyLabeled) {
+				StringBuilder str = new StringBuilder();
+				str.append("{");
+				for (String feat : feats.keySet()) {
+					int u = feat.indexOf('_');
+					str.append("\"" + feat.substring(u + 1) + "\" : " + feats.getCount(feat) + ", ");
+				}
+				str.delete(str.length() - 2, str.length());
+				str.append("}\t");
+				str.append(datum.getLabel());
+				System.out.println(str.toString());
+			}*/
 			
 			rvfData.add(	
 				new RVFDatum<String,String>(feats,  datum.getLabel() != null ? datum.getLabel().toString() : "null")

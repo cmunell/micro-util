@@ -1,6 +1,8 @@
 package edu.cmu.ml.rtw.generic.data.feature;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -8,6 +10,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelIndicator;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.parse.Assignment.AssignmentTyped;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
@@ -37,6 +40,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	}
 	
 	private BidirectionalLookupTable<String, Integer> vocabulary;
+	private List<Feature<D, L>> internalFeatures;
 	
 	private Mode mode = Mode.PRODUCT;
 	private int minFeatureOccurrence;
@@ -50,17 +54,19 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	public FeatureConjunction(DatumContext<D, L> context) {
 		this.context = context;
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>();
+		this.internalFeatures = new ArrayList<>();
 	}
 	
 	@Override
 	public boolean init(DataSet<D, L> dataSet) {
+		this.internalFeatures = new ArrayList<>();
+		
 		for (int i = 0; i < this.features.size(); i++) {
-			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
-			// FIXME This is a hack to make sure features aren't reinitialized... works for now.  But should
-			// be handled differently 
+			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)).clone(false);
 			if (feature.getVocabularySize() == 0)
 				if (!feature.init(dataSet))
 					return false;
+			this.internalFeatures.add(feature);
 		}
 		
 		final CounterTable<String> counter = new CounterTable<String>();
@@ -80,6 +86,13 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		return true;
 	}
 
+	private Feature<D, L> getFeature(int index) {
+		if (this.internalFeatures != null && this.internalFeatures.size() > index)
+			return this.internalFeatures.get(index);
+		else
+			return this.context.getMatchFeature(this.features.get(index));
+	}
+	
 	@Override
 	public Map<Integer, Double> computeVector(D datum, int offset, Map<Integer, Double> vector) {
 		Map<String, Double> unfilteredConjunction = conjunctionForDatum(datum);
@@ -104,7 +117,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		Map<Integer, Double> prevValues = null;
 		Map<Integer, String> prevVocab = null;
 		for (int i = 0; i < this.features.size(); i++) {
-			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
+			Feature<D, L> feature = getFeature(i);
 			Map<Integer, Double> values = feature.computeVector(datum, 0, new HashMap<Integer, Double>());
 			Map<Integer, String> vocab = feature.getVocabularyForIndices(values.keySet());
 		
@@ -148,7 +161,7 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		Map<String, Double> conjunction = new HashMap<String, Double>();
 		conjunction.put("", 1.0);
 		for (int i = 0; i < this.features.size(); i++) {
-			Feature<D, L> feature = this.context.getMatchFeature(this.features.get(i)); 
+			Feature<D, L> feature = getFeature(i); 
 			Map<Integer, Double> values = feature.computeVector(datum, 0, new HashMap<Integer, Double>());
 			Map<Integer, String> vocab = feature.getVocabularyForIndices(values.keySet());
 			Map<String, Double> nextConjunction = new HashMap<String, Double>();
@@ -231,17 +244,45 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 		FeatureConjunction<T, Boolean> binaryFeatureConj = (FeatureConjunction<T, Boolean>)binaryFeature;
 		binaryFeatureConj.vocabulary = this.vocabulary;
 
+		if (this.internalFeatures != null) {
+			for (Feature<D, L> feature : this.internalFeatures)
+				binaryFeatureConj.internalFeatures.add(feature.makeBinary(context, labelIndicator));
+		}
+		
 		return binaryFeatureConj;
 	}
 
 	@Override
 	protected boolean fromParseInternalHelper(AssignmentList internalAssignments) {
+		this.internalFeatures = new ArrayList<>();
+		
+		for (int i = 0; i < internalAssignments.size(); i++) {
+			AssignmentTyped assignment = (AssignmentTyped)internalAssignments.get(i);
+			if (!assignment.getType().equals(DatumContext.ObjectType.FEATURE.name()))
+				continue;
+			
+			Obj.Function featureObj = (Obj.Function)assignment.getValue();
+			Feature<D, L> feature = this.context.getDatumTools().makeFeatureInstance(featureObj.getName(), this.context);
+			if (!feature.fromParse(assignment.getModifiers(), this.referenceName, featureObj))
+				return false;
+			
+			this.internalFeatures.add(feature);
+		}
+		
 		return true;
 	}
 
 	@Override
-	protected AssignmentList toParseInternalHelper(
-			AssignmentList internalAssignments) {
+	protected AssignmentList toParseInternalHelper(AssignmentList internalAssignments) {
+		if (this.internalFeatures == null)
+			return internalAssignments;
+		
+		for (Feature<D, L> feature : this.internalFeatures) {
+			internalAssignments.add(
+				AssignmentTyped.assignmentTyped(null, DatumContext.ObjectType.FEATURE.name(), feature.getReferenceName(), feature.toParse(true))
+			);
+		}
+		
 		return internalAssignments;
 	}
 
@@ -249,6 +290,11 @@ public class FeatureConjunction<D extends Datum<L>, L> extends Feature<D, L> {
 	protected boolean cloneHelper(Feature<D, L> clone) {
 		FeatureConjunction<D, L> cloneConj = (FeatureConjunction<D, L>)clone;
 		cloneConj.vocabulary = this.vocabulary;
+		
+		for (Feature<D, L> feature : this.internalFeatures) {
+			cloneConj.internalFeatures.add(feature.clone(true));
+		}
+		
 		return true;
 	}
 }
