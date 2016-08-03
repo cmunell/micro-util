@@ -12,7 +12,8 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodClassification<D, L> {
 	private L label;
-	private String[] parameterNames = { "label" };
+	private double score = 1.0;
+	private String[] parameterNames = { "label", "score" };
 	
 	public MethodClassificationConstant() {
 		this(null);
@@ -31,6 +32,8 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("label"))
 			return Obj.stringValue(this.label.toString());
+		else if (parameter.equals("score"))
+			return Obj.stringValue(String.valueOf(this.score));
 		else 
 			return null;
 	}
@@ -39,6 +42,8 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("label"))
 			this.label = (parameterValue == null) ? null : this.context.getDatumTools().labelFromString(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("score"))
+			this.score = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		
@@ -117,6 +122,6 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 
 	@Override
 	public Pair<L, Double> classifyWithScore(D datum) {
-		return new Pair<L, Double>(this.label, 1.0);
+		return new Pair<L, Double>(this.label, this.score);
 	}
 }
