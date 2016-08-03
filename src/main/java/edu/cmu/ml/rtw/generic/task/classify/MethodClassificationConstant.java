@@ -66,7 +66,7 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 		Map<D, Pair<L, Double>> map = new HashMap<D, Pair<L, Double>>();
 		
 		for (D datum : data) {
-			map.put(datum, new Pair<L, Double>(this.label, 1.0));
+			map.put(datum, new Pair<L, Double>(this.label, this.score));
 		}
 		
 		return map;
