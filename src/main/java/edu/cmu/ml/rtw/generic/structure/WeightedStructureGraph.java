@@ -521,8 +521,9 @@ public class WeightedStructureGraph extends WeightedStructure {
 			
 			// Get all paths starting with this edge
 			Map<String, Map<WeightedStructureRelationBinary, Double>> nextEdges = new HashMap<>();
-			nextEdges.putAll(this.edges.get(edge.getSecond().getId()));
-			if (!edge.isOrdered())
+			if (this.edges.containsKey(edge.getSecond().getId()))
+				nextEdges.putAll(this.edges.get(edge.getSecond().getId()));
+			if (!edge.isOrdered() && this.edges.containsKey(edge.getFirst().getId()))
 				nextEdges.putAll(this.edges.get(edge.getFirst().getId()));
 			if (nextEdges != null) {
 				for (Entry<String, Map<WeightedStructureRelationBinary, Double>> entry : nextEdges.entrySet()) {

@@ -182,6 +182,13 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				splitFnIndex = iterations % this.splitFns.size();
 				FnStructure<S, ?> splitFn = this.splitFns.get(splitFnIndex);
 				
+				/*System.out.println("FILTER");
+				for (F f : filter)
+					System.out.println(f);
+				System.out.println("RULES STRUCTURE");*/
+				
+				System.out.println(structure);
+				
 				List<?> splitStructure = splitFn.listCompute(structure, filter);
 				
 				for (Object o : splitStructure) {

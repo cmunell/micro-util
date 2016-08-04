@@ -280,12 +280,12 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 				structurizer.addToStructures(datum, label, score, structures, changes);
 			}
 			
-			System.out.println("CHANGES");
+			/*System.out.println("CHANGES");
 			for (WeightedStructure w : changes.get(structureId))
 				System.out.println(w.toParse(false).toString());
 			System.out.println("STRUCTURE");
 			System.out.println(structures.get(structureId));
-			
+			*/
 			
 			List transformedStructures = ((FnStructure)structureTransformFn).listCompute(structures.get(structureId), changes.get(structureId));
 			WeightedStructure firstTransformed = (WeightedStructure)transformedStructures.get(0);
