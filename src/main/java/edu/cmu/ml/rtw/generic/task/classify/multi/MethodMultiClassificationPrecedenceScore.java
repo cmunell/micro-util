@@ -34,8 +34,9 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 	private int trainIters = 10;
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
+	private boolean weightByMeasure = false;
 	private List<EvaluationClassificationMeasure<?, ?>> measures;
-	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure", "measures" };
+	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure", "weightByMeasure", "measures" };
 	
 	private boolean initialized = false;
 	
@@ -85,6 +86,8 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 			for (EvaluationClassificationMeasure<?, ?> measure : this.measures)
 				array.add(Obj.curlyBracedValue(measure.getReferenceName()));
 			return array;
+		} else if (parameter.equals("weightByMeasure")) {
+			return Obj.stringValue(String.valueOf(this.weightByMeasure));
 		}
 		
 		return null;
@@ -123,6 +126,8 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 				for (int i = 0; i < array.size(); i++)
 					this.measures.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
 			}
+		} else if (parameter.equals("weightByMeasure")) {
+			this.weightByMeasure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else {
 			return false;
 		}
@@ -160,6 +165,7 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 		
 		Map<String, List<Pair<Integer, Triple<Datum, Object, Double>>>> predictions = new HashMap<>();
 		for (int i = 0; i < this.methods.size(); i++) {
+			Double measure = this.measures.get(i).compute(true);
 			MethodClassification<?, ?> method = this.methods.get(i);
 			Structurizer structurizer = this.structurizers.get(i);
 			
@@ -176,6 +182,9 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 					String structureId = structurizer.getStructureId(datum, label, structures);
 					if (!predictions.containsKey(structureId))
 						predictions.put(structureId, new ArrayList<>());
+					
+					if (this.weightByMeasure)
+						weight *= measure;
 					
 					predictions.get(structureId).add(
 							new Pair<>(i,
