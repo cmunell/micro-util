@@ -174,4 +174,18 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 		else
 			return null;
 	}
+
+	@Override
+	public Map<D, Double> score(DataSet<D, L> data, L label) {
+		DataSet<D, L> filteredData = data.filter(this.datumIndicator, this.context.getMaxThreads());
+		return this.method.score(filteredData, label);
+	}
+
+	@Override
+	public double score(D datum, L label) {
+		if (this.datumIndicator.indicator(datum))
+			return this.method.score(datum, label);
+		else
+			return 0.0;
+	}
 }

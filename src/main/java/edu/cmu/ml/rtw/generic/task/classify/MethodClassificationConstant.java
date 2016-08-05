@@ -94,7 +94,7 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 
 	@Override
 	public MethodClassification<D, L> clone(String referenceName) {
-		MethodClassificationFilterDatumIndicator<D, L> clone = new MethodClassificationFilterDatumIndicator<D, L>(this.context);
+		MethodClassificationConstant<D, L> clone = new MethodClassificationConstant<D, L>(this.context);
 		if (!clone.fromParse(this.getModifiers(), referenceName, toParse()))
 			return null;
 		return clone;
@@ -123,5 +123,24 @@ public class MethodClassificationConstant<D extends Datum<L>, L> extends MethodC
 	@Override
 	public Pair<L, Double> classifyWithScore(D datum) {
 		return new Pair<L, Double>(this.label, this.score);
+	}
+
+	@Override
+	public Map<D, Double> score(DataSet<D, L> data, L label) {
+		Map<D, Double> map = new HashMap<>();
+		
+		for (D datum : data) {
+			map.put(datum, score(datum, label));
+		}
+		
+		return map;
+	}
+
+	@Override
+	public double score(D datum, L label) {
+		if (label.equals(this.label))
+			return this.score;
+		else
+			return 1.0 - this.score;
 	}
 }

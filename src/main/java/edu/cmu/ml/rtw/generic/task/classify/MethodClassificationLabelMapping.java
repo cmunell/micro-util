@@ -125,13 +125,23 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 
 	@Override
 	public L classify(D datum) {
-		// TODO Auto-generated method stub
-		return null;
+		return this.labelMapping.map(this.method.classify(datum));
 	}
 
 	@Override
 	public Pair<L, Double> classifyWithScore(D datum) {
-		// TODO Auto-generated method stub
-		return null;
+		Pair<L, Double> scoredClass = this.method.classifyWithScore(datum);
+		scoredClass.setFirst(this.labelMapping.map(scoredClass.getFirst()));
+		return scoredClass;
+	}
+
+	@Override
+	public Map<D, Double> score(DataSet<D, L> data, L label) {
+		return this.method.score(data, this.labelMapping.map(label));
+	}
+
+	@Override
+	public double score(D datum, L label) {
+		return this.method.score(datum, this.labelMapping.map(label));
 	}
 }

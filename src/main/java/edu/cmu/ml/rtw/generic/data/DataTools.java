@@ -39,6 +39,7 @@ import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationM
 import edu.cmu.ml.rtw.generic.task.classify.multi.EvaluationMultiClassificationMeasureRecall;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassification;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationPrecedenceScore;
+import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationPrecedenceScoreByModel;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSelfTrain;
 import edu.cmu.ml.rtw.generic.task.classify.multi.MethodMultiClassificationSieve;
 import edu.cmu.ml.rtw.generic.task.classify.multi.TaskMultiClassification;
@@ -390,6 +391,7 @@ public class DataTools {
 		
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSieve());
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationPrecedenceScore());
+		this.addGenericMultiClassifyMethod(new MethodMultiClassificationPrecedenceScoreByModel());
 		this.addGenericMultiClassifyMethod(new MethodMultiClassificationSelfTrain());
 		
 		this.addGenericContext(new DatumContext<DocumentNLPDatum<Boolean>, Boolean>(DocumentNLPDatum.getBooleanTools(this), "DocumentNLPBoolean"));

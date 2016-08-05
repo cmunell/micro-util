@@ -141,4 +141,15 @@ public class MethodClassificationTernaryTest<D extends Datum<TernaryLabel>> exte
 	public Pair<TernaryLabel, Double> classifyWithScore(D datum) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Map<D, Double> score(DataSet<D, TernaryLabel> data,
+			TernaryLabel label) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public double score(D datum, TernaryLabel label) {
+		throw new UnsupportedOperationException();
+	}
 }

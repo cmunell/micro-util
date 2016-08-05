@@ -74,6 +74,7 @@ import edu.cmu.ml.rtw.generic.structure.WeightedStructure;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassification;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionData;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationConfusionMatrix;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureAUC;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureAccuracy;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureConstant;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureF;
@@ -356,6 +357,7 @@ public abstract class Datum<L> {
 			addGenericClassifyEval(new EvaluationClassificationMeasurePrecision<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureRecall<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureF<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationMeasureAUC<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureConstant<D, L>());
 			
 			addGenericDataSetBuilder(new DataSetBuilderStored<D, L>());
@@ -587,6 +589,10 @@ public abstract class Datum<L> {
 		
 		public DataTools getDataTools() {
 			return this.dataTools;
+		}
+		
+		public Collection<TokenSpanExtractor<D, L>> getTokenSpanExtractors() {
+			return this.tokenSpanExtractors.values();
 		}
 		
 		public TokenSpanExtractor<D, L> getTokenSpanExtractor(String name) {

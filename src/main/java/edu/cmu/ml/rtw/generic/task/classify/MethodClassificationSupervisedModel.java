@@ -296,7 +296,37 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 			return c.get(datum);
 	}
 	
+	@Override
+	public double score(D datum, L label) {
+		// FIXME This is slow and stupid
+		DataSet<D, L> data = new DataSet<D, L>(null);
+		data.add(datum);
+		DataFeatureMatrix<D, L> mat = new DataFeatureMatrix<D, L>(this.context, 
+				  data.getReferenceName() + "_" + this.data.getFeatures().getReferenceName(), 
+				  data,
+				  this.data.getFeatures());
+		
+		return this.model.posterior(mat).get(datum).get(label);
+		
+	}
+	
 	public SupervisedModel<D, L> getSupervisedModel() {
 		return this.model;
 	}
+
+	@Override
+	public Map<D, Double> score(DataSet<D, L> data, L label) {
+		DataFeatureMatrix<D, L> mat = new DataFeatureMatrix<D, L>(this.context, 
+				  data.getReferenceName() + "_" + this.data.getFeatures().getReferenceName(), 
+				  data,
+				  this.data.getFeatures());
+		
+		Map<D, Map<L, Double>> p = this.model.posterior(mat);
+		Map<D, Double> scores = new HashMap<>();
+		for (Entry<D, Map<L, Double>> entry : p.entrySet())
+			scores.put(entry.getKey(), entry.getValue().get(label));
+		return scores;
+	}
+
+
 }
