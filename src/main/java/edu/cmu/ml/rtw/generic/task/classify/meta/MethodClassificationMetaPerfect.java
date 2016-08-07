@@ -104,12 +104,12 @@ public class MethodClassificationMetaPerfect extends MethodClassification<Predic
 
 	@Override
 	public Boolean classify(PredictionClassificationDatum<Boolean> datum) {
-		return true;
+		return datum.getPrediction().getLabel().equals(datum.getPrediction().getDatum().getLabel());
 	}
 
 	@Override
 	public Pair<Boolean, Double> classifyWithScore(PredictionClassificationDatum<Boolean> datum) {
-		return new Pair<Boolean, Double>(datum.getPrediction().getLabel().equals(datum.getPrediction().getDatum().getLabel()), 1.0);
+		return new Pair<Boolean, Double>(classify(datum), 1.0);
 	}
 
 	@Override
@@ -131,5 +131,4 @@ public class MethodClassificationMetaPerfect extends MethodClassification<Predic
 		else
 			return 0.0;
 	}
-
 }
