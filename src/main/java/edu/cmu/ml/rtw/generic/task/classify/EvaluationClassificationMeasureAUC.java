@@ -71,7 +71,7 @@ public class EvaluationClassificationMeasureAUC<D extends Datum<L> , L> extends 
 		else if (fp == 0)
 			return 1.0;
 		
-		A += trapezoidArea(1, fp_prev, 1, tp_prev);
+		A += trapezoidArea(fp, fp_prev, tp, tp_prev);
 		A /= (tp*fp);
 		
 		return A;
