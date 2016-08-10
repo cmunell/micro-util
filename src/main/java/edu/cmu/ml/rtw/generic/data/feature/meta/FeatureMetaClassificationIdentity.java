@@ -143,7 +143,8 @@ public class FeatureMetaClassificationIdentity<L> extends Feature<PredictionClas
 	@Override
 	protected boolean cloneHelper(Feature<PredictionClassificationDatum<L>, L> clone) {
 		FeatureMetaClassificationIdentity<L> cloneMeta = (FeatureMetaClassificationIdentity<L>)clone;
-		cloneMeta.feature = this.feature.clone(true);
+		if (this.feature != null)
+			cloneMeta.feature = this.feature.clone(true);
 		return true;
 	}
 }
