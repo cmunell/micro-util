@@ -11,6 +11,7 @@ import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.task.classify.meta.PredictionClassificationDatum;
 import edu.cmu.ml.rtw.generic.util.BidirectionalLookupTable;
+import edu.cmu.ml.rtw.generic.util.CounterTable;
 
 public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionClassificationDatum<L>, L> {
 	public enum Attribute {
@@ -34,20 +35,19 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 	
 	@Override
 	public boolean init(DataSet<PredictionClassificationDatum<L>, L> dataSet) {
+		CounterTable<String> counter = new CounterTable<String>();
+		
 		if (this.attribute == Attribute.LABEL) {
-			int i = 0;
 			for (PredictionClassificationDatum<L> datum : dataSet) {
-				this.vocabulary.put(datum.getPrediction().getLabel().toString(), i);
-				i++;
+				counter.incrementCount(datum.getPrediction().getLabel().toString());
 			}
-
 		} else if (this.attribute == Attribute.METHOD) {
-			int i = 0;
 			for (PredictionClassificationDatum<L> datum : dataSet) {
-				this.vocabulary.put(datum.getPrediction().getMethod().getReferenceName(), i);
-				i++;
+				counter.incrementCount(datum.getPrediction().getMethod().getReferenceName());
 			}
 		} 
+		
+		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
 		
 		return true;
 	}
