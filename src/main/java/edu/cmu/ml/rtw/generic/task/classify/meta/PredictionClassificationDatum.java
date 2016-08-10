@@ -4,6 +4,8 @@ import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.nlp.TokenSpan;
+import edu.cmu.ml.rtw.generic.data.feature.meta.FeatureMetaClassificationAttribute;
+import edu.cmu.ml.rtw.generic.data.feature.meta.FeatureMetaClassificationIdentity;
 
 public class PredictionClassificationDatum<L> extends Datum<L> {
 	private PredictionClassification<?, ?> prediction;
@@ -46,6 +48,9 @@ public class PredictionClassificationDatum<L> extends Datum<L> {
 	public static abstract class Tools<L> extends Datum.Tools<PredictionClassificationDatum<L>, L> { 
 		public Tools(Datum.Tools<?, ?> internalTools) {
 			super(internalTools.getDataTools());
+			
+			addGenericFeature(new FeatureMetaClassificationAttribute<L>());
+			addGenericFeature(new FeatureMetaClassificationIdentity<L>());
 			
 			for (TokenSpanExtractor<?, ?> extractor : internalTools.getTokenSpanExtractors()) {
 				this.addTokenSpanExtractor(new TokenSpanExtractor<PredictionClassificationDatum<L>, L>() {
