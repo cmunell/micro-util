@@ -54,10 +54,15 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 
 	@Override
 	public Map<Integer, Double> computeVector(PredictionClassificationDatum<L> datum, int offset, Map<Integer, Double> vector) {
-		if (this.attribute == Attribute.LABEL)
+		if (this.attribute == Attribute.LABEL) {
+			if (!this.vocabulary.containsKey(datum.getPrediction().getLabel().toString()))
+				return vector;
 			vector.put(offset + this.vocabulary.get(datum.getPrediction().getLabel().toString()), 1.0);
-		else if (this.attribute == Attribute.METHOD)
+		} else if (this.attribute == Attribute.METHOD) {
+			if (!this.vocabulary.containsKey(datum.getPrediction().getMethod().getReferenceName()))
+				return vector;
 			vector.put(offset + this.vocabulary.get(datum.getPrediction().getMethod().getReferenceName()), 1.0);
+		}	
 		return vector;
 	}
 
