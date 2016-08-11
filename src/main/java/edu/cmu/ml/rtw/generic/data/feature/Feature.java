@@ -136,6 +136,7 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 		if (cloneInternal) {
 			if (!clone.fromParse(getModifiers(), getReferenceName(), toParse()))
 				return null;
+			
 		} else {
 			clone.referenceName = this.referenceName;
 			clone.modifiers = this.modifiers;
