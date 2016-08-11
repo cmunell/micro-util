@@ -28,7 +28,7 @@ public class FeatureMetaClassificationIdentity<L> extends Feature<PredictionClas
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public boolean init(DataSet<PredictionClassificationDatum<L>, L> dataSet) {
-		DataSet internalData = new DataSet(null);
+		DataSet internalData = new DataSet(this.feature.getContext().getDatumTools());
 		
 		for (PredictionClassificationDatum<L> datum : dataSet) {
 			internalData.add(datum.getPrediction().getDatum());

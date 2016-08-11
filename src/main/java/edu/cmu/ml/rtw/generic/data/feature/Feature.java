@@ -84,6 +84,10 @@ public abstract class Feature<D extends Datum<L>, L> extends CtxParsableFunction
 	public abstract Feature<D, L> makeInstance(DatumContext<D, L> context);
 	
 	
+	public DatumContext<D, L> getContext() {
+		return this.context;
+	}
+	
 	public Map<Integer, Double> computeVector(D datum) {
 		return computeVector(datum, 0, new HashMap<Integer, Double>());
 	}
