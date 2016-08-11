@@ -55,11 +55,15 @@ public class FeatureMetaClassificationIdentity<L> extends Feature<PredictionClas
 
 	@Override
 	public int getVocabularySize() {
+		if (this.feature == null)
+			return 0;
 		return this.feature.getVocabularySize();
 	}
 
 	@Override
 	public String getVocabularyTerm(int index) {
+		if (this.feature == null)
+			return null;
 		return this.feature.getVocabularyTerm(index);
 	}
 
