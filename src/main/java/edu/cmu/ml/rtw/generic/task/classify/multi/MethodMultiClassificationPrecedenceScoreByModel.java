@@ -36,7 +36,9 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 	private boolean trainStructured = false;
 	private boolean threadStructure = true;
 	private MethodClassification<PredictionClassificationDatum<Boolean>, Boolean> precedenceModel;
-	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure", "precedenceModel" };
+	private MethodClassification<?, ?> baselineMethod;
+	private Structurizer<?, ?, ?> baselineStructurizer;
+	private String[] parameterNames = { "methods", "structurizers", "structureTransformFn", "trainOnInit", "trainIters", "trainStructured", "threadStructure", "precedenceModel", "baselineMethod", "baselineStructurizer" };
 	
 	private boolean initialized = false;
 	
@@ -81,7 +83,11 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 			return Obj.stringValue(String.valueOf(this.threadStructure));
 		} else if (parameter.equals("precedenceModel")) {
 			return (this.precedenceModel == null) ? null : Obj.curlyBracedValue(this.precedenceModel.getReferenceName());
-		} 
+		} else if (parameter.equals("baselineMethod")) {
+			return (this.baselineMethod == null) ? null : Obj.curlyBracedValue(this.baselineMethod.getReferenceName());
+		} else if (parameter.equals("baselineStructurizer")) {
+			return (this.baselineStructurizer == null) ? null : Obj.curlyBracedValue(this.baselineStructurizer.getReferenceName());
+		}
 		
 		return null;
 	}
@@ -115,6 +121,10 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 			this.threadStructure = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("precedenceModel")) {
 			this.precedenceModel = (parameterValue == null) ? null : (MethodClassification<PredictionClassificationDatum<Boolean>, Boolean>)this.context.getAssignedMatches(parameterValue).get(0);
+		} else if (parameter.equals("baselineMethod")) {
+			this.baselineMethod = (parameterValue == null) ? null : (MethodClassification<?, ?>)this.context.getAssignedMatches(parameterValue).get(0);
+		} else if (parameter.equals("baselineStructurizer")) {
+			this.baselineStructurizer = (parameterValue == null) ? null : (Structurizer<?, ?, ?>)this.context.getAssignedMatches(parameterValue).get(0);
 		} else {
 			return false;
 		}
@@ -202,6 +212,27 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished structuring data");
+		
+		Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
+		
+		if (this.baselineMethod != null) {
+			for (int j = 0; j < data.size(); j++) {
+				if (!this.baselineMethod.matchesData(data.get(j)))
+					continue;
+				
+				Map<?, PredictionClassification> datumPredictions = (Map)this.baselineMethod.predict((DataSet)data.get(j));
+				
+				for (Entry<?, PredictionClassification> entry : datumPredictions.entrySet()) {
+					((Structurizer)this.baselineStructurizer).addToStructures(entry.getValue().getDatum(), 
+															  entry.getValue().getLabel(),
+															  entry.getValue().getScore(),
+															  structures, 
+															  changes);
+				}
+			}
+		}
+		
+		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) pulling labeled data out of structures...");
 
 		List<Map<Datum<?>, Pair<?, Double>>> classifications = new ArrayList<Map<Datum<?>, Pair<?, Double>>>();
@@ -337,6 +368,21 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 				method.init();
 		}
 	
+		if (this.baselineMethod != null) {
+			boolean init = false;
+			for (int j = 0; j < testData.size(); j++) {
+				if (!this.baselineMethod.matchesData(testData.get(j)))
+					continue;
+				if (this.baselineMethod.init((DataSet)testData.get(j))) {
+					init = true;
+					break;
+				}
+			}
+			
+			if (!init)
+				this.baselineMethod.init();
+		}
+			
 		this.initialized = true;
 		
 		if (this.trainOnInit)
@@ -353,6 +399,7 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 		
 		clone.methods = new ArrayList<MethodClassification<?, ?>>();
 		clone.precedenceModel = this.precedenceModel.clone();
+		clone.baselineMethod = this.baselineMethod.clone();
 		
 		for (MethodClassification<?, ?> method : this.methods) {
 			clone.methods.add(method.clone());
