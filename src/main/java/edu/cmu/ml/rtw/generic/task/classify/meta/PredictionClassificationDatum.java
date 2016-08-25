@@ -1,5 +1,6 @@
 package edu.cmu.ml.rtw.generic.task.classify.meta;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
@@ -71,7 +72,19 @@ public class PredictionClassificationDatum<L> extends Datum<L> {
 		
 		@Override
 		public JSONObject datumToJSON(PredictionClassificationDatum<L> datum) {
-			throw new UnsupportedOperationException();
+			JSONObject json = new JSONObject();
+			
+			try {
+				json.put("label", datum.getLabel().toString());
+				json.put("prediction", datum.getPrediction().getLabel().toString());
+				json.put("score", datum.getPrediction().getScore());
+				json.put("method", datum.getPrediction().getMethod().getReferenceName());
+				json.put("inner", datum.getPrediction().getDatum());
+			} catch (JSONException e) {
+				return null;
+			}
+			
+			return json;
 		}
 		
 		@Override
