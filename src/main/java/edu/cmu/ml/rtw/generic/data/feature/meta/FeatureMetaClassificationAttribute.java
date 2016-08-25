@@ -16,7 +16,9 @@ import edu.cmu.ml.rtw.generic.util.CounterTable;
 public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionClassificationDatum<L>, L> {
 	public enum Attribute {
 		LABEL,
-		METHOD
+		METHOD,
+		SCORE,
+		LOG_SCORE
 	}
 	
 	private Attribute attribute;
@@ -45,7 +47,11 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 			for (PredictionClassificationDatum<L> datum : dataSet) {
 				counter.incrementCount(datum.getPrediction().getMethod().getReferenceName());
 			}
-		} 
+		} else if (this.attribute == Attribute.SCORE) {
+			counter.incrementCount("value");
+		} else if (this.attribute == Attribute.LOG_SCORE) {
+			counter.incrementCount("value");
+		}
 		
 		this.vocabulary = new BidirectionalLookupTable<String, Integer>(counter.buildIndex());
 		
@@ -62,7 +68,12 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 			if (!this.vocabulary.containsKey(datum.getPrediction().getMethod().getReferenceName()))
 				return vector;
 			vector.put(offset + this.vocabulary.get(datum.getPrediction().getMethod().getReferenceName()), 1.0);
-		}	
+		} else if (this.attribute == Attribute.SCORE) {
+			vector.put(offset, datum.getPrediction().getScore());
+		} else if (this.attribute == Attribute.LOG_SCORE) {
+			vector.put(offset, Math.log(datum.getPrediction().getScore()));
+		}
+		
 		return vector;
 	}
 
