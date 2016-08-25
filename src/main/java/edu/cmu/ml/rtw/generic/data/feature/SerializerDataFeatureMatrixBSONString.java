@@ -61,9 +61,8 @@ public class SerializerDataFeatureMatrixBSONString extends Serializer<DataFeatur
 				double value = values.get(i);
 				bsonVector.append(name, value);
 			}
-		
-			String labelStr = (d.getLabel() == null) ? "null" : d.getLabel().toString();
-			str.append(d.getId()).append("\t").append(labelStr).append("\t").append(bsonVector.toJson()).append("\n");
+
+			str.append(d.getId()).append("\t").append(item.getContext().getDatumTools().datumToJSON(d).toString()).append("\t").append(bsonVector.toJson()).append("\n");
 		}
 		
 		return str.toString();
