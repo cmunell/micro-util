@@ -71,7 +71,7 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 		} else if (this.attribute == Attribute.SCORE) {
 			vector.put(offset, datum.getPrediction().getScore());
 		} else if (this.attribute == Attribute.LOG_SCORE) {
-			vector.put(offset, Math.log(datum.getPrediction().getScore()));
+			vector.put(offset, datum.getPrediction().getScore() <= 0.0 ? 0.0 : Math.log(datum.getPrediction().getScore()));
 		}
 		
 		return vector;
