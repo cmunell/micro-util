@@ -79,7 +79,7 @@ public class PredictionClassificationDatum<L> extends Datum<L> {
 				json.put("prediction", datum.getPrediction().getLabel().toString());
 				json.put("score", datum.getPrediction().getScore());
 				json.put("method", datum.getPrediction().getMethod().getReferenceName());
-				json.put("inner", datum.getPrediction().getDatum());
+				json.put("inner", datum.getPrediction().getDatum().toString());
 			} catch (JSONException e) {
 				return null;
 			}
