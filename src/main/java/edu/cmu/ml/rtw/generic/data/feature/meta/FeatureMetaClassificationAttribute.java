@@ -22,7 +22,8 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 	}
 	
 	private Attribute attribute;
-	private String[] parameterNames = { "attribute" };
+	private String methodPrefixFilter = null;
+	private String[] parameterNames = { "attribute", "methodPrefixFilter" };
 	
 	private BidirectionalLookupTable<String, Integer> vocabulary;
 	
@@ -45,7 +46,10 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 			}
 		} else if (this.attribute == Attribute.METHOD) {
 			for (PredictionClassificationDatum<L> datum : dataSet) {
-				counter.incrementCount(datum.getPrediction().getMethod().getReferenceName());
+				if (this.methodPrefixFilter == null 
+						|| datum.getPrediction().getMethod().getReferenceName().startsWith(this.methodPrefixFilter)) {
+					counter.incrementCount(datum.getPrediction().getMethod().getReferenceName());
+				}
 			}
 		} else if (this.attribute == Attribute.SCORE) {
 			counter.incrementCount("value");
@@ -107,6 +111,8 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 	public Obj getParameterValue(String parameter) {
 		if (parameter.equals("attribute"))
 			return (this.attribute == null) ? null : Obj.stringValue(this.attribute.toString());
+		else if (parameter.equals("methodPrefixFilter"))
+			return (this.methodPrefixFilter == null) ? null : Obj.stringValue(this.methodPrefixFilter);
 		return null;
 	}
 
@@ -114,6 +120,8 @@ public class FeatureMetaClassificationAttribute<L> extends Feature<PredictionCla
 	public boolean setParameterValue(String parameter, Obj parameterValue) {
 		if (parameter.equals("attribute"))
 			this.attribute = (parameterValue == null) ? null : Attribute.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("methodPrefixFilter"))
+			this.methodPrefixFilter = (parameterValue == null) ? null : this.context.getMatchValue(parameterValue);
 		else
 			return false;
 		return true;
