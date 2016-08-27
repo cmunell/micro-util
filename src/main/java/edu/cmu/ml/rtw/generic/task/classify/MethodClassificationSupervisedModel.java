@@ -45,7 +45,7 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	}
 
 	@Override
-	public String[] getParameterNames() {
+	public synchronized String[] getParameterNames() {
 		if (this.model != null) {
 			String[] parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + this.model.getParameterNames().length);
 			for (int i = 0; i < this.model.getParameterNames().length; i++)
@@ -186,7 +186,7 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	}
 
 	@Override
-	public MethodClassification<D, L> clone(String referenceName) {
+	public synchronized MethodClassification<D, L> clone(String referenceName) {
 		SupervisedModel<D, L> temp = this.model;
 		this.model = null;
 		MethodClassificationSupervisedModel<D, L> clone = new MethodClassificationSupervisedModel<D, L>(this.context);
