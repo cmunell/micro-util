@@ -24,6 +24,10 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 	public MethodClassificationLabelMapping(DatumContext<D, L> context) {
 		super(context);
 	}
+	
+	public MethodClassification<D, L> getInnerMethod() {
+		return this.method;
+	}
 
 	@Override
 	public String[] getParameterNames() {

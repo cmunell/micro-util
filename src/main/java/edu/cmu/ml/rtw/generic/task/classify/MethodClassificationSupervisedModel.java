@@ -39,6 +39,10 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 	public MethodClassificationSupervisedModel(DatumContext<D, L> context) {
 		super(context);
 	}
+	
+	public SupervisedModel<D, L> getModel() {
+		return this.model;
+	}
 
 	@Override
 	public String[] getParameterNames() {
@@ -124,6 +128,10 @@ public class MethodClassificationSupervisedModel<D extends Datum<L>, L> extends 
 		}
 		
 		return scores;
+	}
+	
+	public FeatureSet<D, L> getDataFeatures() {
+		return (this.dataFeatures != null) ? this.dataFeatures : this.data.getFeatures();
 	}
 
 	@Override

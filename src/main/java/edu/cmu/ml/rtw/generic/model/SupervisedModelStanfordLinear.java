@@ -15,6 +15,8 @@ import org.platanios.learn.math.matrix.Vector.VectorElement;
 import edu.stanford.nlp/*.legacy*/.classify.GeneralDataset;
 import edu.stanford.nlp/*.legacy*/.classify.LinearClassifier;
 import edu.stanford.nlp/*.legacy*/.classify.LinearClassifierFactory;
+import edu.stanford.nlp.classify.LogPrior;
+import edu.stanford.nlp.classify.LogPrior.LogPriorType;
 import edu.stanford.nlp/*.legacy*/.classify.RVFDataset;
 import edu.stanford.nlp/*.legacy*/.ling.RVFDatum;
 import edu.stanford.nlp/*.legacy*/.stats.ClassicCounter;
@@ -41,7 +43,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 	private boolean searchThreshold = false;
 	private double searchThresholdFB = 1.0;
 	private int minFeatureOccurrence = 1;
-	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB", "minFeatureOccurrence" };
+	private double l2 = 1.0;
+	private String[] hyperParameterNames = { "classificationThreshold", "defaultLabel", "searchThreshold", "searchThresholdFB", "minFeatureOccurrence", "l2" };
 	
 	private LinearClassifier<String, String> classifier;
 	private List<String> featureNames = null;
@@ -59,7 +62,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 		GeneralDataset<String,String> rvfData = makeData(data, true);
 
 		LinearClassifierFactory<String,String> linearFactory = new LinearClassifierFactory<String,String>();
-	    this.classifier = linearFactory.trainClassifier(rvfData);
+	    linearFactory.setPrior(new LogPrior(LogPriorType.QUADRATIC, this.l2, 0.1));
+		
+		this.classifier = linearFactory.trainClassifier(rvfData);
 	    
 	    if (this.searchThreshold && this.defaultLabel != null)
 	    	this.classificationThreshold = searchFBThreshold(testData);
@@ -265,6 +270,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			return (this.defaultLabel != null) ? Obj.stringValue(this.defaultLabel.toString()) : null;
 		else if (parameter.equals("minFeatureOccurrence"))
 			return Obj.stringValue(String.valueOf(this.minFeatureOccurrence));
+		else if (parameter.equals("l2"))
+			return Obj.stringValue(String.valueOf(this.l2));
 		return null;
 	}
 
@@ -280,6 +287,8 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			this.defaultLabel = (parameterValue != null) ? this.context.getMatchValue(parameterValue) : null;
 		else if (parameter.equals("minFeatureOccurrence"))
 			this.minFeatureOccurrence = Integer.valueOf(this.context.getMatchValue(parameterValue));
+		else if (parameter.equals("l2"))
+			this.l2 = Double.valueOf(this.context.getMatchValue(parameterValue));
 		else
 			return false;
 		return true;
@@ -349,5 +358,9 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 			List<SupervisedModelEvaluation<D, L>> evaluations,
 			Map<D, L> constrainedData) {
 		throw new UnsupportedOperationException();
+	}
+	
+	public double[][] getWeights() {
+		return this.classifier.weights();
 	}
 }

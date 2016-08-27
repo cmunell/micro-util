@@ -23,6 +23,10 @@ public class MethodClassificationFilterDatumIndicator<D extends Datum<L>, L> ext
 	public MethodClassificationFilterDatumIndicator(DatumContext<D, L> context) {
 		super(context);
 	}
+	
+	public MethodClassification<D, L> getInnerMethod() {
+		return this.method;
+	}
 
 	@Override
 	public String[] getParameterNames() {
