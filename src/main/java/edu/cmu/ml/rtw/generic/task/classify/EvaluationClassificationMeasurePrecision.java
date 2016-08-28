@@ -83,6 +83,23 @@ public class EvaluationClassificationMeasurePrecision<D extends Datum<L> , L> ex
 		
 		return (this.mode == Mode.MICRO) ? num/den : p;
 	}
+	
+	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method, forceRecompute);
+
+		int n = 0;
+		
+		for (Entry<L, Map<Stat, Integer>> entry : stats.entrySet()) {
+			if (this.filterLabel != null && !this.filterLabel.equals(entry.getKey()))
+				continue;
+			
+			n += entry.getValue().get(Stat.TRUE_POSITIVE);
+			n += entry.getValue().get(Stat.FALSE_POSITIVE);
+		}
+		
+		return n;
+	}
 
 	@Override
 	public String[] getParameterNames() {

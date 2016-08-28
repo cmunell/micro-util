@@ -33,6 +33,19 @@ public class EvaluationClassificationMeasureAccuracy<D extends Datum<L>, L> exte
 		else
 			return trueCount/(double)(trueCount + falseCount);
 	}
+	
+	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		Map<L, Map<Stat, Integer>> stats =  this.task.computeStats(this.method, forceRecompute);
+		int size = 0;
+		
+		for (Entry<L, Map<Stat, Integer>> entry : stats.entrySet()) {
+			size += entry.getValue().get(Stat.TRUE_POSITIVE);
+			size += entry.getValue().get(Stat.FALSE_POSITIVE);
+		}
+		
+		return size;
+	}
 
 	@Override
 	protected boolean fromParseInternal(AssignmentList internalAssignments) {

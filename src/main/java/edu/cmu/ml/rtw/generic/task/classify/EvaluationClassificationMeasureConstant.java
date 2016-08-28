@@ -23,6 +23,11 @@ public class EvaluationClassificationMeasureConstant<D extends Datum<L> , L> ext
 	public Double compute(boolean forceRecompute) {
 		return this.value;
 	}
+	
+	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		return this.task.getData().size();
+	}
 
 	@Override
 	public String[] getParameterNames() {

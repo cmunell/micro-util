@@ -78,6 +78,11 @@ public class EvaluationClassificationMeasureAUC<D extends Datum<L> , L> extends 
 	}
 	
 	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		return this.method.score(this.task, this.filterLabel).size();
+	}
+	
+	@Override
 	public String[] getParameterNames() {
 		String[] parentParameterNames = super.getParameterNames();
 		String[] parameterNames = Arrays.copyOf(this.parameterNames, this.parameterNames.length + parentParameterNames.length);

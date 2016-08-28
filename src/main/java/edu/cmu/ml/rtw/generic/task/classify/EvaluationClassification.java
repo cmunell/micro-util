@@ -77,5 +77,6 @@ public abstract class EvaluationClassification<D extends Datum<L>, L, E> extends
 	
 	public abstract Type getType();
 	public abstract E compute(boolean forceRecompute);
+	public abstract int computeSampleSize(boolean forceRecompute);
 	public abstract EvaluationClassification<D, L, ?> makeInstance(DatumContext<D, L> context);
 }

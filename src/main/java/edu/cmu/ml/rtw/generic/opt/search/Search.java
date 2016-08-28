@@ -63,7 +63,7 @@ public abstract class Search extends CtxParsableFunction {
 					.append("\n");
 		}
 		
-		return str.toString();
+		return getReferenceName() + ":\n" + str.toString();
 	}
 	
 	public List<Dimension> getDimensions() {

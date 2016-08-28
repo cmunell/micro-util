@@ -33,6 +33,11 @@ public class EvaluationClassificationConfusionMatrix<D extends Datum<L>, L> exte
 		ConfusionMatrix<D, L> matrix = new ConfusionMatrix<D, L>(actualToPredictedData, this.labelMapping);
 		return matrix;
 	}
+	
+	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		return this.task.computeActualToPredictedData(this.method, forceRecompute).size();
+	}
 
 	@Override
 	public String[] getParameterNames() {

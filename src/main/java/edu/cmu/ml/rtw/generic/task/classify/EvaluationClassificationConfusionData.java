@@ -58,6 +58,11 @@ public class EvaluationClassificationConfusionData<D extends Datum<L>, L> extend
 	public Map<L, Map<L, List<D>>> compute(boolean forceRecompute) {
 		return this.task.computeActualToPredictedData(this.method, forceRecompute);
 	}
+	
+	@Override
+	public int computeSampleSize(boolean forceRecompute) {
+		return compute(forceRecompute).size();
+	}
 
 	@Override
 	protected boolean fromParseInternal(AssignmentList internalAssignments) {
