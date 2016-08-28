@@ -158,9 +158,9 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 	
 	
 	public List<Map<Datum<?>, Pair<?, Double>>> classifyWithScore(List<DataSet<?, ?>> data, boolean recomputeOrderingMeasures) {
-		double maxWeightedPredictionSum = Double.NEGATIVE_INFINITY;
+		double maxScore = Double.NEGATIVE_INFINITY;
 		List<Map<Datum<?>, Pair<?, Double>>> bestClassifications = null;
-		List<Triple<Integer, Double, Double>> stats = new ArrayList<>();
+		List<Pair<Pair<Double, Integer>, Pair<Double, Double>>> stats = new ArrayList<>();
  		for (int i = 0; i < this.inferenceIters; i++) {
 			Triple<Integer, Double, List<Map<Datum<?>, Pair<?, Double>>>> possibleClassifications = computePossibleClassificationWithScore(data, recomputeOrderingMeasures);
 			int transformPredictions = possibleClassifications.getFirst();
@@ -168,25 +168,31 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 			
 			double correct = 0.0;
 			double total = 0.0;
+			double score = 0.0;
 			for (Map<Datum<?>, Pair<?, Double>> predictions : possibleClassifications.getThird()) {
 				for (Entry<Datum<?>, Pair<?, Double>> entry : predictions.entrySet()) {
 					if (entry.getKey().getLabel() != null) {
 						correct += entry.getValue().getFirst().equals(entry.getKey().getLabel()) ? 1.0 : 0.0;
 						total++;
+						score += entry.getValue().getSecond();
 					}
 				}
 			}
 			
-			if (weightedPredictionSum >= maxWeightedPredictionSum) {
-				maxWeightedPredictionSum = weightedPredictionSum;
+			score /= total;
+			
+			if (score >= maxScore) {
+				maxScore = score;
 				bestClassifications = possibleClassifications.getThird();
 			}
 			
-			stats.add(new Triple<>(transformPredictions, weightedPredictionSum, Double.compare(total, 0.0) != 0 ? correct/total : 0.0));
+			stats.add(new Pair<>(new Pair<>(score, transformPredictions), 
+					  			 new Pair<>(weightedPredictionSum, Double.compare(total, 0.0) != 0 ? correct/total : 0.0)));
 
 			this.context.getDataTools().getOutputWriter().debugWriteln(
 					"RandomSieve iteration " + i + 
-					" (" + transformPredictions + 
+					" (" + score + 
+					", " + transformPredictions + 
 					", " + weightedPredictionSum + 
 					", " + (Double.compare(total, 0.0) != 0 ? correct/total : 0.0) +
 					")");
@@ -194,18 +200,18 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 			recomputeOrderingMeasures = false;
 		}
 		
- 		stats.sort(new Comparator<Triple<Integer, Double, Double>>() {
+ 		stats.sort(new Comparator<Pair<Pair<Double, Integer>, Pair<Double, Double>>>() {
 			@Override
-			public int compare(Triple<Integer, Double, Double> o1,
-					Triple<Integer, Double, Double> o2) {
-				return o1.getThird().compareTo(o2.getThird());
+			public int compare(Pair<Pair<Double, Integer>, Pair<Double, Double>> o1,
+					Pair<Pair<Double, Integer>, Pair<Double, Double>> o2) {
+				return o1.getFirst().getFirst().compareTo(o2.getFirst().getFirst());
 			}
  		});
  		
 		context.getDataTools().getOutputWriter().debugWriteln("Sieve Stats");
-		context.getDataTools().getOutputWriter().debugWriteln("Transformations\tExpectation\tPrecision");
-		for (Triple<Integer, Double, Double> stat : stats) {
-			context.getDataTools().getOutputWriter().debugWriteln(stat.getFirst() + "\t" + stat.getSecond() + "\t" + stat.getThird());
+		context.getDataTools().getOutputWriter().debugWriteln("Score\tTransformations\tExpectation\tPrecision");
+		for (Pair<Pair<Double, Integer>, Pair<Double, Double>> stat : stats) {
+			context.getDataTools().getOutputWriter().debugWriteln(stat.getFirst().getFirst() + "\t" + stat.getFirst().getSecond() + "\t" + stat.getSecond().getFirst() + "\t" + stat.getSecond().getSecond());
 		}
  		
 		return bestClassifications;
@@ -321,8 +327,8 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 					}
 				} else {
 					for (PredictionClassification prediction : predictions.values()) {
-						double halfInterval = this.z * Math.sqrt(methodScore * (1.0 - methodScore)/n);
-						double score = methodScore - halfInterval + 2.0 * halfInterval * r.nextDouble();
+						double halfInterval = this.z * Math.sqrt(/*methodScore * (1.0 - methodScore)*/1.0/n);
+						double score = methodScore - halfInterval + 2.0 * halfInterval * prediction.getScore();//r.nextDouble();
 						score = Math.max(Math.min(score, 1.0), 0.0);
 						ordering.add(new Triple<Integer, PredictionClassification, Double>(i, prediction, score));
 					}
@@ -337,6 +343,9 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 				return Double.compare(o2.getThird(), o1.getThird());
 			}
 		});
+		
+		for (Triple<Integer, PredictionClassification, Double> prediction : ordering)
+			prediction.setThird(this.permutationMeasures.get(prediction.getFirst()).compute(false));
 		
 		return ordering;
 	}

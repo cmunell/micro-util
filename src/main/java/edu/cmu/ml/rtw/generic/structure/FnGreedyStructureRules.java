@@ -30,7 +30,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 	private int maxIterations = 0;
 	private boolean singleRuleSetPerIteration = false;
 	private int maxIterationSize = -1;
-	private String[] parameterNames = { "rules", "splitFns", "maxIterations", "singleRuleSetPerIteration", "maxIterationSize" };
+	private boolean backtracking = false;
+	private String[] parameterNames = { "rules", "splitFns", "maxIterations", "singleRuleSetPerIteration", "maxIterationSize", "backtracking" };
 	
 	public FnGreedyStructureRules() {
 		
@@ -57,6 +58,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			return Obj.stringValue(String.valueOf(this.singleRuleSetPerIteration));
 		} else if (parameter.equals("maxIterationSize")) {
 			return Obj.stringValue(String.valueOf(this.maxIterationSize));
+		} else if (parameter.equals("backtracking")) {
+			return Obj.stringValue(String.valueOf(this.backtracking));
 		} else 
 			return null;
 	}
@@ -88,6 +91,8 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 			this.singleRuleSetPerIteration = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else if (parameter.equals("maxIterationSize")) {
 			this.maxIterationSize = Integer.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("backtracking")) {
+			this.backtracking = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else 
 			return false;
 		return true;
@@ -148,7 +153,24 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 						for (Obj obj : objList.getValue()) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
+							
+							int prevItemCount = structure.getItemCount();
+							
 							structure.add(newStructurePart, structurePart.getSecond(), filter);
+							
+							if (this.backtracking && prevItemCount == structure.getItemCount()) {
+								double minWeight = Double.POSITIVE_INFINITY;
+								CtxParsable minPart = null;
+								for (CtxParsable part : structurePart.getFirst()) {
+									double weight = structure.getWeight(part);
+									if (Double.compare(weight, minWeight) < 0) {
+										minWeight = weight;
+										minPart = part;
+									}
+								}
+								
+								structure.remove(minPart);
+							}
 						}
 					}
 				}
