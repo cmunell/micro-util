@@ -376,7 +376,7 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 					}
 					
 					transformPredictions += structures.get(structureId).getItemCount() - startStructureSize;
-					weightedPredictionSum += score * structures.get(structureId).getItemCount() - startStructureSize;
+					weightedPredictionSum += score * (structures.get(structureId).getItemCount() - startStructureSize);
 				}
 				
 				changes = new HashMap<String, Collection<WeightedStructure>>();
@@ -402,7 +402,7 @@ public class MethodMultiClassificationRandomSieve extends MethodMultiClassificat
 				}
 
 				transformPredictions += structures.get(structureId).getItemCount() - startStructureSize;
-				weightedPredictionSum += prevScore * structures.get(structureId).getItemCount() - startStructureSize;
+				weightedPredictionSum += prevScore * (structures.get(structureId).getItemCount() - startStructureSize);
 
 			}
 		}
