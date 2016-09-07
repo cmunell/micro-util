@@ -66,6 +66,8 @@ public class DataSetBuilderMetaClassification extends DataSetBuilder<PredictionC
 		
 		Map<?, PredictionClassification> predictions = ((MethodClassification)this.method).predict(this.task);
 		for (PredictionClassification prediction : predictions.values()) {
+			if (prediction.getLabel() == null)
+				continue;
 			data.add(new PredictionClassificationDatum<Boolean>(
 					this.context.getDataTools().getIncrementId(),
 					prediction,

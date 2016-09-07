@@ -158,6 +158,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 							
 							structure.add(newStructurePart, structurePart.getSecond(), filter);
 							
+							// FIXME This currently doesn't really work the way it should
 							if (this.backtracking && prevItemCount == structure.getItemCount()) {
 								double minWeight = Double.POSITIVE_INFINITY;
 								CtxParsable minPart = null;
