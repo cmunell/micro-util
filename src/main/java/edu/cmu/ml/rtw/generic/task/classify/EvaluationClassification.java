@@ -11,7 +11,8 @@ public abstract class EvaluationClassification<D extends Datum<L>, L, E> extends
 	public enum Type {
 		MEASURE,
 		CONFUSION_DATA,
-		CONFUSION_MATRIX;
+		CONFUSION_MATRIX,
+		ROC
 	}
 	
 	protected DatumContext<D, L> context;

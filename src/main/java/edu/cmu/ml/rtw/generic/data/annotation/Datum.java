@@ -80,6 +80,7 @@ import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureConst
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureF;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasurePrecision;
 import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationMeasureRecall;
+import edu.cmu.ml.rtw.generic.task.classify.EvaluationClassificationROC;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationConstant;
 import edu.cmu.ml.rtw.generic.task.classify.MethodClassificationFilterDatumIndicator;
@@ -353,6 +354,7 @@ public abstract class Datum<L> {
 			
 			addGenericClassifyEval(new EvaluationClassificationConfusionData<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationConfusionMatrix<D, L>());
+			addGenericClassifyEval(new EvaluationClassificationROC<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureAccuracy<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasurePrecision<D, L>());
 			addGenericClassifyEval(new EvaluationClassificationMeasureRecall<D, L>());
@@ -522,6 +524,7 @@ public abstract class Datum<L> {
 
 					for (int i = 0; i < dataSets.size(); i++) {
 						DataSet<D, L> data = datumContext.getMatchDataSet(dataSets.get(i));
+						
 						if (data.isBuildable() && !data.isBuilt() && !data.build())
 							return null;
 						

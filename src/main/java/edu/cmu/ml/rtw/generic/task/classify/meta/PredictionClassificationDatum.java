@@ -53,6 +53,9 @@ public class PredictionClassificationDatum<L> extends Datum<L> {
 			addGenericFeature(new FeatureMetaClassificationAttribute<L>());
 			addGenericFeature(new FeatureMetaClassificationIdentity<L>());
 			
+			addGenericClassifyEval(new EvaluationClassificationMeasureMetaAUC<L>());
+			addGenericClassifyEval(new EvaluationClassificationMetaROC<L>());
+			
 			for (TokenSpanExtractor<?, ?> extractor : internalTools.getTokenSpanExtractors()) {
 				this.addTokenSpanExtractor(new TokenSpanExtractor<PredictionClassificationDatum<L>, L>() {
 					@SuppressWarnings({ "unchecked", "rawtypes" })
