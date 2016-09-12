@@ -51,6 +51,7 @@ public class EvaluationClassificationROC<D extends Datum<L>, L> extends Evaluati
 			Double score = entry.getValue();
 			if (!score.equals(score_prev)) {
 				points.add(new Pair<Double, Double>(Double.valueOf(fp), Double.valueOf(tp)));
+				score_prev = score;
 			}
 			
 			if (entry.getKey().getLabel().equals(this.filterLabel)) 
@@ -132,8 +133,10 @@ public class EvaluationClassificationROC<D extends Datum<L>, L> extends Evaluati
 				.append(point.getFirst())
 				.append(", ")
 				.append(point.getSecond())
-				.append(");");
+				.append(")\n");
 		}
+		
+		str.append("\n");
 		
 		return str.toString();
 	}

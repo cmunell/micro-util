@@ -84,6 +84,7 @@ public class EvaluationClassificationMetaROC<L> extends EvaluationClassification
 			Double score = entry.getValue();
 			if (!score.equals(score_prev)) {
 				points.add(new Pair<Double, Double>(Double.valueOf(fp), Double.valueOf(tp)));
+				score_prev = score;
 			}
 			
 			if (entry.getKey().getLabel().equals(this.filterLabel)) 
@@ -165,8 +166,10 @@ public class EvaluationClassificationMetaROC<L> extends EvaluationClassification
 				.append(point.getFirst())
 				.append(", ")
 				.append(point.getSecond())
-				.append(");");
+				.append(")\n");
 		}
+		
+		str.append("\n");
 		
 		return str.toString();
 	}

@@ -35,7 +35,7 @@ import edu.cmu.ml.rtw.generic.util.PlataniosUtil;
 import edu.cmu.ml.rtw.generic.util.Triple;
 
 public class SupervisedModelYADLL<D extends Datum<L>, L> extends SupervisedModel<D, L> {
-	private static Boolean SEED_SET = false;
+	private static Boolean SEED_SET = true; // FIXME Set this back to false to make it work properly
 	
 	public static enum YADLLTrainingEstimator {
 		BACK_PROPAGATION
