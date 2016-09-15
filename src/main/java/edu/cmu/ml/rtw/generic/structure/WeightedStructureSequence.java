@@ -8,11 +8,12 @@ import edu.cmu.ml.rtw.generic.data.Context;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.CtxParsable;
 import edu.cmu.ml.rtw.generic.parse.Obj;
+import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class WeightedStructureSequence extends WeightedStructure {
 	private Context context;
 	private List<CtxParsable> items;
-	private List<Double> weights;
+	private List<Pair<Object, Double>> sourcesAndWeights;
 	private double totalWeight = 0.0;
 	
 	private static String[] parameterNames = { };
@@ -24,7 +25,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 	
 	public WeightedStructureSequence(Context context) {
 		this.items = new ArrayList<CtxParsable>();
-		this.weights = new ArrayList<Double>();
+		this.sourcesAndWeights = new ArrayList<Pair<Object, Double>>();
 		this.context = context;
 	}
 	
@@ -55,15 +56,15 @@ public class WeightedStructureSequence extends WeightedStructure {
 	public boolean remove(CtxParsable item) {
 		int index = this.items.indexOf(item);
 		this.items.remove(index);
-		this.totalWeight -= this.weights.remove(index);
+		this.totalWeight -= this.sourcesAndWeights.remove(index).getSecond();
 		return true;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
+	public WeightedStructure add(CtxParsable item, double w, Object source, Collection<?> changes) {
 		this.items.add(item);
-		this.weights.add(w);
+		this.sourcesAndWeights.add(new Pair<>(source, w));
 		this.totalWeight += w;
 		if (changes != null)
 			((Collection<CtxParsable>)changes).add(item);
@@ -73,7 +74,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 	@Override
 	public double getWeight(CtxParsable item) {
 		int index = this.items.indexOf(item);
-		return this.weights.get(index);
+		return this.sourcesAndWeights.get(index).getSecond();
 	}
 
 	@Override
@@ -83,7 +84,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 		
 		WeightedStructureSequence seq = (WeightedStructureSequence)s;
 		this.items.addAll(seq.items);
-		this.weights.addAll(seq.weights);
+		this.sourcesAndWeights.addAll(seq.sourcesAndWeights);
 		
 		return this;
 	}
@@ -120,7 +121,7 @@ public class WeightedStructureSequence extends WeightedStructure {
 		
 		for (int i = 0; i < this.items.size(); i++) {
 			seq.items.add(this.items.get(i));
-			seq.weights.add(this.weights.get(i));
+			seq.sourcesAndWeights.add(this.sourcesAndWeights.get(i));
 		}
 		
 		return seq;
@@ -134,5 +135,11 @@ public class WeightedStructureSequence extends WeightedStructure {
 	@Override
 	public double getTotalWeight() {
 		return this.totalWeight;
+	}
+
+	@Override
+	public Object getSource(CtxParsable item) {
+		int index = this.items.indexOf(item);
+		return this.sourcesAndWeights.get(index).getFirst();
 	}
 }

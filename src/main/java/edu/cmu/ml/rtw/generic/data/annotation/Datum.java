@@ -184,9 +184,9 @@ public abstract class Datum<L> {
 			protected DatumContext<D, L> context;
 			
 			public abstract String getStructureId(D datum, L label, Map<String, S> structures);
-			public abstract boolean addToStructures(D datum, L label, double weight, Map<String, S> structures, Map<String, Collection<WeightedStructure>> changes);
+			public abstract boolean addToStructures(D datum, L label, double weight, Object source, Map<String, S> structures, Map<String, Collection<WeightedStructure>> changes);
 			public abstract Map<String, S> makeStructures();
-			public abstract Map<L, Double> getLabels(D datum, Map<String, S> structures);
+			public abstract Map<L, Pair<Object, Double>> getLabels(D datum, Map<String, S> structures);
 			public abstract Structurizer<D, L, S> makeInstance(DatumContext<D, L> context);
 			public abstract DataSet<D, L> makeData(DataSet<D, L> existingData, Map<String, S> structures);
 			

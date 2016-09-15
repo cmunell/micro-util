@@ -14,6 +14,8 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	
 	private Double w1;
 	private Double w2;
+	private Object s1; 
+	private Object s2;
 	
 	private String[] parameterNames = { "r1", "r2" };
 
@@ -90,6 +92,8 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 		rel.id = this.id;
 		rel.w1 = this.w2;
 		rel.w2 = this.w1;
+		rel.s1 = this.s2;
+		rel.s2 = this.s1;
 		
 		return rel;
 	}
@@ -105,7 +109,7 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	}
 
 	@Override
-	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
+	public WeightedStructure add(CtxParsable item, double w, Object source, Collection<?> changes) {
 		throw new UnsupportedOperationException(); // FIXME Add this later (weighted nodes)
 	}
 
@@ -131,6 +135,11 @@ public class WeightedStructureRelationBinary extends WeightedStructureRelation {
 	
 	@Override
 	public double getTotalWeight() {
+		throw new UnsupportedOperationException(); // FIXME Add this later
+	}
+
+	@Override
+	public Object getSource(CtxParsable item) {
 		throw new UnsupportedOperationException(); // FIXME Add this later
 	}
 }

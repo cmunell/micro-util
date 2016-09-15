@@ -116,7 +116,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				//long startTime = System.currentTimeMillis();
 					
-				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
+				List<Triple<List<CtxParsable>, Pair<Double, Object>, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Pair<Double, Object>, Integer>>();
 				for (int i = 0; i < this.splitFns.size(); i++) {
 					FnStructure<S, ?> splitFn = this.splitFns.get(i);
 					
@@ -126,20 +126,27 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 						WeightedStructure structurePart = (WeightedStructure)o;
 						List<CtxParsable> structurePartList = structurePart.toList();
 						double weight = 0.0;
+						StringBuilder sources = new StringBuilder();
 						
 						for (CtxParsable part : structurePartList) {
 							weight += structurePart.getWeight(part);
+							sources.append(structurePart.getSource(part)).append(";");
 						}
-						orderedStructureParts.add(new Triple<>(structurePartList, weight / (double)structurePartList.size(), i));
+		
+						if (sources.length() > 0)
+							sources.delete(sources.length() - 1, sources.length());
+						
+						orderedStructureParts.add(new Triple<>(structurePartList, 
+								new Pair<Double, Object>(weight / (double)structurePartList.size(), sources.toString()), 
+								i));
 					}
 				}
 				
-				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Double>>() {
+				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Pair<Double, Object>>>() {
 					@Override
-					public int compare(Pair<List<CtxParsable>, Double> o1, Pair<List<CtxParsable>, Double> o2) {
-						return Double.compare(o2.getSecond(), o1.getSecond());
+					public int compare(Pair<List<CtxParsable>, Pair<Double, Object>> o1, Pair<List<CtxParsable>, Pair<Double, Object>> o2) {
+						return Double.compare(o2.getSecond().getFirst(), o1.getSecond().getFirst());
 					}
-					
 				});
 				
 				prevFilterSize = (filter != null) ? filter.size() : 0;
@@ -148,7 +155,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running on iteration " + iterations + " trying to add " + orderedStructureParts.size() + " to graph ");
 				
-				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
+				for (Triple<List<CtxParsable>, Pair<Double, Object>, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 						for (Obj obj : objList.getValue()) {
@@ -156,7 +163,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 							
 							int prevItemCount = structure.getItemCount();
 							
-							structure.add(newStructurePart, structurePart.getSecond(), filter);
+							structure.add(newStructurePart, structurePart.getSecond().getFirst(), structurePart.getSecond().getSecond(), filter);
 							
 							// FIXME This currently doesn't really work the way it should
 							if (this.backtracking && prevItemCount == structure.getItemCount()) {
@@ -200,7 +207,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				//long startTime = System.currentTimeMillis();
 					
-				List<Triple<List<CtxParsable>, Double, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Double, Integer>>();
+				List<Triple<List<CtxParsable>, Pair<Double, Object>, Integer>> orderedStructureParts = new ArrayList<Triple<List<CtxParsable>, Pair<Double, Object>, Integer>>();
 				
 				splitFnIndex = iterations % this.splitFns.size();
 				FnStructure<S, ?> splitFn = this.splitFns.get(splitFnIndex);
@@ -217,19 +224,26 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 					WeightedStructure structurePart = (WeightedStructure)o;
 					List<CtxParsable> structurePartList = structurePart.toList();
 					double weight = 0.0;
+					StringBuilder sources = new StringBuilder();
 					
 					for (CtxParsable part : structurePartList) {
 						weight += structurePart.getWeight(part);
+						sources.append(structurePart.getSource(part)).append(";");
 					}
-					orderedStructureParts.add(new Triple<>(structurePartList, weight / (double)structurePartList.size(), splitFnIndex));
+	
+					if (sources.length() > 0)
+						sources.delete(sources.length() - 1, sources.length());
+					
+					orderedStructureParts.add(new Triple<>(structurePartList, 
+							new Pair<Double, Object>(weight / (double)structurePartList.size(), sources.toString()), 
+							splitFnIndex));
 				}
 				
-				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Double>>() {
+				Collections.sort(orderedStructureParts, new Comparator<Pair<List<CtxParsable>, Pair<Double, Object>>>() {
 					@Override
-					public int compare(Pair<List<CtxParsable>, Double> o1, Pair<List<CtxParsable>, Double> o2) {
-						return Double.compare(o2.getSecond(), o1.getSecond());
-					}
-					
+					public int compare(Pair<List<CtxParsable>, Pair<Double, Object>> o1, Pair<List<CtxParsable>, Pair<Double, Object>> o2) {
+						return Double.compare(o2.getSecond().getFirst(), o1.getSecond().getFirst());
+					}	
 				});
 				
 				if (splitFnIndex == this.splitFns.size() - 1) {
@@ -241,12 +255,12 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 				
 				//this.context.getDataTools().getOutputWriter().debugWriteln("Greedy inference running on iteration " + iterations + " trying to add " + orderedStructureParts.size() + " to graph ");
 				
-				for (Triple<List<CtxParsable>, Double, Integer> structurePart : orderedStructureParts) {
+				for (Triple<List<CtxParsable>, Pair<Double, Object>, Integer> structurePart : orderedStructureParts) {
 					Map<String, List<Obj>> objs = this.rules.get(structurePart.getThird()).apply(structurePart.getFirst());
 					for (Entry<String, List<Obj>> objList : objs.entrySet()) {
 						for (Obj obj : objList.getValue()) {
 							WeightedStructure newStructurePart = this.context.constructMatchWeightedStructure(obj);
-							structure.add(newStructurePart, structurePart.getSecond(), filter);
+							structure.add(newStructurePart, structurePart.getSecond().getFirst(), structurePart.getSecond().getSecond(), filter);
 						}
 					}
 				}

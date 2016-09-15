@@ -28,7 +28,7 @@ public class WeightedStructureRelationUnary extends WeightedStructureRelation {
 	}
 
 	@Override
-	public WeightedStructure add(CtxParsable item, double w, Collection<?> changes) {
+	public WeightedStructure add(CtxParsable item, double w, Object s, Collection<?> changes) {
 		throw new UnsupportedOperationException(); // FIXME Implement later
 	}
 
@@ -61,6 +61,11 @@ public class WeightedStructureRelationUnary extends WeightedStructureRelation {
 	
 	@Override
 	public double getTotalWeight() {
+		throw new UnsupportedOperationException(); // FIXME Add this later
+	}
+
+	@Override
+	public Object getSource(CtxParsable item) {
 		throw new UnsupportedOperationException(); // FIXME Add this later
 	}
 }

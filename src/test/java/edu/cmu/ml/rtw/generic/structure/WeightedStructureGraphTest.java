@@ -42,9 +42,9 @@ public class WeightedStructureGraphTest {
 				true);
 		
 		WeightedStructureGraph graph = new WeightedStructureGraph(context);
-		graph.add(rel1, 1.0);
-		graph.add(rel2, 1.0);
-		graph.add(rel3, 5.0);
+		graph.add(rel1, 1.0, "");
+		graph.add(rel2, 1.0, "");
+		graph.add(rel3, 5.0, "");
 		
 		Assert.assertEquals(1, graph.getEdgePaths(2).size());
 	}
@@ -72,8 +72,8 @@ public class WeightedStructureGraphTest {
 				false);
 		
 		WeightedStructureGraph graph = new WeightedStructureGraph(context);
-		graph.add(rel1, 1.0);
-		graph.add(rel2, 1.0);
+		graph.add(rel1, 1.0, "");
+		graph.add(rel2, 1.0, "");
 		
 		List<WeightedStructureRelation> filter = new ArrayList<>();
 		filter.add(rel1);
