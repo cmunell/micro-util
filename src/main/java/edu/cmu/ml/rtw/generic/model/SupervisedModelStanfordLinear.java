@@ -329,7 +329,7 @@ public class SupervisedModelStanfordLinear<D extends Datum<L>, L> extends Superv
 					Assignment.assignmentTyped(null, 
 					Context.ObjectType.VALUE.toString(), "classifier", Obj.stringValue(classifier)));
 			
-			List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 200);
+			List<Triple<String, String, Double>> fw = this.classifier.getTopFeatures(0.0, true, 1000);
 			int i = 0;
 			for (Triple<String, String, Double> featureWeight : fw) {
 				Obj.Array arr = Obj.array(new String[] { featureWeight.first(), featureWeight.second(), String.valueOf(featureWeight.third()) });

@@ -23,7 +23,7 @@ public class CounterTable<T>{
 	public HashMap<T, Integer> counts;
 	
 	public CounterTable(){
-		this.counts= new HashMap<T,Integer>();
+		this.counts = new HashMap<T,Integer>();
 	}
 	
 	public synchronized void incrementCount(T w) {
@@ -118,6 +118,19 @@ public class CounterTable<T>{
 		}
 		
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		TreeMap<Integer, List<T>> sortedCounts = getSortedCounts();
+		StringBuilder str = new StringBuilder();
 		
+		for (Entry<Integer, List<T>> entry : sortedCounts.entrySet()) {
+			for (T item : entry.getValue()) {
+				str.append(item.toString()).append(":\t").append(entry.getKey()).append("\n");
+			}
+		}
+		
+		return str.toString();
 	}
 }

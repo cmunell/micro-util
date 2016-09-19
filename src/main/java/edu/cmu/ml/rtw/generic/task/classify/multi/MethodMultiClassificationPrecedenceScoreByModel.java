@@ -22,6 +22,7 @@ import edu.cmu.ml.rtw.generic.task.classify.MethodClassification;
 import edu.cmu.ml.rtw.generic.task.classify.Trainable;
 import edu.cmu.ml.rtw.generic.task.classify.meta.PredictionClassification;
 import edu.cmu.ml.rtw.generic.task.classify.meta.PredictionClassificationDatum;
+import edu.cmu.ml.rtw.generic.util.CounterTable;
 import edu.cmu.ml.rtw.generic.util.Pair;
 import edu.cmu.ml.rtw.generic.util.Singleton;
 import edu.cmu.ml.rtw.generic.util.ThreadMapper;
@@ -248,7 +249,9 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 			
 			DataSet dataSet = data.get(i);
 			Map labeledData = new HashMap();
-			System.out.println("PREDICTION SOURCES");
+			CounterTable sourceCounter = new CounterTable();
+			CounterTable sourceLengthCounter = new CounterTable();
+			
 			for (Object o : dataSet) {
 				Datum d = (Datum)o;
 				
@@ -267,15 +270,21 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 					}
 				}
 				
-				System.out.println(maxSource);
-				
-				if (maxLabel != null)
+				if (maxLabel != null) {
 					labeledData.put(d, new Pair(maxLabel, maxWeight));
+					String[] sources = maxSource.toString().split(";");
+					for (String source : sources) 
+						sourceCounter.incrementCount(source);
+					sourceLengthCounter.incrementCount(sources.length);
+				}
 			}
 			
-			System.out.println("END PREDICTION SOURCES");
-			
 			classifications.add(labeledData);
+			
+			this.context.getDataTools().getOutputWriter().debugWriteln(data.get(i).getReferenceName() + " Prediction Source Counts");
+			this.context.getDataTools().getOutputWriter().debugWriteln(sourceCounter.toString());
+			this.context.getDataTools().getOutputWriter().debugWriteln(data.get(i).getReferenceName() + " Prediction Source Length Counts");
+			this.context.getDataTools().getOutputWriter().debugWriteln(sourceLengthCounter.toString());
 		}
 		
 		this.context.getDataTools().getOutputWriter().debugWriteln("Multi-method (precedence score) finished classifying data");
