@@ -76,7 +76,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	}
 
 	@Override
-	public boolean addToStructures(D datum, L label, double weight, Map<String, WeightedStructureGraph> structures, Map<String, Collection<WeightedStructure>> changes) {
+	public boolean addToStructures(D datum, L label, double weight, Object source, Map<String, WeightedStructureGraph> structures, Map<String, Collection<WeightedStructure>> changes) {
 		Pair<String, WeightedStructureGraph> pair = getOrConstructStructure(datum, structures);
 		WeightedStructureGraph graph = pair.getSecond();
 		WeightedStructureRelation rel = makeDatumStructure(datum, label);
@@ -87,7 +87,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 		if (rel != null) {
 			Collection<WeightedStructure> c = changes.get(pair.getFirst());
 			int changesStart = c.size();
-			graph.add(rel, weight, c);
+			graph.add(rel, weight, source, c);
 			changed = c.size() != changesStart;	
 		}
 		
@@ -105,11 +105,11 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 	}
 
 	@Override
-	public Map<L, Double> getLabels(D datum, Map<String, WeightedStructureGraph> structures) {
+	public Map<L, Pair<Object, Double>> getLabels(D datum, Map<String, WeightedStructureGraph> structures) {
 		WeightedStructureGraph graph = getOrConstructStructure(datum, structures).getSecond();
 		List<WeightedStructureRelation> rels = getDatumRelations(datum, graph);
 		
-		Map<L, Double> labels = new HashMap<L, Double>();
+		Map<L, Pair<Object, Double>> labels = new HashMap<L, Pair<Object, Double>>();
 		for (WeightedStructureRelation rel : rels) {
 			L label = this.context.getDatumTools().labelFromString(rel.getType());
 			
@@ -119,7 +119,7 @@ public abstract class StructurizerGraph<D extends Datum<L>, L> extends Structuri
 			if (label == null)
 				continue;
 
-			labels.put(label, graph.getWeight(rel));
+			labels.put(label, new Pair<>(graph.getSource(rel), graph.getWeight(rel)));
 		}
 		
 		return labels;

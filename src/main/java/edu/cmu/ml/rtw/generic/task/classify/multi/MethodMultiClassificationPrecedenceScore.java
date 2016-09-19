@@ -237,25 +237,33 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 			
 			DataSet dataSet = data.get(i);
 			Map labeledData = new HashMap();
+			System.out.println("PREDICTION SOURCES");
+			
 			for (Object o : dataSet) {
 				Datum d = (Datum)o;
 				
-				Map<Object, Double> labelsWeighted = structurizer.getLabels(d, structures);
+				Map<Object, Pair<Object, Double>> labelsWeighted = structurizer.getLabels(d, structures);
 				if (labelsWeighted == null)
 					continue;
 				
 				Object maxLabel = null;
 				double maxWeight = Double.NEGATIVE_INFINITY;
-				for (Entry<Object, Double> entry : labelsWeighted.entrySet()) {
-					if (Double.compare(entry.getValue(), maxWeight) >= 0) {
+				Object maxSource = null;
+				for (Entry<Object, Pair<Object, Double>> entry : labelsWeighted.entrySet()) {
+					if (Double.compare(entry.getValue().getSecond(), maxWeight) >= 0) {
 						maxLabel = entry.getKey();
-						maxWeight = entry.getValue();
+						maxWeight = entry.getValue().getSecond();
+						maxSource = entry.getValue().getFirst();
 					}
 				}
+				
+				System.out.println(maxSource);
 				
 				if (maxLabel != null)
 					labeledData.put(d, new Pair(maxLabel, maxWeight));
 			}
+			
+			System.out.println("END PREDICTION SOURCES");
 			
 			classifications.add(labeledData);
 		}
@@ -286,7 +294,7 @@ public class MethodMultiClassificationPrecedenceScore extends MethodMultiClassif
 			// FIXME This is stupid... but an artifact of the way the other sieve method is designed
 			Map<String, Collection<WeightedStructure>> changes = new HashMap<String, Collection<WeightedStructure>>();
 			synchronized (structures) {
-				structurizer.addToStructures(datum, label, score, structures, changes);
+				structurizer.addToStructures(datum, label, score, this.methods.get(methodIndex).getReferenceName(), structures, changes);
 			}
 			
 			/*System.out.println("CHANGES");

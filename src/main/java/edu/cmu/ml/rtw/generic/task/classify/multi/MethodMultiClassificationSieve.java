@@ -195,7 +195,7 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 					Map<?, Pair<?, Double>> scoredDatums = (Map)method.classifyWithScore((DataSet)currentData.get(j));
 					for (Entry<?, Pair<?, Double>> entry : scoredDatums.entrySet()) {
 						double weight = (indexAndWeight.getSecond() != null && !this.useScoreWeights) ? indexAndWeight.getSecond() : entry.getValue().getSecond();
-						structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, structures, changes);
+						structurizer.addToStructures((Datum)entry.getKey(), entry.getValue().getFirst(), weight, method.getReferenceName(), structures, changes);
 						addedLinks++;
 					}
 				}
@@ -265,25 +265,33 @@ public class MethodMultiClassificationSieve extends MethodMultiClassification im
 			
 			DataSet dataSet = data.get(i);
 			Map labeledData = new HashMap();
+			System.out.println("PREDICTION SOURCES");
 			for (Object o : dataSet) {
 				Datum d = (Datum)o;
 				
-				Map<Object, Double> labelsWeighted = structurizer.getLabels(d, structures);
+				Map<Object, Pair<Object, Double>> labelsWeighted = structurizer.getLabels(d, structures);
 				if (labelsWeighted == null)
 					continue;
 				
 				Object maxLabel = null;
 				double maxWeight = Double.NEGATIVE_INFINITY;
-				for (Entry<Object, Double> entry : labelsWeighted.entrySet()) {
-					if (Double.compare(entry.getValue(), maxWeight) >= 0) {
+				Object maxSource = null;
+				for (Entry<Object, Pair<Object, Double>> entry : labelsWeighted.entrySet()) {
+					if (Double.compare(entry.getValue().getSecond(), maxWeight) >= 0) {
 						maxLabel = entry.getKey();
-						maxWeight = entry.getValue();
+						maxWeight = entry.getValue().getSecond();
+						maxSource = entry.getValue().getFirst();
 					}
 				}
+				
+				System.out.println(maxSource);
 				
 				if (maxLabel != null)
 					labeledData.put(d, new Pair(maxLabel, maxWeight));
 			}
+			
+			System.out.println("END PREDICTION SOURCES");
+			
 			classifications.add(labeledData);
 		}
 		

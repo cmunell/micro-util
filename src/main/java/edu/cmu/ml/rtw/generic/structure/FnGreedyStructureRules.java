@@ -163,7 +163,7 @@ public class FnGreedyStructureRules<S extends WeightedStructure> extends FnStruc
 							
 							int prevItemCount = structure.getItemCount();
 							
-							structure.add(newStructurePart, structurePart.getSecond().getFirst(), structurePart.getSecond().getSecond(), filter);
+							structure.add(newStructurePart, structurePart.getSecond().getFirst(), objList.getKey() + "(" + structurePart.getSecond().getSecond() + ")", filter);
 							
 							// FIXME This currently doesn't really work the way it should
 							if (this.backtracking && prevItemCount == structure.getItemCount()) {
