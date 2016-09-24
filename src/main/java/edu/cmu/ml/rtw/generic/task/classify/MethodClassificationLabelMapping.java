@@ -8,6 +8,7 @@ import edu.cmu.ml.rtw.generic.data.annotation.DataSet;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum;
 import edu.cmu.ml.rtw.generic.data.annotation.Datum.Tools.LabelMapping;
 import edu.cmu.ml.rtw.generic.data.annotation.DatumContext;
+import edu.cmu.ml.rtw.generic.parse.Assignment;
 import edu.cmu.ml.rtw.generic.parse.AssignmentList;
 import edu.cmu.ml.rtw.generic.parse.Obj;
 import edu.cmu.ml.rtw.generic.util.Pair;
@@ -94,7 +95,10 @@ public class MethodClassificationLabelMapping<D extends Datum<L>, L> extends Met
 
 	@Override
 	protected AssignmentList toParseInternal() {
-		return null;
+		AssignmentList assignments = new AssignmentList();
+		if (this.method != null)
+			assignments.add(Assignment.assignmentTyped(null, "classify_method", "method", this.method.toParse(true)));
+		return assignments;
 	}
 
 	@Override
