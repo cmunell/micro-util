@@ -170,6 +170,9 @@ public class MethodMultiClassificationPrecedenceScoreByModel extends MethodMulti
 					Datum datum = (Datum)entry.getKey();
 					PredictionClassification prediction = entry.getValue();
 					Object label = prediction.getLabel();
+					if (label == null)
+						continue;
+					
 					Double weight = this.precedenceModel.score(new PredictionClassificationDatum<Boolean>(1, prediction, null), true);
 					String structureId = structurizer.getStructureId(datum, label, structures);
 					
