@@ -1,6 +1,7 @@
 package edu.cmu.ml.rtw.generic.task.classify.meta;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,10 @@ import edu.cmu.ml.rtw.generic.util.Pair;
 
 public class MethodClassificationMetaEvaluation extends MethodClassification<PredictionClassificationDatum<Boolean>, Boolean> {
 	private List<EvaluationClassificationMeasure<?, ?>> evaluations;
+	private List<Integer> evaluationRanks;
 	private boolean weightByScores = false;
-	private String[] parameterNames = { "evaluations", "weightByScores" };
+	private boolean partialByScores = false;
+	private String[] parameterNames = { "evaluations", "weightByScores", "partialByScores" };
 	
 	public MethodClassificationMetaEvaluation() {
 		this(null);
@@ -43,6 +46,8 @@ public class MethodClassificationMetaEvaluation extends MethodClassification<Pre
 			return array;
 		} else if (parameter.equals("weightByScores")) {
 			return Obj.stringValue(String.valueOf(this.weightByScores));
+		} else if (parameter.equals("partialByScores")) {
+			return Obj.stringValue(String.valueOf(this.partialByScores));
 		} else 
 			return null;
 	}
@@ -55,9 +60,22 @@ public class MethodClassificationMetaEvaluation extends MethodClassification<Pre
 				Obj.Array array = (Obj.Array)parameterValue;
 				for (int i = 0; i < array.size(); i++)
 					this.evaluations.add((EvaluationClassificationMeasure<?, ?>)this.context.getAssignedMatches(array.get(i)).get(0));
+			
+				this.evaluationRanks = new ArrayList<>();
+				for (int i = 0; i < this.evaluations.size(); i++)
+					this.evaluationRanks.add(i);
+				this.evaluationRanks.sort(new Comparator<Integer>() {
+					@Override
+					public int compare(Integer o1, Integer o2) {
+						return Double.compare(evaluations.get(o1).compute(), evaluations.get(o2).compute());
+					}
+				});
+				
 			}
 		} else if (parameter.equals("weightByScores")) {
 			this.weightByScores = Boolean.valueOf(this.context.getMatchValue(parameterValue));
+		} else if (parameter.equals("partialByScores")) {
+			this.partialByScores = Boolean.valueOf(this.context.getMatchValue(parameterValue));
 		} else
 			return false;
 		
@@ -66,13 +84,19 @@ public class MethodClassificationMetaEvaluation extends MethodClassification<Pre
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Double getScoreForDatum(PredictionClassificationDatum<Boolean> datum) {
+		int i = 0;
 		for (EvaluationClassificationMeasure<?, ?> measure : this.evaluations) {
 			if (measure.getMethod().equals(datum.getPrediction().getMethod())) {
 				double score = measure.compute();
 				if (this.weightByScores)
 					score *= ((MethodClassification)datum.getPrediction().getMethod()).score(datum.getPrediction().getDatum(), datum.getPrediction().getLabel());
+				else if (this.partialByScores) {
+					score = (this.evaluationRanks.indexOf(i)+score)/(double)this.evaluations.size();
+				}
 				return score;
 			}
+			
+			i++;
 		}
 		
 		return null;
