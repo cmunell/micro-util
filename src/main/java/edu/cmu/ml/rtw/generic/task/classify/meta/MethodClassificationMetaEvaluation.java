@@ -91,7 +91,8 @@ public class MethodClassificationMetaEvaluation extends MethodClassification<Pre
 				if (this.weightByScores)
 					score *= ((MethodClassification)datum.getPrediction().getMethod()).score(datum.getPrediction().getDatum(), datum.getPrediction().getLabel());
 				else if (this.partialByScores) {
-					score = (this.evaluationRanks.indexOf(i)+score)/(double)this.evaluations.size();
+					double weight = ((MethodClassification)datum.getPrediction().getMethod()).score(datum.getPrediction().getDatum(), datum.getPrediction().getLabel());
+					score = (this.evaluationRanks.indexOf(i)+weight)/(double)this.evaluations.size();
 				}
 				return score;
 			}
