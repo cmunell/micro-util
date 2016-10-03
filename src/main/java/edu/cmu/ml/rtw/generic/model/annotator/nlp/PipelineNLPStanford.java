@@ -120,7 +120,15 @@ public class PipelineNLPStanford extends PipelineNLP {
 	public synchronized boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer, 
 							  StoredItemSet<TimeExpression, TimeExpression> storedTimexes, 
 							  StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues) {
-		Properties props = new Properties();
+                return initialize(disableFrom, tokenizer, storedTimexes, storedTimeValues, null, false);
+        }
+
+	public synchronized boolean initialize(AnnotationTypeNLP<?> disableFrom, Annotator tokenizer, 
+							  StoredItemSet<TimeExpression, TimeExpression> storedTimexes, 
+                                                          StoredItemSet<NormalizedTimeValue, NormalizedTimeValue> storedTimeValues,
+                                                          Properties props,
+                                                          boolean enableCleanXML) {
+                if (props == null) props = new Properties();
 		
 		if (tokenizer != null) {
 			if (!tokenizer.requirementsSatisfied().containsAll(Annotator.TOKENIZE_AND_SSPLIT))
@@ -149,6 +157,7 @@ public class PipelineNLPStanford extends PipelineNLP {
 		} else if (disableFrom.equals(AnnotationTypeNLP.COREF)) {
 			propsStr = "tokenize, ssplit, pos, lemma, parse, ner";
 		}
+                if (enableCleanXML) propsStr.replace("tokenize, ", "tokenize, cleanxml, ");
 
 		if (this.maxSentenceLength != 0) {
 			props.put("pos.maxlen", String.valueOf(this.maxSentenceLength));
